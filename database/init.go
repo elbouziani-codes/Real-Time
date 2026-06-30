@@ -6,27 +6,34 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 )
-var DB *sql.DB
-func InitDB()  error{
-	var err error
-	DB , err := sql.Open("sqlite3","./realTime.db")
-	if err != nil{
-		return err
+
+func InitDB() (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", "./realTime.db")
+	if err != nil {
+		return nil, err
 	}
-	err = readShema()
-	
-	if err != nil{
-		return err
+
+	if err := readSchema(db); err != nil {
+		db.Close()
+		return nil, err
 	}
-	
-	return DB.Ping()
+
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	return db, nil
 }
 
-func readShema() err{
-	bytes , err := os.ReadFile("shema.sql")
+func readSchema(db *sql.DB) error {
+	bytes, err := os.ReadFile("schema.sql")
 	if err != nil {
 		return err
 	}
-	DB.Exec("INSERT ")
-	return err
+	_, err = db.Exec(string(bytes))
+	if err != nil {
+		return err
+	}
+	return nil
 }
