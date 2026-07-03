@@ -2,10 +2,8 @@ package main
 
 import (
 	"log"
-	"net/http"
 
-	"RealTime/database"
-	"RealTime/handler"
+	"realTime/database"
 )
 
 func main() {
@@ -14,8 +12,6 @@ func main() {
 		log.Fatalln(err)
 		return
 	}
+	log.Println("Database Initialised")
 	defer db.Close()
-	mux := http.NewServeMux()
-	handler.Router(mux, db)
-	log.Fatalln(http.ListenAndServe(":8080", mux))
 }

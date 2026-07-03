@@ -3,11 +3,12 @@ package database
 import (
 	"database/sql"
 	"os"
-
+	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func InitDB() (*sql.DB, error) {
+	fmt.Println("called")
 	db, err := sql.Open("sqlite3", "./realTime.db")
 	if err != nil {
 		return nil, err
@@ -27,6 +28,7 @@ func InitDB() (*sql.DB, error) {
 }
 
 func readSchema(db *sql.DB) error {
+	fmt.Println("called")
 	bytes, err := os.ReadFile("schema.sql")
 	if err != nil {
 		return err
