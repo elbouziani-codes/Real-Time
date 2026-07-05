@@ -4,14 +4,16 @@ import "time"
 
 
 type Config struct {
-	Port            string
+	PortMux1           string
+	PortMux2           string
 	DBPath          string
 	SessionDuration time.Duration
 }
 func Load() Config {
 	return Config{
-		Port:            ":8080",
-		DBPath:          "./forum.db",
+		PortMux1:        ":8080",
+		PortMux2:        ":8081",
+		DBPath:          "./realTime.db",
 		SessionDuration: 24 * time.Hour,
 	}
 }

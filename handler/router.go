@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"database/sql"
 	"net/http"
 )
 
 
-func Router(mux *http.ServeMux , db *sql.DB){
-	
+func RegisterHandlers(mux *http.ServeMux){
+	mux.HandleFunc("/api/Register",Register)
+	mux.HandleFunc("/api/Login",Login)
 }
