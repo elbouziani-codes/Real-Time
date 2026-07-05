@@ -7,6 +7,7 @@ import (
 
 	"realTime/config"
 	"realTime/database"
+	"realTime/handler"
 )
 
 func main() {
@@ -26,17 +27,10 @@ func main() {
 	})
 
 	go ServeFrontend(con.PortMux2)
-
+	handler.RegisterHandlers(mux1)
 	// 4. Start Server Two in the main goroutine to block and keep the application alive
 	log.Println("Starting Server Two on " + con.PortMux1 + "...")
 	if err := http.ListenAndServe(con.PortMux1, mux1); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Server Two failed: %v", err)
 	}
 }
-
-
-
-
-
-
-

@@ -2,5 +2,5 @@ package handler
 
 import "net/http"
 
-func Register(w http.Response, r *http.Request) {
+func Register(w http.ResponseWriter, r *http.Request) {
 }
