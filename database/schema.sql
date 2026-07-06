@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS  users  (
 	created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 	updated_at TEXT
 ); 
+
+
 CREATE TABLE IF NOT EXISTS sessions  (
 	id BLOB PRIMARY KEY,
 	user_id BLOB REFERENCES users(id) ON DELETE CASCADE, 
@@ -55,11 +57,17 @@ CREATE TABLE IF NOT EXISTS likes  (
 
 CREATE TABLE IF NOT EXISTS conversations  (
 	id BLOB PRIMARY KEY,
-	user_a_id BLOB NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- actuallt this must be reviewed if a user delete whta s the correct practice 
-	user_b_id BLOB NOT NULL REFERENCES users(id) ON DELETE CASCADE, 
 	created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 	updated_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS conversation_participants  (
+	id BLOB PRIMARY KEY,
+	user_id BLOB NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+	conversation_id BLOB NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+	joined_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
 
 
 CREATE TABLE IF NOT EXISTS messages  (
@@ -75,7 +83,14 @@ CREATE TABLE IF NOT EXISTS messages  (
 
 
 
-CREATE INDEX IF NOT EXISTS poster_id ON posts(user_id);
+CREATE INDEX IF NOT EXISTS poster_idx ON posts(user_id);
+CREATE INDEX IF NOT EXISTS session_idx ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS  participants_idx ON conversation_participants(user_id);
+CREATE INDEX IF NOT EXISTS  sender_idx ON messages(sender_id);
+CREATE INDEX IF NOT EXISTS  conversation_idx ON messages(conversation_id);
+CREATE INDEX IF NOT EXISTS  post_idx ON comments(post_id);
+
+
 
 
 

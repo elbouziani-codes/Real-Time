@@ -26,7 +26,7 @@ func InitDB(DBPath string) (*sql.DB, error) {
 }
 
 func readSchema(db *sql.DB) error {
-	bytes, err := os.ReadFile("schema.sql")
+	bytes, err := os.ReadFile("./database/schema.sql")
 	if err != nil {
 		return err
 	}
