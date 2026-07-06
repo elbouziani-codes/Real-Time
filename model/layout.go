@@ -4,11 +4,11 @@ package model
 
 
 type RegisterModel struct{
-	Nick_name string
-	First_name string
-	Last_name string
+	NickName string
+	FirstName string
+	LastName string
 	Email string
-	Password_hash string
+	PasswordHash string
 }
 
 type LoginModel struct {

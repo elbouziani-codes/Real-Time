@@ -1,20 +1,17 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
-	"net/http"
-	"net/mail"
 	"regexp"
 	"strings"
 
 	"realTime/model"
 )
-var usernameRegex = regexp.MustCompile(`^[\p{L}\p{N}_]+$`)
-func ParseJsonLogin(r *http.Request, loginForm *model.LoginModel) error {
-	defer r.Body.Close()
-	return json.NewDecoder(r.Body).Decode(loginForm)
-}
+
+var (
+	usernameRegex = regexp.MustCompile(`^[\p{L}\p{N}_]+$`)
+	emailRegex    = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+)
 
 func ValidDataLogin(loginForm *model.LoginModel) error {
 	loginForm.EmailOrNickName = strings.TrimSpace(loginForm.EmailOrNickName)
@@ -24,8 +21,8 @@ func ValidDataLogin(loginForm *model.LoginModel) error {
 		return errors.New("password length must be between 6 and 20")
 	}
 
-	if _, err := mail.ParseAddress(loginForm.EmailOrNickName); err == nil {
-		if len(loginForm.EmailOrNickName) > 75 || len(loginForm.EmailOrNickName) < 6 {
+	if emailRegex.MatchString(loginForm.EmailOrNickName) {
+		if len(loginForm.EmailOrNickName) > 40 || len(loginForm.EmailOrNickName) < 6 {
 			return errors.New("email length must be between 6 and 75")
 		}
 	} else {
@@ -39,6 +36,5 @@ func ValidDataLogin(loginForm *model.LoginModel) error {
 	return nil
 }
 
-func PasswordHash(loginForm *model.LoginModel)error{
-
+func PasswordHash(loginForm *model.LoginModel) error {
 }
