@@ -8,7 +8,7 @@ type RegisterModel struct{
 	FirstName string
 	LastName string
 	Email string
-	PasswordHash string
+	Password string
 }
 
 type LoginModel struct {
