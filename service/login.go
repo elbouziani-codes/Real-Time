@@ -36,5 +36,6 @@ func ValidDataLogin(loginForm *model.LoginModel) error {
 	return nil
 }
 
-func PasswordHash(loginForm *model.LoginModel) error {
+func PasswordHash(password string) (string ,error){
+	return "", nil
 }

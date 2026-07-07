@@ -21,8 +21,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := service.PasswordHash(&dataLogin); err != nil {
+	newPasswordHash ,err := service.PasswordHash(dataLogin.Password)
+	if err != nil {
 		http.Error(w, "error in parser", http.StatusBadRequest)
 		return
 	}
+	dataLogin.Password = newPasswordHash
 }
