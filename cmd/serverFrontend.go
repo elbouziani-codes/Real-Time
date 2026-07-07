@@ -7,7 +7,7 @@ import (
 
 func ServeFrontend(port string) {
 	mux := http.NewServeMux()
-	fs := http.FileServer(http.Dir("dir"))
+	fs := http.FileServer(http.Dir("web"))
 	http.Handle("/", fs)
 	log.Println("Starting Server Two on " + port[1:] + "...")
 
