@@ -1,4 +1,4 @@
-package database
+package db 
 
 import (
 	"database/sql"
@@ -6,8 +6,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func InitDB(DBPath string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", DBPath)
+func Open(path string) (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", path+"?_foreign_keys=on")
 	if err != nil {
 		return nil, err
 	}
@@ -34,5 +34,6 @@ func readSchema(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
