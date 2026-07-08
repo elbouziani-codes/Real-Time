@@ -8,6 +8,7 @@ import (
 	"realTime/config"
 	"realTime/database"
 	"realTime/handler"
+	"realTime/service"
 )
 
 func main() {
@@ -33,4 +34,7 @@ func main() {
 	if err := http.ListenAndServe(con.PortMux1, mux1); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Server Two failed: %v", err)
 	}
+
+	A := service.LoadRepo(db)
+	B := handler.Loadhandler(A)
 }

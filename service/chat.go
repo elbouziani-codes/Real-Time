@@ -1,19 +1,8 @@
 package service
 
-import (
-	"fmt"
-	"realTime/database"	
-)
-
-
-
-
-func getChat() {
+func (S Servece) getChat() {
 	// must pass two users
-	// get user chat 
+	// get user chat
 	// create user chat if not exist
-	// return chat_id 
+	// return chat_id
 }
-
-
-

@@ -17,7 +17,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := service.ValidDataRegister(&dataRegister); err != nil {
-		http.Error(w, "error in parser", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

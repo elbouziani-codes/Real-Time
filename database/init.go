@@ -11,7 +11,7 @@ func InitDB(DBPath string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	db.Exec("PRAGMA foreign_keys = ON")
 	if err := readSchema(db); err != nil {
 		db.Close()
 		return nil, err

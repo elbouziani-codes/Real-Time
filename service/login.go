@@ -13,7 +13,8 @@ var (
 	emailRegex    = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 )
 
-func ValidDataLogin(loginForm *model.LoginModel) error {
+
+func  (S Servece) ValidDataLogin(loginForm *model.LoginModel) error {
 	loginForm.EmailOrNickName = strings.TrimSpace(loginForm.EmailOrNickName)
 	loginForm.Password = strings.TrimSpace(loginForm.Password)
 
@@ -22,8 +23,8 @@ func ValidDataLogin(loginForm *model.LoginModel) error {
 	}
 
 	if emailRegex.MatchString(loginForm.EmailOrNickName) {
-		if len(loginForm.EmailOrNickName) > 40 || len(loginForm.EmailOrNickName) < 6 {
-			return errors.New("email length must be between 6 and 75")
+		if len(loginForm.EmailOrNickName) > 50 || len(loginForm.EmailOrNickName) < 6 {
+			return errors.New("email length must be between 6 and 50")
 		}
 	} else {
 		if !usernameRegex.MatchString(loginForm.EmailOrNickName) {
@@ -33,9 +34,6 @@ func ValidDataLogin(loginForm *model.LoginModel) error {
 			return errors.New("nickname length must be between 6 and 20")
 		}
 	}
-	return nil
-}
 
-func PasswordHash(password string) (string ,error){
-	return "", nil
+	return nil
 }
