@@ -18,13 +18,9 @@ func NewService() *Service {
 
 func (svc *Service ) getChat(users [][]byte) {
 	// must pass two users
-	// get user chat 
+	// get user chat
 	// create user chat if not exist
-	// return chat_id 
+	// return chat_id
 }
-
-
-func 
-
 
 

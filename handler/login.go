@@ -8,24 +8,17 @@ import (
 	"realTime/service"
 )
 
-func (h *Router) Login(w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request) {
+	r.Context()
 	dataLogin := model.LoginModel{}
 	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&dataLogin); err != nil {
-	http.Error(w, "invalid json", http.StatusBadRequest)
-	return
-}
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
 
 	if err := service.ValidDataLogin(&dataLogin); err != nil {
-		http.Error(w, "error in parser", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	newPasswordHash ,err := service.PasswordHash(dataLogin.Password)
-	h.service()
-	if err != nil {
-		http.Error(w, "error in parser", http.StatusBadRequest)
-		return
-	}
-	dataLogin.Password = newPasswordHash
 }

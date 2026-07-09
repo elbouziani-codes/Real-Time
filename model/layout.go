@@ -1,14 +1,12 @@
 package model
 
 
-
-
-type RegisterModel struct{
-	NickName string
-	FirstName string
-	LastName string
-	Email string
-	Password string
+type RegisterModel struct {
+	NickName  string `json:"nickName"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
 }
 
 type LoginModel struct {
@@ -16,6 +14,5 @@ type LoginModel struct {
 	Password         string `json:"password"`
 }
 
-type SessionModel struct{
-	
+type SessionModel struct {
 }
