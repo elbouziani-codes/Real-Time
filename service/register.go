@@ -34,5 +34,4 @@ func ValidDataRegister(RegisterForm *model.RegisterModel) error {
 		}
 	}
 	return nil
-	return nil
 }
