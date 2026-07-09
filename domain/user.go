@@ -1,5 +1,7 @@
 package domain
 
+import "context"
+
 
 type User struct {
 	ID []byte
@@ -11,8 +13,12 @@ type User struct {
 }
 
 
+func NewUser(... info) User {
+	// pust validation here
+}
 
-type RepoUser interface {
+
+type UserRepo interface {
 	Get(context.Context, []byte) (User, error)
 	Create(context.Context, User) (User, error)
 	GetUsers(context.Context) ([]User, error)

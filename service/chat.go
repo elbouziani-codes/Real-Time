@@ -1,26 +1,32 @@
 package service
 
 import (
-//	"fmt"
-//	"realTime/database"	
+	//	"fmt"
+	"realTime/domain"
+	"sync"
+	// "realTime/database"
 )
 
-
-type Repo interface {
-	CreateChat() 
-	GetChat() 
+type chatService struct {
+	Repo *domain.RepoChat
 }
 
-func NewService() *Service {
-	return 
-}
-
-
-func (svc *Service ) getChat(users [][]byte) {
-	// must pass two users
-	// get user chat
-	// create user chat if not exist
-	// return chat_id
+func NewService(repo *domain.RepoChat) *chatService {
+	return &chatService{Repo: repo}
 }
 
 
+func (svc *chatService ) CreatChat(users [][]byte) {
+	
+}
+
+func (svc *chatService ) GetChat(users [][]byte) {
+
+}
+
+
+
+
+func (svc *chatService ) chatLoop() {
+
+}

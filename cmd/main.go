@@ -9,13 +9,12 @@ import (
 	"realTime/database"
 	"realTime/repository"
 
-	"github.com/projectdiscovery/interactsh/pkg/server"
 )
 
 func main() {
 	conf := config.Load()
 
-	db, err := db.Open(conf.DBPath)
+	db, err := database.Open(conf.DBPath)
 
 	if err != nil {
 		log.Println(err)
