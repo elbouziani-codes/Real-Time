@@ -1,7 +1,7 @@
 
 -- User's table
 CREATE TABLE IF NOT EXISTS  users  (
-	id BLOB PRIMARY KEY DEFAULT (uuid_blob()), -- I will use binary format([]byte) because sqlite has no reserved type for uuid
+	id TEXT PRIMARY KEY, -- I will use binary format([]byte) because sqlite has no reserved type for uuid
 	email TEXT NOT NULL  UNIQUE, 
 	password_hash TEXT NOT NULL, --length enforced by hashing algorithm in app level (some for other fields)
 	nick_name TEXT NOT NULL UNIQUE,
@@ -15,25 +15,25 @@ CREATE TABLE IF NOT EXISTS  users  (
 
 
 CREATE TABLE IF NOT EXISTS sessions  (
-	id BLOB PRIMARY KEY,
-	user_id BLOB REFERENCES users(id) ON DELETE CASCADE, 
+	id TEXT PRIMARY KEY,
+	user_id TEXT REFERENCES users(id) ON DELETE CASCADE, 
 	created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 	updated_at TEXT
 );
 
 CREATE TABLE IF NOT EXISTS posts  (
-	id BLOB PRIMARY KEY,
-	user_id BLOB REFERENCES users(id) ON DELETE CASCADE, 
+	id TEXT PRIMARY KEY,
+	user_id TEXT REFERENCES users(id) ON DELETE CASCADE, 
 	content TEXT  NOT NULL , 
 	created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 	updated_at TEXT
 );
 
 CREATE TABLE IF NOT EXISTS comments  (
-	id BLOB PRIMARY KEY,
-	user_id BLOB NOT NULL REFERENCES users(id) ON DELETE CASCADE, 
-	post_id BLOB NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-	parent_id BLOB NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+	id TEXT PRIMARY KEY,
+	user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, 
+	post_id TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+	parent_id TEXT NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
 	content TEXT  NOT NULL, 
 	created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 	updated_at TEXT
@@ -41,10 +41,10 @@ CREATE TABLE IF NOT EXISTS comments  (
 
 
 CREATE TABLE IF NOT EXISTS likes  (
-	id BLOB PRIMARY KEY,
-	user_id BLOB NOT NULL REFERENCES users(id) ON DELETE CASCADE, 
-	post_id BLOB REFERENCES posts(id) ON DELETE CASCADE,
-	comment_id BLOB  REFERENCES comments(id) ON DELETE CASCADE,
+	id TEXT PRIMARY KEY,
+	user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, 
+	post_id TEXT REFERENCES posts(id) ON DELETE CASCADE,
+	comment_id TEXT  REFERENCES comments(id) ON DELETE CASCADE,
 	is_like  BOOLEAN NOT NULL, 
 	created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 	updated_at TEXT,
@@ -58,24 +58,24 @@ CREATE TABLE IF NOT EXISTS likes  (
 
 
 CREATE TABLE IF NOT EXISTS conversations  (
-	id BLOB PRIMARY KEY,
+	id TEXT PRIMARY KEY,
 	created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 	updated_at TEXT
 );
 
 CREATE TABLE IF NOT EXISTS conversation_participants  (
-	id BLOB PRIMARY KEY,
-	user_id BLOB NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-	conversation_id BLOB NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+	id TEXT PRIMARY KEY,
+	user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+	conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
 	joined_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 
 
 CREATE TABLE IF NOT EXISTS messages  (
-	id BLOB PRIMARY KEY,
-	sender_id BLOB NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- actuallt this must be reviewed if a user delete whta s the correct practice 
-	conversation_id BLOB NOT NULL REFERENCES conversations(id) ON DELETE CASCADE, 
+	id TEXT PRIMARY KEY,
+	sender_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- actuallt this must be reviewed if a user delete whta s the correct practice 
+	conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE, 
 	content TEXT NOT NULL,
 	created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 	updated_at TEXT

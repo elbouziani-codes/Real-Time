@@ -30,11 +30,12 @@ type User struct {
 
 
 const CreateUserQuery = `INSERT INTO users 
-(email, password_hash, nick_name, last_name, first_name, age, gender) VALUES 
-(?, ?, ?, ?, ?, ?, ?) `
+(id, email, password_hash, nick_name, last_name, first_name, age, gender) VALUES 
+(?, ?, ?, ?, ?, ?, ?, ?) `
 
 func (u *UserRepo) CreateUser(ctx context.Context, user domain.User) error {
 	row, err := u.db.ExecContext(ctx, CreateUserQuery, 
+		user.ID,
 		user.Email,
 		user.Password,
 		user.NickName,
