@@ -1,0 +1,14 @@
+package handler
+
+import (
+	"net/http"
+)
+
+
+
+
+func NewRouter(authHandler *AuthHandler) *http.ServeMux {
+	router := http.NewServeMux()
+	router.HandleFunc("/api/register", authHandler.Register)
+	return router
+}

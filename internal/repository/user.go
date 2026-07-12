@@ -3,7 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"realTime/domain"
+
+	"realTime/internal/domain"
 )
 
 type UserRepo struct {
@@ -14,10 +15,9 @@ func NewUserRepo(db DBTX) *UserRepo {
 	return &UserRepo{db: db}
 }
 
-
-func scanUser(row *sql.Row) (domain.User, error){
+func scanUser(row *sql.Row) (domain.User, error) {
 	user := domain.User{}
-	err  := row.Scan(&user.ID,
+	err := row.Scan(&user.ID,
 		&user.Email,
 		&user.Password,
 		&user.NickName,
@@ -27,10 +27,10 @@ func scanUser(row *sql.Row) (domain.User, error){
 		&user.Gender,
 		&user.Created_at,
 		&user.Updated_at)
-	if err != nil{
-		return domain.User{},err
+	if err != nil {
+		return domain.User{}, err
 	}
-	return user , nil 
+	return user, nil
 }
 
 const CreateUserQuery = `INSERT INTO users 
@@ -39,61 +39,57 @@ const CreateUserQuery = `INSERT INTO users
 
 func (u *UserRepo) CreateUser(ctx context.Context, user domain.User) error {
 	_, err := u.db.ExecContext(ctx, CreateUserQuery,
-		user.ID, 
+		user.ID,
 		user.Email,
 		user.Password,
 		user.NickName,
 		user.LastName,
 		user.FirstName,
 		user.Age,
-		user.Gender) 
-	if err != nil{
+		user.Gender)
+	if err != nil {
 		return err
 	}
-	return nil 
+	return nil
 }
 
 const GetByIdQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at, updated_at
 FROM users WHERE id = ?`
 
-
-func (u *UserRepo) GetByID(ctx context.Context, userID string) (domain.User ,error) {
-	row := u.db.QueryRowContext(ctx, GetByIdQuery, userID) 
+func (u *UserRepo) GetByID(ctx context.Context, userID string) (domain.User, error) {
+	row := u.db.QueryRowContext(ctx, GetByIdQuery, userID)
 	return scanUser(row)
 }
 
 const GetByEmailQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at, updated_at
 FROM users WHERE email = ?`
 
-
-func (u *UserRepo) GetByEmail(ctx context.Context, userEmail string) (domain.User ,error) {
-	row := u.db.QueryRowContext(ctx, GetByEmailQuery, userEmail) 
+func (u *UserRepo) GetByEmail(ctx context.Context, userEmail string) (domain.User, error) {
+	row := u.db.QueryRowContext(ctx, GetByEmailQuery, userEmail)
 	return scanUser(row)
-
 }
 
 const GetByNickNameQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at, updated_at
 FROM users WHERE nick_name = ?`
 
-
-func (u *UserRepo) GetByNickName(ctx context.Context, NickName string) (domain.User ,error) {
-	row := u.db.QueryRowContext(ctx, GetByNickNameQuery, NickName) 
+func (u *UserRepo) GetByNickName(ctx context.Context, NickName string) (domain.User, error) {
+	row := u.db.QueryRowContext(ctx, GetByNickNameQuery, NickName)
 	return scanUser(row)
-
 }
+
 const GetAllUserQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at, updated_at
 FROM users`
 
-func (u *UserRepo) GetAllUser(ctx context.Context) ([]domain.User ,error) {
+func (u *UserRepo) GetUsers(ctx context.Context) ([]domain.User, error) {
 	users := []domain.User{}
-	row ,err := u.db.QueryContext(ctx, GetAllUserQuery) 
-	if err != nil{
-		return nil , err
+	row, err := u.db.QueryContext(ctx, GetAllUserQuery)
+	if err != nil {
+		return nil, err
 	}
 	defer row.Close()
 	for row.Next() {
 		user := domain.User{}
-		err  = row.Scan(&user.ID,
+		err = row.Scan(&user.ID,
 			&user.Email,
 			&user.Password,
 			&user.NickName,
@@ -103,15 +99,14 @@ func (u *UserRepo) GetAllUser(ctx context.Context) ([]domain.User ,error) {
 			&user.Gender,
 			&user.Created_at,
 			&user.Updated_at)
-		if err != nil{
-			return nil ,err
+		if err != nil {
+			return nil, err
 		}
 		users = append(users, user)
 	}
 	err = row.Err()
-	if err != nil{
-			return nil ,err
-		}
-	return users , nil 
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }
-

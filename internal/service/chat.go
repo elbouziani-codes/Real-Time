@@ -2,8 +2,7 @@ package service
 
 import (
 	//	"fmt"
-	"realTime/domain"
-	"sync"
+	"realTime/internal/domain"
 	// "realTime/database"
 )
 
@@ -15,12 +14,8 @@ func NewService(repo *domain.RepoChat) *chatService {
 	return &chatService{Repo: repo}
 }
 
-
-func (svc *chatService ) CreatChat(users [][]byte) {
-	
+func (svc *chatService) CreatChat(users []string) {
 }
 
-func (svc *chatService ) GetChat(users [][]byte) {
-
+func (svc *chatService) GetChat(users []string) {
 }
-

@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"realTime/domain"
+	"realTime/internal/domain"
 )
 
 type DBTX interface {
@@ -25,7 +25,7 @@ const createChatQuery = `
 	INSERT into conversations (id) VALUES (?) RETURNING * ;
 `
 
-func (q *ChatRepo) CreateChat(ctx context.Context, chatID []byte) (domain.ChatRoom, error) {
+func (q *ChatRepo) CreateChat(ctx context.Context, chatID string) (domain.ChatRoom, error) {
 	row := q.db.QueryRowContext(ctx, createChatQuery, chatID)
 	var chat domain.ChatRoom
 	err := row.Scan(&chat.ID)
@@ -56,7 +56,7 @@ const getMessagesQuery = `
 	LIMIT  ? 	
 `
 
-func (q *ChatRepo) GetMessages(ctx context.Context, chatID []byte) ([]domain.Message, error) {
+func (q *ChatRepo) GetMessages(ctx context.Context, chatID string) ([]domain.Message, error) {
 	rows, err := q.db.QueryContext(ctx, getMessagesQuery, chatID) // must be updated later
 	if err != nil {
 		return nil, err

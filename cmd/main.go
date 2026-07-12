@@ -1,29 +1,39 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"net/http"
 	"os"
 
-	"realTime/config"
-	"realTime/database"
-	"realTime/repository"
+	"realTime/internal/database"
+	"realTime/internal/handler"
+	"realTime/internal/repository"
+	"realTime/internal/service"
 
+	"realTime/internal/config"
 )
 
 func main() {
 	conf := config.Load()
 
 	db, err := database.Open(conf.DBPath)
-
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
 	}
 	// new repo
-	repo := repository.New(db)
-	fmt.Println(repo)
+	authRepo := repository.NewAuthRepo(db)
+	userRepo := repository.NewUserRepo(db)
+
 	// new service
-	// new handler 
-	log.Println("Database Initialised")	
+	authSvc := service.NewAuthService(authRepo, userRepo)
+	userSvc := service.NewUserSevice(userRepo)
+
+	// new handler
+
+	authHandler := handler.NewAuthHandler(authSvc, userSvc)
+
+	router := handler.NewRouter(authHandler)
+	http.ListenAndServe(":8080", router)
+	log.Println("Database Initialised")
 }

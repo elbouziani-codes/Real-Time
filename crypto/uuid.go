@@ -3,7 +3,7 @@ package crypto
 import (
 		"github.com/gofrs/uuid/v5"
 )
-
+//fhem
 var u1 = uuid.Must(uuid.NewV4())
 
 func GenerateUUID() (string, error) {
