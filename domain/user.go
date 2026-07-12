@@ -4,7 +4,7 @@ import "context"
 
 
 type User struct {
-	ID []byte
+	ID string 
 	NickName string
 	LastName string	
 	FirstName string

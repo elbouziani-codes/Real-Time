@@ -7,6 +7,7 @@ import (
 	"realTime/database"
 	"realTime/domain"
 	"realTime/repository"
+	"realTime/crypto"
 )
 
 func main() {
@@ -19,9 +20,13 @@ func main() {
 }
 
 func testCreateUser(userRepo *repository.UserRepo) {
+	id, _ := crypto.GenerateUUID()
+	password, _ := crypto.GenerateHash("password")
 	user := domain.User{
+		ID : id,
 		NickName:  "HMAR",
 		LastName:  "ZARHON",
+		Password: password,
 		FirstName: "younes",
 		Age:       5,
 		Gender:    "famme",
@@ -31,4 +36,5 @@ func testCreateUser(userRepo *repository.UserRepo) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	
 }

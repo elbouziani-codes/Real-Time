@@ -38,7 +38,8 @@ const CreateUserQuery = `INSERT INTO users
 (?, ?, ?, ?, ?, ?, ?, ?) `
 
 func (u *UserRepo) CreateUser(ctx context.Context, user domain.User) error {
-	_, err := u.db.ExecContext(ctx, CreateUserQuery, user.ID, 
+	_, err := u.db.ExecContext(ctx, CreateUserQuery,
+		user.ID, 
 		user.Email,
 		user.Password,
 		user.NickName,
@@ -56,7 +57,7 @@ const GetByIdQuery = `SELECT id, email, password_hash, nick_name, last_name, fir
 FROM users WHERE id = ?`
 
 
-func (u *UserRepo) GetByID(ctx context.Context, userID []byte) (domain.User ,error) {
+func (u *UserRepo) GetByID(ctx context.Context, userID string) (domain.User ,error) {
 	row := u.db.QueryRowContext(ctx, GetByIdQuery, userID) 
 	return scanUser(row)
 }
@@ -113,3 +114,4 @@ func (u *UserRepo) GetAllUser(ctx context.Context) ([]domain.User ,error) {
 		}
 	return users , nil 
 }
+
