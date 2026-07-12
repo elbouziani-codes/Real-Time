@@ -21,7 +21,8 @@ func Open(path string) (*sql.DB, error) {
 		db.Close()
 		return nil, err
 	}
-
+	db.Exec("PRAGMA trusted_schema = ON")
+	db.Exec("SELECT load_extension('./uuid')")
 	return db, nil
 }
 

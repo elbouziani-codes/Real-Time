@@ -12,12 +12,14 @@ import (
 
 var nameRegex = regexp.MustCompile(`^[\p{L}]+(?:[-'][\p{L}]+)*(?: [\p{L}]+(?:[-'][\p{L}]+)*)*$`)
 
-func (S Servece) ValidDataRegister(RegisterForm *model.RegisterModel) error {
+func ValidDataRegister(RegisterForm *model.RegisterModel) error {
 	RegisterForm.Email = strings.TrimSpace(RegisterForm.Email)
 	RegisterForm.Password = strings.TrimSpace(RegisterForm.Password)
 	RegisterForm.NickName = strings.TrimSpace(RegisterForm.NickName)
 	RegisterForm.LastName = strings.TrimSpace(RegisterForm.LastName)
 	RegisterForm.FirstName = strings.TrimSpace(RegisterForm.FirstName)
+	//Gender
+	//Age 
 
 	if len(RegisterForm.Password) < 6 || len(RegisterForm.Password) > 20 {
 		return errors.New("password length must be between 6 and 20")

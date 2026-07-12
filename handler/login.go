@@ -4,21 +4,24 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"realTime/model"
-	"realTime/service"
+	"realTime/domain"
 )
 
-func Login(w http.ResponseWriter, r *http.Request) {
-	r.Context()
-	dataLogin := model.LoginModel{}
+type AuthHandler struct {
+	svc     domain.AuthService
+	userSvc domain.UserService
+}
+
+func (h AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	if err := json.NewDecoder(r.Body).Decode(&dataLogin); err != nil {
-		http.Error(w, "invalid json", http.StatusBadRequest)
-		return
+
+	var loginForm domain.Credentials
+
+	if err := json.NewDecoder(r.Body).Decode(&loginForm); err != nil {
+		// http error handler
 	}
 
-	if err := service.ValidDataLogin(&dataLogin); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	
+
+	// get session
 }

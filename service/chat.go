@@ -24,9 +24,3 @@ func (svc *chatService ) GetChat(users [][]byte) {
 
 }
 
-
-
-
-func (svc *chatService ) chatLoop() {
-
-}

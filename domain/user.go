@@ -9,17 +9,21 @@ type User struct {
 	LastName string	
 	FirstName string
 	Email string
+	Password string
+	Gender string
 	Age uint8
+	Created_at string
+	Updated_at string
 }
 
 
-func NewUser(... info) User {
-	// pust validation here
-}
+
 
 
 type UserRepo interface {
-	Get(context.Context, []byte) (User, error)
-	Create(context.Context, User) (User, error)
+	GetByID(context.Context, []byte) (User, error)
+	GetByEmail(context.Context, string) (User, error)
+	GetByNickName(context.Context, string) (User, error)
+	CreateUser(context.Context, User) (User, error)
 	GetUsers(context.Context) ([]User, error)
 }

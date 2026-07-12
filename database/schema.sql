@@ -1,12 +1,14 @@
 
 -- User's table
 CREATE TABLE IF NOT EXISTS  users  (
-	id BLOB PRIMARY KEY, -- I will use binary format([]byte) because sqlite has no reserved type for uuid
+	id BLOB PRIMARY KEY DEFAULT (uuid_blob()), -- I will use binary format([]byte) because sqlite has no reserved type for uuid
+	email TEXT NOT NULL  UNIQUE, 
+	password_hash TEXT NOT NULL, --length enforced by hashing algorithm in app level (some for other fields)
 	nick_name TEXT NOT NULL UNIQUE,
 	first_name TEXT NOT NULL , 
 	last_name TEXT  NOT NULL , 
-	email TEXT NOT NULL  UNIQUE, 
-	password_hash TEXT NOT NULL, --length enforced by hashing algorithm in app level (some for other fields)
+	age INTEGER NOT NULL,
+	gender TEXT NOT NULL,
 	created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 	updated_at TEXT
 ); 

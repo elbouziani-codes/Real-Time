@@ -11,10 +11,9 @@ type servece interface {
 	ValidDataRegister(RegisterForm *model.RegisterModel) error
 }
 
-type Handler struct{
-	sr servece
+type AuthHandler struct {
+	
 }
-
 func Loadhandler(serveces servece) *Handler {
 	return &Handler{
 		sr: serveces,
