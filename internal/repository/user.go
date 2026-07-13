@@ -48,7 +48,7 @@ func (u *UserRepo) CreateUser(ctx context.Context, user domain.User) error {
 		user.Age,
 		user.Gender)
 	if err != nil {
-		return err
+		return TranslateError(err) 
 	}
 	return nil
 }

@@ -1,8 +1,6 @@
 package domain
 
 import (
-	"context"
-	"errors"
 	"regexp"
 	"strings"
 )
@@ -22,59 +20,47 @@ type User struct {
 
 
 
-type UserRepo interface {
-	GetByID(context.Context, string) (User, error)
-	GetByEmail(context.Context, string) (User, error)
-	GetByNickName(context.Context, string) (User, error)
-	CreateUser(context.Context, User) (User, error)
-	GetUsers(context.Context) ([]User, error)
-}
 
-
-type UserService interface {
-	CreateUser(context.Context, string) (string, error)
-}
-
-var nameRegex = regexp.MustCompile(`^[\p{L}]+(?:[-'][\p{L}]+)*(?: [\p{L}]+(?:[-'][\p{L}]+)*)*$`)
+var nameRegex = regexp.MustCompile(`^[\p{L}]+(?:[-'][\p{L}]+)*(?: [\p{L}]+(?:[-'][\p{L}]+)*)*$`) // would deleted later
 
 func ValidDataUser(email, password, nickName, lastName, firstName, gender string, age uint8) (User, error) {
 	var user User
 	user.Email = strings.TrimSpace(email)
-	user.Password = strings.TrimSpace(password)
+	user.Password = password
 	user.NickName = strings.TrimSpace(nickName)
 	user.LastName = strings.TrimSpace(lastName)
 	user.FirstName = strings.TrimSpace(firstName)
 	user.Gender = strings.TrimSpace(gender)
 	user.Age = age
 	if len(user.Password) < 6 || len(user.Password) > 20 {
-		return User{}, errors.New("password length must be between 6 and 20")
+			return User{}, &ValidationError{Field: "password", Message: "length must be between 6 and 20", Code: 400}
 	}
 
 	if len(user.Email) < 6 || len(user.Email) > 75 {
-		return User{}, errors.New("email length must be between 6 and 75")
+			return User{}, &ValidationError{Field: "email", Message: "length must be between 6 and 75", Code: 400} // 400 
 	}
 
 	if !emailRegex.MatchString(user.Email) {
-		return User{}, errors.New("invalid email")
+		return User{}, &ValidationError{Field: "email", Message: "invalid format", Code: 400} 
 	}
 
 	if !usernameRegex.MatchString(user.NickName) {
-		return User{}, errors.New("invalid nickname")
+		return User{}, &ValidationError{Field: "nickname", Message: "invalid format", Code: 400}  
 	}
 
 	if len(user.NickName) > 20 || len(user.NickName) < 6 {
-		return User{}, errors.New("nickname length must be between 6 and 20")
+		return User{}, &ValidationError{Field: "nickname", Message: "nickname length must be between 6 and 20", Code: 400}
 	}
 
 	if !nameRegex.MatchString(user.FirstName) || !nameRegex.MatchString(user.LastName) {
-		return User{}, errors.New("invalid FirstName or LastName")
+		return User{}, &ValidationError{Field: "fullname", Message: "invalid FirstName or LastName", Code: 400}
 	}
 
 	if (len(user.FirstName) > 25 || len(user.FirstName) < 4) || (len(user.LastName) > 25 || len(user.LastName) < 4) {
-		return User{}, errors.New("FirstName and LastName length must be between 4 and 25 ")
+		return User{}, &ValidationError{Field: "fullname", Message: "FirstName and LastName length must be between 4 and 25", Code: 400}
 	}
 	if user.Gender != "Man" && user.Gender != "Woman" {
-		return User{}, errors.New("Value Gender is not valid")
+			return User{}, &ValidationError{Field: "gender", Message: "Value Gender is not valid", Code: 400}
 	}
 	return user, nil
 }
