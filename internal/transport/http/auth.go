@@ -2,9 +2,9 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"encoding/json"
 	"net/http"
-	"fmt"
 	"errors"
 	"realTime/internal/domain"
 	"realTime/internal/service"
@@ -61,15 +61,17 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	
 
 	user, err := a.userSvc.CreateUser(r.Context(), dataRegister)
+
 	if err != nil {
 		var valErr domain.ValidationError
 		
 		if errors.As(err, &valErr) {
+			fmt.Println(err)
 			switch valErr.Code {
-				case 409:  
-					http.Error(w, err.Error(), http.StatusBadRequest)
+				case domain.ConflictCode:  
+					http.Error(w, err.Error(), http.StatusConflict)
 					return
-				case 400: 
+				case domain.BadFormatCode: 
 					http.Error(w, err.Error(), http.StatusBadRequest)
 					return
 				default: 
@@ -77,7 +79,6 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 					return
 			}			
 		 }
-		fmt.Println(err)
 		http.Error(w, "InternalServerError", http.StatusInternalServerError)
 		return 
 

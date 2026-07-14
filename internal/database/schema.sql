@@ -9,8 +9,8 @@ CREATE TABLE
 		last_name TEXT NOT NULL,
 		age INTEGER NOT NULL,
 		gender TEXT NOT NULL,
-		created_at TEXT DEFAULT (datetime (CURRENT_TIMESTAMP, '+1 hours')), 
-		updated_at TEXT
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')), 
+		updated_at INTEGER 
 	);
 
 CREATE TABLE

@@ -26,7 +26,7 @@ type UserRepo interface {
 	GetByEmail(context.Context, string) (domain.User, error)
 	GetByNickName(context.Context, string) (domain.User, error)
 	CreateUser(context.Context, domain.User) error
-	GetUsers(context.Context) ([]domain.User, error)
+	GetUsers(context.Context, int, int) ([]domain.User, error)
 }
 
 func NewUserSevice(repo UserRepo) *UserService {

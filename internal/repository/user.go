@@ -2,8 +2,6 @@ package repository
 
 import (
 	"context"
-	"database/sql"
-
 	"realTime/internal/domain"
 )
 
@@ -11,11 +9,16 @@ type UserRepo struct {
 	db DBTX
 }
 
+type scanner interface  {
+	Scan(...any) error
+}
+
+
 func NewUserRepo(db DBTX) *UserRepo {
 	return &UserRepo{db: db}
 }
 
-func scanUser(row *sql.Row) (domain.User, error) {
+func scanUser(row scanner) (domain.User, error) {
 	user := domain.User{}
 	err := row.Scan(&user.ID,
 		&user.Email,
@@ -25,10 +28,10 @@ func scanUser(row *sql.Row) (domain.User, error) {
 		&user.FirstName,
 		&user.Age,
 		&user.Gender,
-		&user.Created_at,
-		&user.Updated_at)
+		&user.CreatedAt,
+		&user.UpdatedAt)
 	if err != nil {
-		return domain.User{}, err
+		return domain.User{},  TranslateError(err)
 	}
 	return user, nil
 }
@@ -72,15 +75,19 @@ func (u *UserRepo) GetByEmail(ctx context.Context, userEmail string) (domain.Use
 const GetByNickNameQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at, updated_at
 FROM users WHERE nick_name = ?`
 
+
+// Idont think we will need that 
 func (u *UserRepo) GetByNickName(ctx context.Context, NickName string) (domain.User, error) {
 	row := u.db.QueryRowContext(ctx, GetByNickNameQuery, NickName)
 	return scanUser(row)
 }
 
-const GetAllUserQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at, updated_at
-FROM users`
 
-func (u *UserRepo) GetUsers(ctx context.Context) ([]domain.User, error) {
+
+/// MUST BE FIXED LATER
+const GetAllUserQuery = `SELECT id, email, nick_name, last_name, first_name FROM users LIMIT  ? OFFSET ?`
+
+func (u *UserRepo) GetUsers(ctx context.Context, limit, offset int) ([]domain.User, error) {
 	users := []domain.User{}
 	row, err := u.db.QueryContext(ctx, GetAllUserQuery)
 	if err != nil {
@@ -88,17 +95,7 @@ func (u *UserRepo) GetUsers(ctx context.Context) ([]domain.User, error) {
 	}
 	defer row.Close()
 	for row.Next() {
-		user := domain.User{}
-		err = row.Scan(&user.ID,
-			&user.Email,
-			&user.Password,
-			&user.NickName,
-			&user.LastName,
-			&user.FirstName,
-			&user.Age,
-			&user.Gender,
-			&user.Created_at,
-			&user.Updated_at)
+		user, err := scanUser(row) 
 		if err != nil {
 			return nil, err
 		}
