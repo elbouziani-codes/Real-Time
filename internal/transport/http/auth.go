@@ -68,8 +68,10 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 			switch valErr.Code {
 				case 409:  
 					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
 				case 400: 
 					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
 				default: 
 					http.Error(w, "InternalServerError", http.StatusInternalServerError)
 					return

@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"realTime/internal/database"
-	"realTime/internal/handler"
+	"realTime/internal/transport/http"
 	"realTime/internal/repository"
 	"realTime/internal/service"
 

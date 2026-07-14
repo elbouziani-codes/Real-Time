@@ -5,9 +5,10 @@ import (
 )
 
 const (
-	InternalServerError  = iota
-	EmailTaken  
-	NickNameUsed
+	UnexpectedCode  = iota
+	NotFoundCode 
+	BadFormatCode
+	ConflictCode	
 )
 
 type ValidationError struct {

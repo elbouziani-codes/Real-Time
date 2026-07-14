@@ -13,9 +13,9 @@ func TranslateError(constraintError error) error {
 		message := err.Error()
 		switch {
 		case strings.Contains(message, "email"):	
-		return &domain.ValidationError{Field: "email", Message: "already taken", Code: 409}
+				return &domain.ValidationError{Field: "email", Message: "already taken", Code: domain.ConflictCode}
 		case strings.Contains(message, "nick_name"):
-				return &domain.ValidationError{Field: "nickname", Message: "already used", Code: 409}
+				return &domain.ValidationError{Field: "nickname", Message: "already used", Code: domain.ConflictCode}
 		}
 	}
 	return err
