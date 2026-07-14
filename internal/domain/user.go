@@ -13,9 +13,9 @@ type User struct {
 	Email      string
 	Password   string
 	Gender     string
-	Age        uint8
-	CreatedAt  int64 
-	UpdatedAt  int64 
+	Age        int
+	CreatedAt  int 
+	UpdatedAt  int 
 }
 
 
@@ -23,7 +23,7 @@ type User struct {
 
 var nameRegex = regexp.MustCompile(`^[a-zA-Z0-9]{2,20}$`) // would deleted later
 
-func ValidDataUser(email, password, nickName, lastName, firstName, gender string, age uint8) (User, error) {
+func ValidDataUser(email, password, nickName, lastName, firstName, gender string, age int) (User, error) {
 	var user User
 	user.Email = strings.TrimSpace(email)
 	user.Password = password

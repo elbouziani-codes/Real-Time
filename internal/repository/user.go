@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"context"
 	"realTime/internal/domain"
 )
@@ -30,7 +31,9 @@ func scanUser(row scanner) (domain.User, error) {
 		&user.Gender,
 		&user.CreatedAt,
 		&user.UpdatedAt)
-	if err != nil {
+	if err != nil  {
+		fmt.Println(err)
+		fmt.Println(TranslateError(err))	
 		return domain.User{},  TranslateError(err)
 	}
 	return user, nil
@@ -61,6 +64,7 @@ FROM users WHERE id = ?`
 
 func (u *UserRepo) GetByID(ctx context.Context, userID string) (domain.User, error) {
 	row := u.db.QueryRowContext(ctx, GetByIdQuery, userID)
+	fmt.Println(row)
 	return scanUser(row)
 }
 

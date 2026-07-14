@@ -10,7 +10,7 @@ CREATE TABLE
 		age INTEGER NOT NULL,
 		gender TEXT NOT NULL,
 		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')), 
-		updated_at INTEGER 
+		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')) 
 	);
 
 CREATE TABLE
@@ -18,8 +18,8 @@ CREATE TABLE
 		id TEXT PRIMARY KEY,
 		user_id TEXT REFERENCES users (id) ON DELETE CASCADE,
 		expiry_date TEXT DEFAULT (datetime (CURRENT_TIMESTAMP, '+24 hours')),
-		created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-		updated_at TEXT
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
+		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
 	);
 
 CREATE TABLE
@@ -27,8 +27,8 @@ CREATE TABLE
 		id TEXT PRIMARY KEY,
 		user_id TEXT REFERENCES users (id) ON DELETE CASCADE,
 		content TEXT NOT NULL,
-		created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-		updated_at TEXT
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
+		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
 	);
 
 CREATE TABLE
@@ -38,8 +38,8 @@ CREATE TABLE
 		post_id TEXT NOT NULL REFERENCES posts (id) ON DELETE CASCADE,
 		parent_id TEXT NOT NULL REFERENCES comments (id) ON DELETE CASCADE,
 		content TEXT NOT NULL,
-		created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-		updated_at TEXT
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
+		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
 	);
 
 CREATE TABLE
@@ -49,8 +49,8 @@ CREATE TABLE
 		post_id TEXT REFERENCES posts (id) ON DELETE CASCADE,
 		comment_id TEXT REFERENCES comments (id) ON DELETE CASCADE,
 		is_like BOOLEAN NOT NULL,
-		created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-		updated_at TEXT,
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
+		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
 		CHECK (
 			(
 				comment_id IS NOT NULL
@@ -66,8 +66,8 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS conversations (
 		id TEXT PRIMARY KEY,
-		created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-		updated_at TEXT
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
+		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
 	);
 
 CREATE TABLE
@@ -75,7 +75,7 @@ CREATE TABLE
 		id TEXT PRIMARY KEY,
 		user_id TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 		conversation_id TEXT NOT NULL REFERENCES conversations (id) ON DELETE CASCADE,
-		joined_at TEXT DEFAULT CURRENT_TIMESTAMP
+		joined_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
 	);
 
 CREATE TABLE
@@ -84,8 +84,8 @@ CREATE TABLE
 		sender_id TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE, -- actuallt this must be reviewed if a user delete whta s the correct practice 
 		conversation_id TEXT NOT NULL REFERENCES conversations (id) ON DELETE CASCADE,
 		content TEXT NOT NULL,
-		created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-		updated_at TEXT
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
+		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
 	);
 
 CREATE INDEX IF NOT EXISTS poster_idx ON posts (user_id);

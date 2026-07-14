@@ -46,7 +46,7 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 type output struct{
 	NickName string
 	Email string
-	Age uint8
+	Age int
 	Session string
 
 }

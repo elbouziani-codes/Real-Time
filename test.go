@@ -1,40 +1,32 @@
 package main
 
-import (
-	"context"
-	"log"
 
-	"realTime/database"
-	"realTime/domain"
-	"realTime/repository"
-	"realTime/crypto"
+import (
+	"fmt"
+	"context"
+	"realTime/internal/repository"
+	"realTime/internal/database"
+	"realTime/internal/config"
+
 )
 
-func main() {
-	db, err := database.Open("test.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	userRepo := repository.NewUserRepo(db)
-	testCreateUser(userRepo)
-}
 
-func testCreateUser(userRepo *repository.UserRepo) {
-	id, _ := crypto.GenerateUUID()
-	password, _ := crypto.GenerateHash("password")
-	user := domain.User{
-		ID : id,
-		NickName:  "HMAR",
-		LastName:  "ZARHON",
-		Password: password,
-		FirstName: "younes",
-		Age:       5,
-		Gender:    "famme",
-		Email:     "test@test.com",
-	}
-	err := userRepo.CreateUser(context.Background(), user)
+func main() {
+	conf := config.Load()
+	id := "cc9bcbfc-104f-441e-b02d-8874c7cb320e"	
+	 db, err := database.Open(conf.DBPath)
 	if err != nil {
-		log.Fatal(err)
+			fmt.Println(err)
+			return
 	}
-	
+	// new repo
+	userRepo := repository.NewUserRepo(db)
+
+	// new service
+	user, err := userRepo.GetByID(context.Background(), id)
+	if err != nil {
+		fmt.Println(err, "tes")
+		return
+	}
+	fmt.Println(user)
 }

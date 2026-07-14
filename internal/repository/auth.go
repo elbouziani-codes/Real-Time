@@ -19,7 +19,7 @@ func scanSession(row scanner) (domain.Session, error) {
 		&session.ID,
 		&session.UserID,
 		&session.CreatedAt,
-		&session.ExipireAt)
+		&session.ExpireAt)
 	if err != nil {
 		return domain.Session{},  TranslateError(err)
 	}
@@ -55,17 +55,17 @@ const GetSessionByUserIDQuery = `
 	SELECT id, user_id FROM sessions WHERE user_id = ?  
 `
 
-func (a *AuthRepo) GetBySessionID(ctx context.Context, UserID string) (domain.User, error) {
-	row := u.db.QueryRowContext(ctx, GetSessionSessionByIDQuery, userID)
+func (a *AuthRepo) GetBySessionID(ctx context.Context, userID string) (domain.Session, error) {
+	row := a.db.QueryRowContext(ctx, GetSessionByUserIDQuery, userID)
 	return scanSession(row)
 }
 
-const GetSessionByIDQuery = `
+const GetSessionByIDQuery = `datetime_value
 	SELECT id, user_id FROM sessions WHERE id = ?  
 `
 
-func (u *AuthRepo) GetByID(ctx context.Context, sessionID string) (domain.Session, error) {
-	row := u.db.QueryRowContext(ctx, GetSessionByIDQuery, sessionID)
+func (a *AuthRepo) GetByID(ctx context.Context, sessionID string) (domain.Session, error) {
+	row := a.db.QueryRowContext(ctx, GetSessionByIDQuery,  sessionID)
 	return scanSession(row)
 }
 // getByUser
