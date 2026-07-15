@@ -9,14 +9,15 @@ const (
 	NotFoundCode 
 	BadFormatCode
 	ConflictCode	
+	UnauthorizedCode
 )
 
-type ValidationError struct {
+type Error struct {
 		Field string // e	
 		Message string 
 		Code int
 }
 
-func (e ValidationError) Error() string {
+func (e Error) Error() string {
 	return fmt.Sprintf("%s: %s", e.Field, e.Message);
 } 

@@ -29,7 +29,7 @@ func (q *ChatRepo) CreateChat(ctx context.Context, chatID string) (domain.ChatRo
 	row := q.db.QueryRowContext(ctx, createChatQuery, chatID)
 	var chat domain.ChatRoom
 	err := row.Scan(&chat.ID)
-	return chat, err
+	return chat,  TranslateError(err)
 }
 
 const getChatQuery = `
@@ -41,11 +41,11 @@ const getChatQuery = `
 		AND cp2.user_id = ?  
 `
 
-func (q *ChatRepo) GetChat(ctx context.Context, users []domain.User) (domain.ChatRoom, error) {
+func (q *ChatRepo) GetChat(ctx context.Context, users []domain.User) (string, error) {
 	row := q.db.QueryRowContext(ctx, getChatQuery, users[0].ID, users[1].ID) // must be updated later
-	var chat domain.ChatRoom
-	err := row.Scan(&chat.ID)
-	return chat, err
+	var chatID string 
+	err := row.Scan(chatID)
+	return chatID, TranslateError(err)
 }
 
 const getMessagesQuery = `
@@ -56,8 +56,8 @@ const getMessagesQuery = `
 	LIMIT  ? 	
 `
 
-func (q *ChatRepo) GetMessages(ctx context.Context, chatID string) ([]domain.Message, error) {
-	rows, err := q.db.QueryContext(ctx, getMessagesQuery, chatID) // must be updated later
+func (q *ChatRepo) GetMessages(ctx context.Context, chatID string, offset, limit int) ([]domain.Message, error) {
+	rows, err := q.db.QueryContext(ctx, getMessagesQuery, chatID, offset, limit) // must be updated later
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (q *ChatRepo) GetMessages(ctx context.Context, chatID string) ([]domain.Mes
 		var message domain.Message
 		err := rows.Scan(&message.ID, &message.Sender, &message.Content)
 		if err != nil {
-			return nil, err
+			return nil,  TranslateError(err)
 		}
 		messages = append(messages, message)
 	}
@@ -83,10 +83,10 @@ func (q *ChatRepo) SendMessage(ctx context.Context, message domain.Message) erro
 	}
 	n, err := row.RowsAffected()
 	if err != nil {
-		return err
+		return  TranslateError(err)
 	}
-	if n != 1 {
-		return err
+	if n != 1 {// msut be updated 
+		return  TranslateError(err)
 	}
 	return nil
 }

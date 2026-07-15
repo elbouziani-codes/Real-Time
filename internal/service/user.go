@@ -33,6 +33,7 @@ func NewUserSevice(repo UserRepo) *UserService {
 	return &UserService{repo: repo}
 }
 
+
 func (svc *UserService) CreateUser(ctx context.Context, inputs RegisterInput) (domain.User, error) {
 	user, err := domain.ValidDataUser(inputs.Email, inputs.Password, inputs.NickName, inputs.LastName, inputs.FirstName, inputs.Gender, inputs.Age)
 	if err != nil {
@@ -50,4 +51,6 @@ func (svc *UserService) CreateUser(ctx context.Context, inputs RegisterInput) (d
 	}
 
 	return user, svc.repo.CreateUser(ctx, user)
+	
 }
+

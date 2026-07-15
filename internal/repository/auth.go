@@ -34,19 +34,19 @@ const createSessionQuery = `
 func (a *AuthRepo) SaveSession(ctx context.Context, UserID, sessionID string) error {
 	_, err := a.db.ExecContext(ctx, createSessionQuery, UserID, sessionID)
 	if err != nil {
-		return err
+		return  TranslateError(err)
 	}
 	return nil
 }
 
 const DeleteSessionQuery = `
-	DELETE FROM sessions WHERE id = ?  
+	DELETE FROM sessions WHERE user_id = ?  
 `
 
-func (a *AuthRepo) DeleteSession(ctx context.Context, sessionID string) error {
-	_, err := a.db.ExecContext(ctx, DeleteSessionQuery, sessionID)
+func (a *AuthRepo) DeleteSession(ctx context.Context, userID string) error {
+	_, err := a.db.ExecContext(ctx, DeleteSessionQuery, userID)
 	if err != nil {
-		return err
+		return  TranslateError(err)
 	}
 	return nil
 }
@@ -60,7 +60,7 @@ func (a *AuthRepo) GetBySessionID(ctx context.Context, userID string) (domain.Se
 	return scanSession(row)
 }
 
-const GetSessionByIDQuery = `datetime_value
+const GetSessionByIDQuery = `
 	SELECT id, user_id FROM sessions WHERE id = ?  
 `
 
@@ -68,6 +68,4 @@ func (a *AuthRepo) GetByID(ctx context.Context, sessionID string) (domain.Sessio
 	row := a.db.QueryRowContext(ctx, GetSessionByIDQuery,  sessionID)
 	return scanSession(row)
 }
-// getByUser
 
-// getById
