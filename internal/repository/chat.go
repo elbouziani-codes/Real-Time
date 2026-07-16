@@ -22,14 +22,14 @@ func NewChatRepo(db DBTX) *ChatRepo { // repository(for all cases)
 }
 
 const createChatQuery = `
-	INSERT into conversations (id) VALUES (?) RETURNING * ;
+	INSERT into conversations (id) VALUES (?) ;
 `
 
-func (q *ChatRepo) CreateChat(ctx context.Context, chatID string) (domain.ChatRoom, error) {
+func (q *ChatRepo) CreateChat(ctx context.Context, chatID string) (error) {
 	row := q.db.QueryRowContext(ctx, createChatQuery, chatID)
 	var chat domain.ChatRoom
 	err := row.Scan(&chat.ID)
-	return chat, err
+	return err
 }
 
 const getChatQuery = `
@@ -41,10 +41,10 @@ const getChatQuery = `
 		AND cp2.user_id = ?  
 `
 
-func (q *ChatRepo) GetChat(ctx context.Context, users []domain.User) (domain.ChatRoom, error) {
-	row := q.db.QueryRowContext(ctx, getChatQuery, users[0].ID, users[1].ID) // must be updated later
-	var chat domain.ChatRoom
-	err := row.Scan(&chat.ID)
+func (q *ChatRepo) GetChat(ctx context.Context, usersID []string) (string, error) {
+	row := q.db.QueryRowContext(ctx, getChatQuery, usersID[0], usersID[1]) // must be updated later
+	var chat string
+	err := row.Scan(&chat)
 	return chat, err
 }
 
@@ -65,7 +65,7 @@ func (q *ChatRepo) GetMessages(ctx context.Context, chatID string) ([]domain.Mes
 	defer rows.Close()
 	for rows.Next() {
 		var message domain.Message
-		err := rows.Scan(&message.ID, &message.Sender, &message.Content)
+		err := rows.Scan(&message.ID, &message.SenderID, &message.Content)
 		if err != nil {
 			return nil, err
 		}
@@ -74,19 +74,23 @@ func (q *ChatRepo) GetMessages(ctx context.Context, chatID string) ([]domain.Mes
 	return messages, nil
 }
 
-const sendMessageQuery = `INSERT INTO messages (id, sender_id, value) VALUES (?, ?, ?)`
+
+const sendMessageQuery = `INSERT INTO messages (id, sender_id, content, conversation_id) VALUES (?, ?, ?, ?)`
 
 func (q *ChatRepo) SendMessage(ctx context.Context, message domain.Message) error {
-	row, err := q.db.ExecContext(ctx, sendMessageQuery, message.Content)
-	if err != nil {
-		return err
-	}
-	n, err := row.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if n != 1 {
-		return err
-	}
-	return nil
+    row, err := q.db.ExecContext(ctx, sendMessageQuery, message.ID, message.SenderID, message.Content, message.ChatID)
+    if err != nil {
+        return err
+    }
+    n, err := row.RowsAffected()
+    if err != nil {
+        return  TranslateError(err)
+    }
+    if n != 1 {// msut be updated 
+        return  TranslateError(err)
+    }
+    return nil
 }
+
+
+
