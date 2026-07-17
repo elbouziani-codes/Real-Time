@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 
-	"realTime/internal/domain"
 )
 
 type DBTX interface {
@@ -17,7 +16,7 @@ type ChatRepo struct {
 	db DBTX
 }
 
-func NewChatRepo(db DBTX) *ChatRepo { // repository(for all cases)
+/*func NewChatRepo(db DBTX) *ChatRepo { // repository(for all cases)
 	return &ChatRepo{db: db}
 }
 
@@ -74,10 +73,10 @@ func (q *ChatRepo) GetMessages(ctx context.Context, chatID string, offset, limit
 	return messages, nil
 }
 
-const sendMessageQuery = `INSERT INTO messages (id, sender_id, value) VALUES (?, ?, ?)`
+const sendMessageQuery = `INSERT INTO messages (id, sender_id, content, conversation_id) VALUES (?, ?, ?, ?)`
 
 func (q *ChatRepo) SendMessage(ctx context.Context, message domain.Message) error {
-	row, err := q.db.ExecContext(ctx, sendMessageQuery, message.Content)
+	row, err := q.db.ExecContext(ctx, sendMessageQuery, messmessage.ID, message.SenderID, message.Content, message.ChatID)
 	if err != nil {
 		return err
 	}
@@ -89,4 +88,4 @@ func (q *ChatRepo) SendMessage(ctx context.Context, message domain.Message) erro
 		return  TranslateError(err)
 	}
 	return nil
-}
+}*/

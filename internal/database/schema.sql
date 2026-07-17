@@ -17,9 +17,8 @@ CREATE TABLE
 	IF NOT EXISTS sessions (
 		id TEXT PRIMARY KEY,
 		user_id TEXT REFERENCES users (id) ON DELETE CASCADE,
-		expiry_date TEXT DEFAULT (datetime (CURRENT_TIMESTAMP, '+24 hours')),
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
+		expire_at TEXT DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+24 hours')),
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
 	);
 
 CREATE TABLE

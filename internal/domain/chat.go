@@ -2,7 +2,8 @@ package domain
 
 type Message struct {
 	ID      string
-	Sender  string
+	SenderID  string
+	ChatID string
 	Content string
 }
 

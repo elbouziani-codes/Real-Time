@@ -18,7 +18,7 @@ type RegisterInput struct {
 	Email     string `json:"email"`
 	Password  string `json:"password"`
 	Gender    string `json:"gender"`
-	Age       int  `json:"age"`
+	Age       int    `json:"age"`
 }
 
 type UserRepo interface {

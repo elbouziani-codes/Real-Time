@@ -1,6 +1,7 @@
 package repository
 
 import ( 
+		"fmt"
 		"context"
 		"realTime/internal/domain"
 )
@@ -21,6 +22,7 @@ func scanSession(row scanner) (domain.Session, error) {
 		&session.CreatedAt,
 		&session.ExpireAt)
 	if err != nil {
+		fmt.Println(err)
 		return domain.Session{},  TranslateError(err)
 	}
 	return session, nil
@@ -55,13 +57,13 @@ const GetSessionByUserIDQuery = `
 	SELECT id, user_id FROM sessions WHERE user_id = ?  
 `
 
-func (a *AuthRepo) GetBySessionID(ctx context.Context, userID string) (domain.Session, error) {
+func (a *AuthRepo) GetByUserID(ctx context.Context, userID string) (domain.Session, error) {
 	row := a.db.QueryRowContext(ctx, GetSessionByUserIDQuery, userID)
 	return scanSession(row)
 }
 
 const GetSessionByIDQuery = `
-	SELECT id, user_id FROM sessions WHERE id = ?  
+	SELECT id, user_id, created_at, expire_at FROM sessions WHERE id = ?  
 `
 
 func (a *AuthRepo) GetByID(ctx context.Context, sessionID string) (domain.Session, error) {

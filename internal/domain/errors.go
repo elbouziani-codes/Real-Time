@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 )
 
 const (
@@ -13,11 +12,10 @@ const (
 )
 
 type Error struct {
-		Field string // e	
 		Message string 
 		Code int
 }
 
 func (e Error) Error() string {
-	return fmt.Sprintf("%s: %s", e.Field, e.Message);
+	return e.Message;
 } 

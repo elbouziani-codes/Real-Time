@@ -11,6 +11,8 @@ import (
 	"realTime/internal/service"
 
 	"realTime/internal/config"
+	"realTime/internal/transport/http/middleware"
+
 )
 
 func main() {
@@ -32,8 +34,10 @@ func main() {
 	// new handler
 
 	authHandler := handler.NewAuthHandler(authSvc, userSvc)
-
-	router := handler.NewRouter(authHandler)
+	testHandler := handler.NewTestHandler(authSvc, userSvc)
+		
+	middleware := middleware.NewMiddleware(authSvc)
+	router := handler.NewRouter(authHandler, testHandler, middleware)
 	http.ListenAndServe(":8080", router)
 	log.Println("Database Initialised")
 }

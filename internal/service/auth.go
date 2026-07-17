@@ -2,8 +2,9 @@ package service
 
 import (
 	"fmt"
+	"time"
+	"errors"
 	"context"
-
 	"realTime/crypto"
 	"realTime/internal/domain"
 )
@@ -15,6 +16,7 @@ type AuthService struct {
 type AuthRepo interface {
 	DeleteSession(context.Context, string) error 
 	SaveSession(context.Context, string, string) error
+	GetByID(context.Context, string)  (domain.Session, error)
 }
 /*type UserRepo interface {
 	GetByID(context.Context, string) (domain.User, error)
@@ -39,9 +41,32 @@ func (a *AuthService) CreateSession(ctx context.Context, userID string) (string,
 }
 
 
+func (a *AuthService) ValidateSession(ctx context.Context, sessionID string) (domain.Session, error) {
+	session, err := a.authRepo.GetByID(ctx, sessionID) 
+	if err != nil {
+		fmt.Println("exit", sessionID)
+		return domain.Session{}, err
+	}
+	if time.Now().Unix() > session.ExpireAt  {
+			err :=  a.Logout(ctx, session.UserID)
+			if err != nil {
+				return domain.Session{}, err
+			}
+			return domain.Session{}, domain.Error{Message: "invalid credentials", Code: domain.UnauthorizedCode}
+	} 
+	return session, nil
+}
+
+
 func (a *AuthService) Logout(ctx context.Context, userID string) (error) {
 	err := a.authRepo.DeleteSession(ctx, userID) 
-	if err != nil {
+	if err != nil  {
+		var buckErr domain.Error 
+		if errors.As(err, buckErr) {
+			if buckErr.Code == domain.NotFoundCode {
+					return nil
+			}	
+		} 
 		return err
 	}
 	return nil
@@ -55,24 +80,25 @@ func (a *AuthService) Login(ctx context.Context, creds domain.Credentials, idTyp
 	if (idType == domain.EmailType) {
 		user, err := a.userRepo.GetByEmail(ctx, creds.Identifier)
 		if err != nil {
-			fmt.Println(err)
-			return "", err
+			return "", domain.Error{Message: "invalid credentials", Code: domain.UnauthorizedCode}
+
 		}
 		userID = user.ID
 		hashedPassword = user.Password
 	} else {
 		user, err := a.userRepo.GetByNickName(ctx, creds.Identifier) 	
 		if err != nil {
-			return "", err
+			return "",  domain.Error{Message: "invalid credentials", Code: domain.UnauthorizedCode}
+
 		}
 		userID = user.ID
 		hashedPassword = user.Password
 	}	
 
 	// phase_2 matching password
-	err := crypto.CompareHashWithPassword(creds.Password, hashedPassword)	
+	err := crypto.CompareHashWithPassword(hashedPassword, creds.Password)	
 	if err != nil {
-			return "", domain.Error{Field: "password", Message: "invalid credentials", Code: domain.UnauthorizedCode}
+			return "", domain.Error{Message: "invalid credentials", Code: domain.UnauthorizedCode}
 	}
 
 	// clearing old session

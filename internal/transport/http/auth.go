@@ -1,9 +1,9 @@
 package handler
 
 import (
+	"fmt"
 	"errors"
 	"context"
-	"fmt"
 	"encoding/json"
 	"net/http"
 	"realTime/internal/domain"
@@ -26,6 +26,24 @@ type UserService interface {
 type AuthHandler struct {
 	authSvc AuthService
 	userSvc UserService
+	middleware middleWare
+}
+
+type TestHandler  struct {
+
+}
+
+
+func NewTestHandler(authSvc AuthService, userSvc UserService) TestHandler {
+	return TestHandler{}
+}
+
+func (t *TestHandler) Test(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id")
+	if err := json.NewEncoder(w).Encode(userID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func NewAuthHandler(authSvc AuthService, userSvc UserService) *AuthHandler {
@@ -43,34 +61,17 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	dataRegister := service.RegisterInput{}
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
-		if err := decoder.Decode(&dataRegister); err != nil {
-				http.Error(w, "invalid json", http.StatusBadRequest)
-				return
-		}
+	if err := decoder.Decode(&dataRegister); err != nil {
+		a.Error(domain.Error{Message: "invalid json", Code: domain.BadFormatCode}, w, r) // must beh
+		return
+	}
 	
 
 	user, err := a.userSvc.CreateUser(r.Context(), dataRegister)
 	// ERROR HANDLING SECTION
 	if err != nil {
-		var valErr domain.Error      
-		
-		if errors.As(err, &valErr) {
-			fmt.Println(err)
-			switch valErr.Code {
-				case domain.ConflictCode:  
-					http.Error(w, err.Error(), http.StatusConflict)
-					return
-				case domain.BadFormatCode: 
-					http.Error(w, err.Error(), http.StatusBadRequest)
-					return
-				default: 
-					http.Error(w, "InternalServerError", http.StatusInternalServerError)
-					return
-			}			
-		 }
-		http.Error(w, "InternalServerError", http.StatusInternalServerError)
+		a.Error(err, w, r)
 		return 
-
 	}
 	//////
 
@@ -78,7 +79,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	session, err := a.authSvc.CreateSession(r.Context(), user.ID)
 	if err != nil {	
-		http.Error(w, "InternalServerError", http.StatusInternalServerError)
+		a.Error(err, w, r)
 		return 
 	}
 
@@ -96,16 +97,20 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&creds); err != nil {
-		http.Error(w, "invalid json", http.StatusBadRequest)
+		a.Error(domain.Error{Message: "invalid json", Code: domain.BadFormatCode}, w, r) // must beh
 		return
 	}
 	idType, err := domain.LoginValidation(creds)  
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		a.Error(err, w, r)
 		//instead of repeating code I will add helper for that
 		return
 	}
  	sessionID, err := a.authSvc.Login(r.Context(), creds, idType)
+	if err != nil {
+		a.Error(err, w, r)
+		return
+	}
 	if err := json.NewEncoder(w).Encode(sessionID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -114,8 +119,9 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 
 func (a *AuthHandler) Error(err error, w http.ResponseWriter, r *http.Request) {
-		if errors.As(err, &valErr) {
-			fmt.Println(err)
+		fmt.Println(err)
+		var valErr domain.Error 	
+		if errors.As(err, &valErr) {	
 			switch valErr.Code {
 				case domain.ConflictCode:  
 					http.Error(w, err.Error(), http.StatusConflict)
@@ -123,6 +129,13 @@ func (a *AuthHandler) Error(err error, w http.ResponseWriter, r *http.Request) {
 				case domain.BadFormatCode: 
 					http.Error(w, err.Error(), http.StatusBadRequest)
 					return
+				case domain.UnauthorizedCode: 
+					http.Error(w, err.Error(), http.StatusUnauthorized)
+					return
+				case domain.NotFoundCode: 
+					http.Error(w, err.Error(), http.StatusNotFound)
+					return
+
 				default: 
 					http.Error(w, "InternalServerError", http.StatusInternalServerError)
 					return

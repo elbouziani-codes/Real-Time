@@ -10,16 +10,16 @@ import (
 
 func TranslateError(constraintError error) error {
 	var err sqlite3.Error
-	if errors.Is(sql.ErrNoRows, constraintError)  {
-		return  domain.Error{Field: "", Message: "NotFound", Code: domain.NotFoundCode}
+	if sql.ErrNoRows == constraintError  {
+		return  domain.Error{Message: "not found", Code: domain.NotFoundCode}
 	}
 	if errors.As(constraintError, &err) {
 		message := err.Error()
 		switch {
 		case strings.Contains(message, "email"):	
-				return domain.Error{Field: "email", Message: "already taken", Code: domain.ConflictCode}
+				return domain.Error{Message: "email lready taken", Code: domain.ConflictCode}
 		case strings.Contains(message, "nick_name"):
-				return domain.Error{Field: "nickname", Message: "already used", Code: domain.ConflictCode}
+				return domain.Error{Message: "nickname already used", Code: domain.ConflictCode}
 		default:
 			return err
 		}
