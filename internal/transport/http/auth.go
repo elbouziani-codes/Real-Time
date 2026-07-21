@@ -3,97 +3,154 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"net/http"
-	"fmt"
 	"errors"
+	"fmt"
+	"net/http"
+	"realTime/crypto"
 	"realTime/internal/domain"
-	"realTime/internal/service"
 )
 
 type AuthRepo interface {
-	SaveSession(context.Context, string, string) error
+	SaveSession(context.Context, crypto.UUID, crypto.UUID) error
 }
 
 type AuthService interface {
-	CreateSession(context.Context, string) (string, error)
+	Login(context.Context, domain.Credentials, int) (crypto.UUID, error)
+	CreateSession(context.Context, crypto.UUID) (crypto.UUID, error)
 }
 
 type UserService interface {
-	CreateUser(context.Context, service.RegisterInput) (domain.User, error)
+	CreateUser(context.Context, *domain.User) error
 }
 
 type AuthHandler struct {
-	authSvc AuthService
-	userSvc UserService
+	authSvc    AuthService
+	userSvc    UserService
+	middleware middleWare
+}
+
+type TestHandler struct {
+}
+
+func NewTestHandler(authSvc AuthService, userSvc UserService) TestHandler {
+	return TestHandler{}
+}
+
+func (t *TestHandler) Test(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id")
+	if err := json.NewEncoder(w).Encode(userID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func NewAuthHandler(authSvc AuthService, userSvc UserService) *AuthHandler {
 	return &AuthHandler{authSvc: authSvc, userSvc: userSvc}
 }
 
-func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	// TODO LATER 
-	defer r.Body.Close()
-
-	var loginForm domain.Credentials
-
-	if err := json.NewDecoder(r.Body).Decode(&loginForm); err != nil {
-		// http error handler
-	}
-
-	// get session
-}
-type output struct{
+type userInfo struct {
 	NickName string
-	Email string
-	Age uint8
-	Session string
-
+	Email    string
+	Age      int
 }
+
 func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
-	dataRegister := service.RegisterInput{}
+	registerRequest := domain.RegisterRequest{}
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
-		if err := decoder.Decode(&dataRegister); err != nil {
-				http.Error(w, "invalid json", http.StatusBadRequest)
-				return
-		}
-	
-
-	user, err := a.userSvc.CreateUser(r.Context(), dataRegister)
-	if err != nil {
-		var valErr domain.ValidationError
-		
-		if errors.As(err, &valErr) {
-			switch valErr.Code {
-				case 409:  
-					http.Error(w, err.Error(), http.StatusBadRequest)
-					return
-				case 400: 
-					http.Error(w, err.Error(), http.StatusBadRequest)
-					return
-				default: 
-					http.Error(w, "InternalServerError", http.StatusInternalServerError)
-					return
-			}			
-		 }
-		fmt.Println(err)
-		http.Error(w, "InternalServerError", http.StatusInternalServerError)
-		return 
-
+	if err := decoder.Decode(&registerRequest); err != nil {
+		Error(domain.Error{Message: "invalid json", Code: domain.BadFormatCode}, w) // must beh
+		return
 	}
+
+	user, err := domain.ValueidateUserInfo(registerRequest)
+	if err != nil {
+		Error(err, w)
+		return
+	}
+
+	err = a.userSvc.CreateUser(r.Context(), &user)
+	if err != nil {
+		Error(err, w)
+		return
+	}
+
+	fmt.Println(user)
+	sessionID, err := a.authSvc.CreateSession(r.Context(), user.ID)
+	if err != nil {
+		Error(err, w)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
-	//fhem
-	session, err := a.authSvc.CreateSession(r.Context(), user.ID)
-	if err != nil {	
-		http.Error(w, "InternalServerError", http.StatusInternalServerError)
-		return 
-	}
-	outputUser := output{NickName : user.NickName,Email : user.Email ,Age:user.Age, Session: session}
+	outputUser := userInfo{NickName: user.NickName, Email: user.Email, Age: user.Age}
+	a.setCookie(w, sessionID)
 	if err := json.NewEncoder(w).Encode(outputUser); err != nil {
-
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+}
+
+func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var creds domain.Credentials
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&creds); err != nil {
+		Error(domain.Error{Message: "invalid json", Code: domain.BadFormatCode}, w) // must beh
+		return
+	}
+	idType, err := domain.LoginValueidation(creds)
+	if err != nil {
+		Error(err, w)
+		//instead of repeating code I will add helper for that
+		return
+	}
+	sessionID, err := a.authSvc.Login(r.Context(), creds, idType)
+	if err != nil {
+		Error(err, w)
+		return
+	}
+	a.setCookie(w, sessionID)
+	if err := json.NewEncoder(w).Encode("done"); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// I may need to pass pointer
+func (a *AuthHandler) setCookie(w http.ResponseWriter, sessionID crypto.UUID) {
+	cookie := &http.Cookie{
+		Name:     "session-id",
+		Value:    sessionID.Value.String(),
+		Path:     "/",
+		MaxAge:   3600 * 24,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
+	http.SetCookie(w, cookie)
+}
+func Error(err error, w http.ResponseWriter) {
+	fmt.Println(err)
+	var valErr domain.Error
+	if errors.As(err, &valErr) {
+		switch valErr.Code {
+		case domain.ConflictCode:
+			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		case domain.BadFormatCode:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		case domain.UnauthorizedCode:
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		case domain.NotFoundCode:
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+
+		default:
+			http.Error(w, "InternalServerError", http.StatusInternalServerError)
+			return
+		}
 	}
 }

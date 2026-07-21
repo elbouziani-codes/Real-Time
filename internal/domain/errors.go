@@ -1,22 +1,19 @@
 package domain
 
-import (
-	"fmt"
-)
 
 const (
-	UnexpectedCode  = iota
-	NotFoundCode 
+	UnexpectedCode = iota
+	NotFoundCode
 	BadFormatCode
-	ConflictCode	
+	ConflictCode
+	UnauthorizedCode
 )
 
-type ValidationError struct {
-		Field string // e	
-		Message string 
-		Code int
+type Error struct {
+	Message string
+	Code    int
 }
 
-func (e ValidationError) Error() string {
-	return fmt.Sprintf("%s: %s", e.Field, e.Message);
-} 
+func (e Error) Error() string {
+	return e.Message
+}

@@ -1,66 +1,82 @@
 package domain
 
 import (
+	"fmt"
+	"realTime/crypto"
 	"regexp"
 	"strings"
 )
 
 type User struct {
-	ID         string
-	NickName   string
-	LastName   string
-	FirstName  string
-	Email      string
-	Password   string
-	Gender     string
-	Age        uint8
-	Created_at string
-	Updated_at string
+	ID        crypto.UUID
+	NickName  string
+	LastName  string
+	FirstName string
+	Email     string
+	Password  string
+	Gender    string
+	Age       int
+	CreatedAt int
+	UpdatedAt int
 }
 
+type RegisterRequest struct {
+	NickName  string `json:"nick_name"`
+	LastName  string `json:"last_name"`
+	FirstName string `json:"first_name"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	Gender    string `json:"gender"`
+	Age       int    `json:"age"`
+}
 
+var nameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]*$`) // would deleted later
 
-
-var nameRegex = regexp.MustCompile(`^[\p{L}]+(?:[-'][\p{L}]+)*(?: [\p{L}]+(?:[-'][\p{L}]+)*)*$`) // would deleted later
-
-func ValidDataUser(email, password, nickName, lastName, firstName, gender string, age uint8) (User, error) {
+func ValueidateUserInfo(registerRequest RegisterRequest) (User, error) {
 	var user User
-	user.Email = strings.TrimSpace(email)
-	user.Password = password
-	user.NickName = strings.TrimSpace(nickName)
-	user.LastName = strings.TrimSpace(lastName)
-	user.FirstName = strings.TrimSpace(firstName)
-	user.Gender = strings.TrimSpace(gender)
-	user.Age = age
-	if len(user.Password) < 6 || len(user.Password) > 20 {
-			return User{}, &ValidationError{Field: "password", Message: "length must be between 6 and 20", Code: 400}
+	user.Email = strings.TrimSpace(registerRequest.Email)
+	user.Password = registerRequest.Password
+	user.NickName = strings.TrimSpace(registerRequest.NickName)
+	user.LastName = strings.TrimSpace(registerRequest.LastName)
+	user.FirstName = strings.TrimSpace(registerRequest.FirstName)
+	user.Gender = strings.TrimSpace(registerRequest.Gender)
+	user.Age = registerRequest.Age
+	fmt.Println(registerRequest)
+	if len(user.Password) < 8 || len(user.Password) > 20 {
+		return user, Error{Message: "password length must be between 8 and 20", Code: BadFormatCode}
 	}
 
 	if len(user.Email) < 6 || len(user.Email) > 75 {
-			return User{}, &ValidationError{Field: "email", Message: "length must be between 6 and 75", Code: 400} // 400 
+		return user, Error{Message: "email length must be between 6 and 75", Code: BadFormatCode} // 400
 	}
 
 	if !emailRegex.MatchString(user.Email) {
-		return User{}, &ValidationError{Field: "email", Message: "invalid format", Code: 400} 
+		return user, Error{Message: "email invalid format", Code: BadFormatCode}
 	}
 
 	if !usernameRegex.MatchString(user.NickName) {
-		return User{}, &ValidationError{Field: "nickname", Message: "invalid format", Code: 400}  
+		return user, Error{Message: "nickname invalid format", Code: BadFormatCode}
 	}
 
-	if len(user.NickName) > 20 || len(user.NickName) < 6 {
-		return User{}, &ValidationError{Field: "nickname", Message: "nickname length must be between 6 and 20", Code: 400}
+	if len(user.NickName) > 20 || len(user.NickName) < 2 {
+		return user, Error{Message: "nickname length must be between 2 and 20", Code: BadFormatCode}
 	}
 
 	if !nameRegex.MatchString(user.FirstName) || !nameRegex.MatchString(user.LastName) {
-		return User{}, &ValidationError{Field: "fullname", Message: "invalid FirstName or LastName", Code: 400}
+		return user, Error{Message: "invalid FirstName or LastName", Code: BadFormatCode}
 	}
 
-	if (len(user.FirstName) > 25 || len(user.FirstName) < 4) || (len(user.LastName) > 25 || len(user.LastName) < 4) {
-		return User{}, &ValidationError{Field: "fullname", Message: "FirstName and LastName length must be between 4 and 25", Code: 400}
+	if (len(user.FirstName) > 25 || len(user.FirstName) < 2) || (len(user.LastName) > 25 || len(user.LastName) < 2) {
+		return user, Error{Message: "firstName and LastName length must be between 2 and 25", Code: BadFormatCode}
 	}
-	if user.Gender != "Man" && user.Gender != "Woman" {
-			return User{}, &ValidationError{Field: "gender", Message: "Value Gender is not valid", Code: 400}
+	if user.Gender != "man" && user.Gender != "woman" {
+		return user, Error{Message: "value gender is not valid", Code: BadFormatCode}
+	}
+	if user.Age < 14 {
+		return user, Error{Message: "you are too old", Code: BadFormatCode}
+	}
+	if user.Age > 200 {
+		return user, Error{Message: "invalid age", Code: BadFormatCode}
 	}
 	return user, nil
 }

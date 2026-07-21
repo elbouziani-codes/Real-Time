@@ -1,9 +1,9 @@
-package database 
+package sqlite
 
 import (
 	"database/sql"
-	"os"
 	_ "github.com/mattn/go-sqlite3"
+	"os"
 )
 
 func Open(path string) (*sql.DB, error) {
@@ -28,11 +28,11 @@ func Open(path string) (*sql.DB, error) {
 }
 
 func readSchema(db *sql.DB) error {
-	bytes, err := os.ReadFile("./internal/database/schema.sql")
+	bytes, err := os.ReadFile("./schema.sql")
 	if err != nil {
 		return err
 	}
-	
+
 	_, err = db.Exec(string(bytes))
 	if err != nil {
 		return err
