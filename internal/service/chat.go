@@ -17,7 +17,7 @@ type chatService struct {
 	ChatRepo ChatRepo
 }
 type ChatRepo interface {
-	CreateChat(context.Context, string) error
+	CreateConversationWithParticipants (context.Context, string, []string, []string) error 
 	GetChat(context.Context, []string) (string, error)
 	GetMessages(context.Context, string) ([]domain.Message, error)
 	SendMessage( context.Context, domain.Message) error
@@ -43,25 +43,42 @@ func (c chatService) ValidMessage(ctx context.Context, receiver_id, Content stri
 	return nil
 }
 
-
+func (c chatService) IsChatNotFound(err error) bool {
+	return errors.Is(err, sql.ErrNoRows)
+}
 
 func (c chatService) CheckRoomChat(ctx context.Context, userIDs []string) (string, error) {
 	chatID, err := c.ChatRepo.GetChat(ctx, userIDs)
-	if err == sql.ErrNoRows {
-		return "-99", errors.New("error not find")
+	if err != nil {
+		return "", err
 	}
 	return chatID, nil
 }
+func (c chatService) CreateRoomChat(ctx context.Context ,userIDs []string) (string, error) {
 
-func (c chatService) CreateRoomChat(ctx context.Context, userIDs []string) (string, error) {
-	
 	idChat, err := crypto.GenerateUUID()
-	err = c.ChatRepo.CreateChat(ctx, idChat)
 	if err != nil {
-		return "-99", err
+		return "", err
+	}
+	// func (q *ChatRepo) CreateConversationWithParticipants(ctx context.Context, chatID string, idUUID, userIDs []string) error {
+
+	UUIDs := []string{}
+	for range userIDs {
+
+		UUID, err := crypto.GenerateUUID()
+		if err != nil {
+			return "", err
+		}
+
+		UUIDs = append(UUIDs, UUID)
+	}
+
+	err = c.ChatRepo.CreateConversationWithParticipants(ctx, idChat, UUIDs, userIDs)
+	if err != nil {
+		return "", err
 	}
 	
-	return idChat, err
+	return idChat, nil
 }
 
 func (c chatService) SendMessageRoomChat(ctx context.Context ,content,SenderID,ChatID string) ( string ,error) {

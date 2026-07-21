@@ -3,6 +3,8 @@ package handler
 import (
 	"context"
 	"net/http"
+	"sort"
+	"sync"
 
 	"realTime/internal/domain"
 
@@ -12,13 +14,19 @@ import (
 type handlerWs struct {
 	svcChat ChatService
 	svcUser UserService
+	hub     *hub
 }
 
+type hub struct {
+	mu      sync.RWMutex
+	clients map[string][]*Client
+}
 type UserService interface {
 	GetByID(context.Context, string) (domain.User, error)
 }
 
 type ChatService interface {
+	IsChatNotFound(error) bool
 	CheckRoomChat(context.Context, []string) (string, error)
 	CreateRoomChat(context.Context, []string) (string, error)
 	SendMessageRoomChat(context.Context, string, string, string) (string, error)
@@ -29,25 +37,29 @@ func NewHandleWs(svcChat ChatService, svcUser UserService) *handlerWs {
 	return &handlerWs{
 		svcChat: svcChat,
 		svcUser: svcUser,
+		hub: &hub{
+			clients: make(map[string][]*Client),
+		},
 	}
 }
 
 type MessageInput struct {
-	receiver_id string
-	content     string
+    ReceiverID string `json:"receiver_id"`
+    Content string `json:"content"`
 }
 
 type MessageOutput struct {
-	id      string
-	code    int
-	Sender  string
-	content string
+	ID      string `json:"id"`
+	Code    int    `json:"code"`
+	Sender  string `json:"sender"`
+	Content string `json:"content"`
 }
 
 type Client struct {
 	id     int
 	UserId string
 	conn   *websocket.Conn
+	mu      sync.Mutex
 }
 
 var allConn = make(map[string][]*Client)
@@ -59,11 +71,97 @@ var upgrader = websocket.Upgrader{
 }
 
 func (wss handlerWs) chatWs(w http.ResponseWriter, r *http.Request) {
+	client := wss.AddClient(w,r)
+	
+	go wss.engineMessages(r.Context(), client)
+}
+
+func (wss handlerWs) engineMessages(ctx context.Context, client *Client) {
+	defer wss.DeleteClient(client)
+	for {
+		var MessageInput MessageInput
+		err := client.conn.ReadJSON(&MessageInput)
+		if err != nil {
+			return
+		}
+		err = wss.svcChat.ValidMessage(ctx, MessageInput.ReceiverID, MessageInput.Content)
+		if err != nil {
+			responceWrite("", 404, err.Error(), client.UserId, client)
+			continue
+		}
+
+		userIDs := []string{client.UserId, MessageInput.ReceiverID}
+		sort.Strings(userIDs)
+		chatId, err := wss.GetRoom(ctx, userIDs)
+		if chatId == "-99" && err != nil {
+			responceWrite("", 404, err.Error(), client.UserId, client)
+			continue
+		}
+		msgId, err := wss.svcChat.SendMessageRoomChat(ctx, MessageInput.Content, client.UserId, chatId)
+		wss.hub.mu.RLock()
+			all_receiver := make([]*Client, len(wss.hub.clients[MessageInput.ReceiverID]))
+			copy(all_receiver, wss.hub.clients[MessageInput.ReceiverID])
+
+		wss.hub.mu.RUnlock()
+		if all_receiver != nil {
+			for _, receiver := range all_receiver {
+				responceWrite(msgId, 200, MessageInput.Content, MessageInput.ReceiverID, receiver)
+			}
+		}
+	}
+}
+
+func responceWrite(id string, codeError int, content string, SenderID string, receiver *Client) {
+	receiver.mu.Lock()
+	defer receiver.mu.Unlock()
+	MessageOutput := MessageOutput{ID: id, Code: codeError, Content: content, Sender: SenderID}
+	receiver.conn.WriteJSON(&MessageOutput)
+}
+
+func (wss handlerWs) GetRoom(ctx context.Context, userIDs []string) (string, error) {
+	idChat, err := wss.svcChat.CheckRoomChat(ctx, userIDs)
+	if wss.svcChat.IsChatNotFound(err) {
+		idChat, err = wss.svcChat.CreateRoomChat(ctx, userIDs)
+		if err != nil {
+			return "", err
+		}
+	} else if err != nil {
+		return "", err
+	}
+	return idChat, err
+}
+
+func (wss handlerWs) DeleteClient(client *Client) {
+	wss.hub.mu.Lock()
+	defer wss.hub.mu.Unlock()
+	userConnections, exists := wss.hub.clients[client.UserId]
+	if !exists {
+		return
+	}
+
+	for i, c := range userConnections {
+		if c.id == client.id {
+			userConnections = append(userConnections[:i], userConnections[i+1:]...)
+			break
+		}
+	}
+	if len(userConnections) == 0 {
+		delete(wss.hub.clients, client.UserId)
+		return
+	}
+
+	wss.hub.clients[client.UserId] = userConnections
+}
+
+
+func (wss handlerWs) AddClient(w http.ResponseWriter , r *http.Request) (*Client){
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
-		return
+		return &Client{}
 	}
+
+
 	userAny := r.Context().Value("me")
 	user := userAny.(domain.User)
 	client := &Client{
@@ -71,75 +169,18 @@ func (wss handlerWs) chatWs(w http.ResponseWriter, r *http.Request) {
 		conn:   conn,
 	}
 
-	if userConnections := allConn[client.UserId]; userConnections == nil {
+
+	wss.hub.mu.Lock()
+
+	if userConnections := wss.hub.clients[client.UserId]; userConnections == nil {
 		client.id = 1
 		var clients []*Client
-		allConn[client.UserId] = clients
+		wss.hub.clients[client.UserId] = clients
 	} else {
-		num := len(allConn[client.UserId])
+		num := len(wss.hub.clients[client.UserId])
 		client.id = num + 1
 	}
-	allConn[client.UserId] = append(allConn[client.UserId], client)
-	go wss.engineMessages(r.Context(), client)
-}
-
-func (wss handlerWs) engineMessages(ctx context.Context, client *Client) {
-	for {
-		defer DeleteClient(client)
-		var MessageInput MessageInput
-		err := client.conn.ReadJSON(&MessageInput)
-		if err != nil {
-			MessageOutput := MessageOutput{id: "", code: 404, content: "Error in Read Missage", Sender: client.UserId}
-			client.conn.WriteJSON(&MessageOutput)
-			continue
-		}
-		err = wss.svcChat.ValidMessage(ctx, MessageInput.receiver_id, MessageInput.content)
-		if err != nil {
-			MessageOutput := MessageOutput{id: "", code: 404, content: err.Error(), Sender: client.UserId}
-			client.conn.WriteJSON(&MessageOutput)
-			continue
-		}
-		userIDs := []string{client.UserId, MessageInput.receiver_id}
-		chatId := wss.GetRoom(ctx, userIDs)
-		msgId, err := wss.svcChat.SendMessageRoomChat(ctx, MessageInput.content, client.UserId, chatId)
-
-		if all_receiver := allConn[MessageInput.receiver_id]; all_receiver != nil {
-			for _, receiver := range all_receiver {
-				MessageOutput := MessageOutput{id: msgId, code: 200, content: MessageInput.content, Sender: MessageInput.receiver_id}
-				receiver.conn.WriteJSON(&MessageOutput)
-			}
-		}
-
-	}
-}
-
-func (wss handlerWs) GetRoom(ctx context.Context, userIDs []string) string {
-	idChat, err := wss.svcChat.CheckRoomChat(ctx, userIDs)
-	if err.Error() == "error not find" && idChat == "-99" {
-		idChat, err = wss.svcChat.CreateRoomChat(ctx, userIDs)
-	}
-
-	return idChat
-}
-
-func DeleteClient(client *Client) {
-    userConnections, exists := allConn[client.UserId]
-
-    if !exists {
-        return
-    }
-
-    for i, c := range userConnections {
-        if c.id == client.id {
-            userConnections = append(userConnections[:i], userConnections[i+1:]...)
-            break
-        }
-    }
-
-    if len(userConnections) == 0 {
-        delete(allConn, client.UserId)
-        return
-    }
-
-    allConn[client.UserId] = userConnections
+	wss.hub.clients[client.UserId] = append(wss.hub.clients[client.UserId], client)
+	wss.hub.mu.Unlock()
+	return client
 }

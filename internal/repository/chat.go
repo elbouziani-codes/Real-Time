@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"realTime/internal/domain"
 )
@@ -11,6 +12,7 @@ type DBTX interface {
 	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
 	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
 	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
 }
 
 type ChatRepo struct {
@@ -21,15 +23,39 @@ func NewChatRepo(db DBTX) *ChatRepo { // repository(for all cases)
 	return &ChatRepo{db: db}
 }
 
-const createChatQuery = `
-	INSERT into conversations (id) VALUES (?) ;
-`
+const createChatQuery = `INSERT into conversations (id) VALUES (?)`
 
-func (q *ChatRepo) CreateChat(ctx context.Context, chatID string) (error) {
-	row := q.db.QueryRowContext(ctx, createChatQuery, chatID)
-	var chat domain.ChatRoom
-	err := row.Scan(&chat.ID)
+func (q *ChatRepo) CreateConversation(ctx context.Context, chatID string , tx *sql.Tx) error {
+	_, err := tx.ExecContext(ctx, createChatQuery, chatID)
 	return err
+}
+
+
+const CreateConversationParticipantsQuery = `INSERT INTO conversation_participants (id, user_id, conversation_id) VALUES (?, ?, ?)`
+
+func (q *ChatRepo) CreateConversationWithParticipants(ctx context.Context, chatID string, idUUID, userIDs []string) error {
+	if len(userIDs) != len(idUUID) {
+		return errors.New("error in length slices")
+	}
+
+	tx, err := q.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err = q.CreateConversation(ctx , chatID , tx)
+	if err != nil {
+			return err
+	}
+	
+	for i, userID := range userIDs {
+		_, err = tx.ExecContext(ctx, CreateConversationParticipantsQuery, idUUID[i], userID, chatID)
+		if err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
 }
 
 const getChatQuery = `
@@ -74,23 +100,19 @@ func (q *ChatRepo) GetMessages(ctx context.Context, chatID string) ([]domain.Mes
 	return messages, nil
 }
 
-
 const sendMessageQuery = `INSERT INTO messages (id, sender_id, content, conversation_id) VALUES (?, ?, ?, ?)`
 
 func (q *ChatRepo) SendMessage(ctx context.Context, message domain.Message) error {
-    row, err := q.db.ExecContext(ctx, sendMessageQuery, message.ID, message.SenderID, message.Content, message.ChatID)
-    if err != nil {
-        return err
-    }
-    n, err := row.RowsAffected()
-    if err != nil {
-        return  TranslateError(err)
-    }
-    if n != 1 {// msut be updated 
-        return  TranslateError(err)
-    }
-    return nil
+	result, err := q.db.ExecContext(ctx, sendMessageQuery, message.ID, message.SenderID, message.Content, message.ChatID)
+	if err != nil {
+		return err
+	}
+	n, err := result.RowsAffected()
+	if err != nil {
+		return TranslateError(err)
+	}
+	if n != 1 { // msut be updated
+		return TranslateError(err)
+	}
+	return nil
 }
-
-
-
