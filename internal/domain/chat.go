@@ -1,10 +1,10 @@
 package domain
 
 type Message struct {
-	ID      string
-	SenderID  string
-	ChatID string
-	Content string
+	ID       string
+	SenderID string
+	ChatID   string
+	Content  string
 }
 
 type ChatRoom struct {

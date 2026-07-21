@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 	"database/sql"
-
 )
 
+/// this would migrated to sqlite package
 type DBTX interface {
 	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
 	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
@@ -28,31 +28,31 @@ func (q *ChatRepo) CreateChat(ctx context.Context, chatID string) (domain.ChatRo
 	row := q.db.QueryRowContext(ctx, createChatQuery, chatID)
 	var chat domain.ChatRoom
 	err := row.Scan(&chat.ID)
-	return chat,  TranslateError(err)
+	return chat,  sqlite.TranslateError(err)
 }
 
 const getChatQuery = `
-	SELECT cp1.conversation_id 		
+	SELECT cp1.conversation_id
 	FROM conversation_participants cp1
 	JOIN conversation_participants cp2
 	ON cp1.conversation_id = cp2.conversation_id
-		WHERE cp1.user_id = ? 
-		AND cp2.user_id = ?  
+		WHERE cp1.user_id = ?
+		AND cp2.user_id = ?
 `
 
 func (q *ChatRepo) GetChat(ctx context.Context, users []domain.User) (string, error) {
 	row := q.db.QueryRowContext(ctx, getChatQuery, users[0].ID, users[1].ID) // must be updated later
-	var chatID string 
+	var chatID string
 	err := row.Scan(chatID)
-	return chatID, TranslateError(err)
+	return chatID, sqlite.TranslateError(err)
 }
 
 const getMessagesQuery = `
-	SELECT * FROM messages 
-	WHERE conversation_id  = ? 
+	SELECT * FROM messages
+	WHERE conversation_id  = ?
 	ORDER BY created_at DESC
-	OFFSET ? 
-	LIMIT  ? 	
+	OFFSET ?
+	LIMIT  ?
 `
 
 func (q *ChatRepo) GetMessages(ctx context.Context, chatID string, offset, limit int) ([]domain.Message, error) {
@@ -66,7 +66,7 @@ func (q *ChatRepo) GetMessages(ctx context.Context, chatID string, offset, limit
 		var message domain.Message
 		err := rows.Scan(&message.ID, &message.Sender, &message.Content)
 		if err != nil {
-			return nil,  TranslateError(err)
+			return nil,  sqlite.TranslateError(err)
 		}
 		messages = append(messages, message)
 	}
@@ -82,10 +82,10 @@ func (q *ChatRepo) SendMessage(ctx context.Context, message domain.Message) erro
 	}
 	n, err := row.RowsAffected()
 	if err != nil {
-		return  TranslateError(err)
+		return  sqlite.TranslateError(err)
 	}
-	if n != 1 {// msut be updated 
-		return  TranslateError(err)
+	if n != 1 {// msut be updated
+		return  sqlite.TranslateError(err)
 	}
 	return nil
 }*/

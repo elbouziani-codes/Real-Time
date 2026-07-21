@@ -1,13 +1,12 @@
 package main
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"strings"
 )
 
-
 func main() {
-		text := os.Args[1]
-		fmt.Println(strings.TrimSpace(text))
+	text := os.Args[1]
+	fmt.Println(strings.TrimSpace(text))
 }

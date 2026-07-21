@@ -2,17 +2,18 @@ package repository
 
 import (
 	"context"
+	"realTime/crypto"
 	"realTime/internal/domain"
+	"realTime/internal/repository/sqlite"
 )
 
 type UserRepo struct {
 	db DBTX
 }
 
-type scanner interface  {
+type scanner interface {
 	Scan(...any) error
 }
-
 
 func NewUserRepo(db DBTX) *UserRepo {
 	return &UserRepo{db: db}
@@ -20,7 +21,8 @@ func NewUserRepo(db DBTX) *UserRepo {
 
 func scanUser(row scanner) (domain.User, error) {
 	user := domain.User{}
-	err := row.Scan(&user.ID,
+	err := row.Scan(
+		&user.ID.Value,
 		&user.Email,
 		&user.Password,
 		&user.NickName,
@@ -30,8 +32,8 @@ func scanUser(row scanner) (domain.User, error) {
 		&user.Gender,
 		&user.CreatedAt,
 		&user.UpdatedAt)
-	if err != nil  {
-		return domain.User{},  TranslateError(err)
+	if err != nil {
+		return domain.User{}, sqlite.TranslateError(err)
 	}
 	return user, nil
 }
@@ -42,7 +44,7 @@ const CreateUserQuery = `INSERT INTO users
 
 func (u *UserRepo) CreateUser(ctx context.Context, user domain.User) error {
 	_, err := u.db.ExecContext(ctx, CreateUserQuery,
-		user.ID,
+		user.ID.Value,
 		user.Email,
 		user.Password,
 		user.NickName,
@@ -51,7 +53,7 @@ func (u *UserRepo) CreateUser(ctx context.Context, user domain.User) error {
 		user.Age,
 		user.Gender)
 	if err != nil {
-		return TranslateError(err) 
+		return sqlite.TranslateError(err)
 	}
 	return nil
 }
@@ -59,8 +61,8 @@ func (u *UserRepo) CreateUser(ctx context.Context, user domain.User) error {
 const GetByIdQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at, updated_at
 FROM users WHERE id = ?`
 
-func (u *UserRepo) GetByID(ctx context.Context, userID string) (domain.User, error) {
-	row := u.db.QueryRowContext(ctx, GetByIdQuery, userID)
+func (u *UserRepo) GetByID(ctx context.Context, userID crypto.UUID) (domain.User, error) {
+	row := u.db.QueryRowContext(ctx, GetByIdQuery, userID.Value)
 	return scanUser(row)
 }
 
@@ -75,14 +77,11 @@ func (u *UserRepo) GetByEmail(ctx context.Context, userEmail string) (domain.Use
 const GetByNickNameQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at, updated_at
 FROM users WHERE nick_name = ?`
 
-
-// Idont think we will need that 
+// Idont think we will need that
 func (u *UserRepo) GetByNickName(ctx context.Context, NickName string) (domain.User, error) {
 	row := u.db.QueryRowContext(ctx, GetByNickNameQuery, NickName)
 	return scanUser(row)
 }
-
-
 
 /// MUST BE FIXED LATER
 const GetAllUserQuery = `SELECT id, email, nick_name, last_name, first_name FROM users LIMIT  ? OFFSET ?`
@@ -95,15 +94,15 @@ func (u *UserRepo) GetUsers(ctx context.Context, limit, offset int) ([]domain.Us
 	}
 	defer row.Close()
 	for row.Next() {
-		user, err := scanUser(row) 
+		user, err := scanUser(row)
 		if err != nil {
-			return nil,  TranslateError(err)
+			return nil, sqlite.TranslateError(err)
 		}
 		users = append(users, user)
 	}
 	err = row.Err()
 	if err != nil {
-		return nil,  TranslateError(err)
+		return nil, sqlite.TranslateError(err)
 	}
 	return users, nil
 }

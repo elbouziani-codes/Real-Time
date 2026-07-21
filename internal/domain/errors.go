@@ -1,21 +1,20 @@
 package domain
 
-import (
-)
+import ()
 
 const (
-	UnexpectedCode  = iota
-	NotFoundCode 
+	UnexpectedCode = iota
+	NotFoundCode
 	BadFormatCode
-	ConflictCode	
+	ConflictCode
 	UnauthorizedCode
 )
 
 type Error struct {
-		Message string 
-		Code int
+	Message string
+	Code    int
 }
 
 func (e Error) Error() string {
-	return e.Message;
-} 
+	return e.Message
+}
