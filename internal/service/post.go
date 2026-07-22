@@ -13,8 +13,8 @@ type postService struct {
 
 type PostRepo interface {
 	SavePost(context.Context, domain.Post) error
-	GetPost(context.Context, crypto.UUID) (*domain.Post, error)
-	GetPosts(context.Context, int, int) ([]*domain.Post, error)	
+	GetPost(context.Context, crypto.UUID) (*domain.PostInfo, error)
+	GetPosts(context.Context, int, int) ([]*domain.PostInfo, error)	
 	ExecPatchQuery(context.Context, string, crypto.UUID, []any) error 
 }
 
@@ -35,7 +35,7 @@ func (p *postService) CreatePost(ctx context.Context, post *domain.Post) error {
 	return nil
 }
 
-func (p *postService) GetPost(ctx context.Context, postID crypto.UUID) (*domain.Post, error) {
+func (p *postService) GetPost(ctx context.Context, postID crypto.UUID) (*domain.PostInfo, error) {
 	return  p.postRepo.GetPost(ctx, postID) 
 }
 
@@ -46,7 +46,7 @@ func (p *postService) PatchPost(ctx context.Context, editObject domain.PatchPost
 }
 
 
-func (p *postService) GetPosts(ctx context.Context, limit, offset int) ([]*domain.Post, error) {
+func (p *postService) GetPosts(ctx context.Context, limit, offset int) ([]*domain.PostInfo, error) {
 	return p.postRepo.GetPosts(context.Background(), limit, offset)
 }
 

@@ -14,6 +14,19 @@ type Post struct {
 	UpdatedAt int
 }
 
+
+type PostInfo struct {
+	ID        crypto.UUID
+	Author UserProfile
+	Title     string
+	Content   string
+	CreatedAt int
+	UpdatedAt int
+}
+
+
+
+
 type CreatePostRequest struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`

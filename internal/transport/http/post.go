@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"strconv"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -10,8 +11,8 @@ import (
 
 type postService interface {
 	CreatePost(context.Context, *domain.Post) error
-	GetPost(context.Context, crypto.UUID) (*domain.Post, error)
-	GetPosts(context.Context, int, int) ([]*domain.Post, error)
+	GetPost(context.Context, crypto.UUID) (*domain.PostInfo, error)
+	GetPosts(context.Context, int, int) ([]*domain.PostInfo, error)
 	PatchPost(context.Context, domain.PatchPostRequest, crypto.UUID) (error)
 }
 
@@ -54,20 +55,15 @@ func (p *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 	
-	/* request := domain.GetPostsRequest{}
-	defer r.Body.Close()
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		Error(domain.Error{Message: "invalid json", Code: domain.BadFormatCode}, w)
-		return
+	query := r.URL.Query() 
+	n := query.Get("offset") 
+	offset, _ := strconv.Atoi(n) // I dont need to check error because if it failed then it will be 0   			
+	if offset < 0 {
+		offset = 0 //fallbacking to 0
 	}
 
-	err := domain.ValueidateGetPostsRequest(request)
-	if err != nil {
-		Error(err, w)
-		return
-	}*/
-	// To  be dynamic later
-	posts, err := p.postSvc.GetPosts(r.Context(), 20, 0)
+
+	posts, err := p.postSvc.GetPosts(r.Context(), 20, offset)
 	if err != nil {
 		Error(err, w)
 		return
@@ -81,6 +77,24 @@ func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (p *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
+	postID, err := crypto.ParseUUID(r.PathValue("id")) 
+	if err != nil {
+		Error(domain.Error{Message: "invalid post id", Code: domain.BadFormatCode}, w)	
+		return
+	}
+	post, err := p.postSvc.GetPost(r.Context(), postID)
+	if err != nil {
+		Error(err, w)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(post); err != nil {
+		http.Error(w, "uknown error", http.StatusInternalServerError)
+		return
+	}
+	
+}
 
 func (p *PostHandler) PatchPost(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
@@ -110,7 +124,7 @@ func (p *PostHandler) PatchPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	if post.AuthorID != userID {
+	if post.Author.ID.Value != userID.Value {
 		Error(domain.Error{Message: "unauthorized action", Code: domain.UnauthorizedCode}, w)
 		return
 	}
