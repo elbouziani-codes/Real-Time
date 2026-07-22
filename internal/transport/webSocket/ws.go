@@ -1,4 +1,4 @@
-package handler
+package ws
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type handlerWs struct {
+type HandlerWs struct {
 	svcChat ChatService
 	svcUser UserService
 	hub     *hub
@@ -30,11 +30,10 @@ type ChatService interface {
 	CheckRoomChat(context.Context, []crypto.UUID) (crypto.UUID, error)
 	CreateRoomChat(context.Context, []crypto.UUID) (crypto.UUID, error)
 	SendMessageRoomChat(context.Context, string, crypto.UUID, crypto.UUID) (crypto.UUID, error)
-	ValidMessage(context.Context, string, string) error
 }
 
-func NewHandleWs(svcChat ChatService, svcUser UserService) *handlerWs {
-	return &handlerWs{
+func NewHandleWs(svcChat ChatService, svcUser UserService) HandlerWs {
+	return HandlerWs{
 		svcChat: svcChat,
 		svcUser: svcUser,
 		hub: &hub{
@@ -63,13 +62,13 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func (wss handlerWs) chatWs(w http.ResponseWriter, r *http.Request) {
+func (wss HandlerWs) ChatWs(w http.ResponseWriter, r *http.Request) {
 	client := wss.AddClient(w, r)
 
 	go wss.engineMessages(r.Context(), client)
 }
 
-func (wss handlerWs) engineMessages(ctx context.Context, client *Client) {
+func (wss HandlerWs) engineMessages(ctx context.Context, client *Client) {
 	defer wss.DeleteClient(client)
 	for {
 		var messageInput domain.MessageInput
@@ -117,7 +116,7 @@ func responceWrite(id crypto.UUID, codeError int, content string, SenderID crypt
 	receiver.conn.WriteJSON(&MessageOutput)
 }
 
-func (wss handlerWs) GetRoom(ctx context.Context, userIDs []crypto.UUID) (crypto.UUID, error) {
+func (wss HandlerWs) GetRoom(ctx context.Context, userIDs []crypto.UUID) (crypto.UUID, error) {
 	idChat, err := wss.svcChat.CheckRoomChat(ctx, userIDs)
 	if wss.svcChat.IsChatNotFound(err) {
 		idChat, err = wss.svcChat.CreateRoomChat(ctx, userIDs)
@@ -130,7 +129,7 @@ func (wss handlerWs) GetRoom(ctx context.Context, userIDs []crypto.UUID) (crypto
 	return idChat, err
 }
 
-func (wss handlerWs) DeleteClient(client *Client) {
+func (wss HandlerWs) DeleteClient(client *Client) {
 	wss.hub.mu.Lock()
 	defer wss.hub.mu.Unlock()
 	userConnections, exists := wss.hub.clients[client.userId]
@@ -152,7 +151,7 @@ func (wss handlerWs) DeleteClient(client *Client) {
 	wss.hub.clients[client.userId] = userConnections
 }
 
-func (wss handlerWs) AddClient(w http.ResponseWriter, r *http.Request) *Client {
+func (wss HandlerWs) AddClient(w http.ResponseWriter, r *http.Request) *Client {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		http.Error(w, err.Error(), 500)

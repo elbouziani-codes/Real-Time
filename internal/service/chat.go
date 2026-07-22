@@ -18,11 +18,11 @@ type chatService struct {
 type ChatRepo interface {
 	CreateConversationWithParticipants(context.Context, crypto.UUID, []crypto.UUID, []crypto.UUID) error
 	GetChat(context.Context, []crypto.UUID) (crypto.UUID, error)
-	GetMessages(context.Context, crypto.UUID) ([]domain.Message, error)
+	GetMessages( context.Context, string, int, int) ([]domain.Message, error) 
 	SendMessage(context.Context, domain.Message) error
 }
 
-func NewService(ChatRepo ChatRepo, UserRepo UserRepo) chatService {
+func NewChatService(ChatRepo ChatRepo, UserRepo UserRepo) chatService {
 	return chatService{UserRepo: UserRepo, ChatRepo: ChatRepo}
 }
 

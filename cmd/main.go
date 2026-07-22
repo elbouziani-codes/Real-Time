@@ -7,7 +7,8 @@ import (
 
 	"realTime/internal/repository"
 	"realTime/internal/service"
-	"realTime/internal/transport/http"
+	handler "realTime/internal/transport/http"
+	ws "realTime/internal/transport/webSocket"
 
 	"realTime/internal/config"
 	"realTime/internal/repository/sqlite"
@@ -26,19 +27,22 @@ func main() {
 	authRepo := repository.NewAuthRepo(db)
 	userRepo := repository.NewUserRepo(db)
 	postRepo := repository.NewPostRepo(db)
+	chatRepo := repository.NewChatRepo(db)
 
 	// new service
 	authSvc := service.NewAuthService(authRepo, userRepo)
 	userSvc := service.NewUserService(userRepo)
 	postSvc := service.NewPostService(postRepo)
+	charSvc := service.NewChatService(chatRepo, userRepo)
 
 	// new handler
 	authHandler := handler.NewAuthHandler(authSvc, userSvc)
 	postHandler := handler.NewPostHandler(postSvc)
 	testHandler := handler.NewTestHandler(authSvc, userSvc)
+	chatHandler := ws.NewHandleWs(charSvc, userSvc)
 
 	middleware := middleware.NewMiddleware(authSvc)
-	router := handler.NewRouter(authHandler, postHandler, testHandler, middleware)
+	router := handler.NewRouter(authHandler, postHandler, testHandler, chatHandler, middleware)
 	http.ListenAndServe(":8081", router)
 	log.Println("Database Initialised")
 }

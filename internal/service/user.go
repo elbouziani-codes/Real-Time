@@ -34,3 +34,8 @@ func (svc *UserService) CreateUser(ctx context.Context, user *domain.User) error
 	user.ID = id
 	return svc.repo.CreateUser(ctx, *user)
 }
+
+
+func (svc *UserService) GetByID(ctx context.Context, id crypto.UUID) (domain.User , error){
+	return svc.repo.GetByID(ctx, id)
+}
