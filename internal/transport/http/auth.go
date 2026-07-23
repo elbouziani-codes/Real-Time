@@ -75,7 +75,6 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(user)
 	sessionID, err := a.authSvc.CreateSession(r.Context(), user.ID)
 	if err != nil {
 		Error(err, w)

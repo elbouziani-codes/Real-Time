@@ -1,0 +1,32 @@
+:root {
+
+    /* Colors */
+    --primary-color: #2563eb;
+    --secondary-color: #1e40af;
+
+    --background-color: #ffffff;
+    --text-color: #111827;
+
+    --danger-color: #ef4444;
+    --success-color: #22c55e;
+
+
+    /* Gray scale */
+    --gray-100: #f3f4f6;
+    --gray-500: #6b7280;
+    --gray-900: #111827;
+
+
+    /* Sizes */
+    --container-width: 1200px;
+
+    --border-radius: 8px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.1);
+    --shadow-md: 0 4px 10px rgba(0,0,0,.15);
+
+
+    /* Animation */
+    --transition: .3s ease;
+}

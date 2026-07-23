@@ -78,6 +78,14 @@ CREATE TABLE
 		joined_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
 	);
 
+	CREATE TABLE
+	IF NOT EXISTS following_relations (
+		id CHAR(36) PRIMARY KEY,
+		slave_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE, 
+		lord_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
+	);
+
 CREATE TABLE
 	IF NOT EXISTS messages (
 		id CHAR(36) PRIMARY KEY,

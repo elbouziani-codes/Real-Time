@@ -2,15 +2,14 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+	"sync"
+
 	"realTime/crypto"
 	"realTime/internal/domain"
-	"sync"
 )
 
-type userService interface {
-}
+type userService interface{}
 
 type authService interface {
 	ValueidateSession(context.Context, crypto.UUID) (domain.Session, error)
@@ -44,7 +43,6 @@ func (m *middleWare) Auth(next http.Handler) http.Handler {
 			http.Error(w, "missing session-id", http.StatusUnauthorized)
 			return
 		}
-		fmt.Println(err, c)
 		sessionUUID, err := crypto.ParseUUID(c.Value)
 		if err != nil {
 			http.Error(w, "failed to validate session id", http.StatusUnauthorized)
@@ -52,7 +50,6 @@ func (m *middleWare) Auth(next http.Handler) http.Handler {
 		}
 		session, err := m.authSvc.ValueidateSession(r.Context(), sessionUUID)
 		if err != nil {
-			fmt.Println(err)
 			http.Error(w, "failed to validate session id ", http.StatusUnauthorized)
 			return
 		}
