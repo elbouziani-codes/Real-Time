@@ -17,13 +17,13 @@ func main() {
 		return
 	}
 	// new repo
-	postRepo := repository.NewPostRepo(db)
-	postService := service.NewPostService(postRepo)	
+	commentRepo := repository.NewPostRepo(db)
+	commentService := service.NewPostService(commentRepo)	
 	// new service
-	posts, err := postService.GetPosts(context.Background(), 10, 0)
+	comments, err := commentService.GetPosts(context.Background(), 10, 0)
 	if err != nil {
 		fmt.Println(err, "tes")
 		return
 	}
-	fmt.Println(posts[0])
+	fmt.Println(comments[0])
 }

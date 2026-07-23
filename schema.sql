@@ -34,9 +34,8 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS comments (
 		id CHAR(36) PRIMARY KEY,
-		user_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-		post_id CHAR(36) NOT NULL REFERENCES posts (id) ON DELETE CASCADE,
-		parent_id CHAR(36) NOT NULL REFERENCES comments (id) ON DELETE CASCADE,
+		author_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+		parent_id CHAR(36) NOT NULL EXISTS (SELECT id FROM posts WHERE id = parent_id),
 		content TEXT NOT NULL,
 		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
 		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
@@ -98,7 +97,7 @@ CREATE INDEX IF NOT EXISTS sender_idx ON messages (sender_id);
 
 CREATE INDEX IF NOT EXISTS conversation_idx ON messages (conversation_id);
 
-CREATE INDEX IF NOT EXISTS post_idx ON comments (post_id);
+CREATE INDEX IF NOT EXISTS post_idx ON comments (parent_id);
 
 CREATE TRIGGER IF NOT EXISTS update_date BEFORE
 UPDATE ON users FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at

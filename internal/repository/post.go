@@ -44,6 +44,7 @@ func scanPost(row scanner) (*domain.PostInfo, error) {
 	}
 	return &post, nil
 }
+
 const savePostQuery = `INSERT INTO posts (id, author_id, title, content) VALUES(?, ?, ?, ?)`
 
 func (p *postRepo) SavePost(ctx context.Context, post domain.Post) error {
