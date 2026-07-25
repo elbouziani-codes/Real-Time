@@ -14,7 +14,8 @@ type commentService struct {
 type CommentRepo interface {
 	SaveComment(context.Context, domain.Comment) error
 	GetComment(context.Context, crypto.UUID) (*domain.CommentInfo, error)
-	GetComments(context.Context, int, int) ([]*domain.CommentInfo, error)	
+	DeleteComment(context.Context, crypto.UUID) (error)
+	GetComments(context.Context, crypto.UUID) ([]*domain.CommentInfo, error)	
 	ExecPatchQuery(context.Context, string, crypto.UUID, []any) error 
 }
 
@@ -39,6 +40,10 @@ func (p *commentService) GetComment(ctx context.Context, commentID crypto.UUID) 
 	return  p.commentRepo.GetComment(ctx, commentID) 
 }
 
+func (p *commentService) DeleteComment(ctx context.Context, commentID crypto.UUID) (error) {
+	return  p.commentRepo.DeleteComment(ctx, commentID) 
+}
+
 
 func (p *commentService) PatchComment(ctx context.Context, editObject domain.PatchCommentRequest, commentID crypto.UUID) error {
 	query := repository.ConstructPatchQuery("comments", "id",  editObject.FilledKeys)			
@@ -46,8 +51,8 @@ func (p *commentService) PatchComment(ctx context.Context, editObject domain.Pat
 }
 
 
-func (p *commentService) GetComments(ctx context.Context, limit, offset int) ([]*domain.CommentInfo, error) {
-	return p.commentRepo.GetComments(context.Background(), limit, offset)
+func (p *commentService) GetComments(ctx context.Context, parentID crypto.UUID) ([]*domain.CommentInfo, error) {
+	return p.commentRepo.GetComments(context.Background(), parentID)
 }
 
 

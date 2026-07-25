@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"strconv"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -12,7 +11,8 @@ import (
 type commentService interface {
 	CreateComment(context.Context, *domain.Comment) error
 	GetComment(context.Context, crypto.UUID) (*domain.CommentInfo, error)
-	GetComments(context.Context, int, int) ([]*domain.CommentInfo, error)
+	DeleteComment(context.Context, crypto.UUID) (error)
+	GetComments(context.Context, crypto.UUID) ([]*domain.CommentInfo, error)
 	PatchComment(context.Context, domain.PatchCommentRequest, crypto.UUID) (error)
 }
 
@@ -25,7 +25,7 @@ func NewCommentHandler(commentSvc commentService, postSvc postService) *CommentH
 		return &CommentHandler{commentSvc: commentSvc, postSvc: postSvc}
 }
 
-func (p *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
+func (c *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
 	userID := userIDAny.(crypto.UUID)
 	request := domain.CreateCommentRequest{}
@@ -43,12 +43,11 @@ func (p *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	comment.AuthorID = userID
-	err = p.commentSvc.CreateComment(r.Context(), &comment)
+	err = c.commentSvc.CreateComment(r.Context(), &comment)
 	if err != nil {
 		Error(err, w)
 		return
 	}
-
 	if err := json.NewEncoder(w).Encode(comment.ID); err != nil {
 		http.Error(w, "uknown error", http.StatusInternalServerError)
 		return
@@ -56,17 +55,49 @@ func (p *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (p *CommentHandler) GetComments(w http.ResponseWriter, r *http.Request) {
+
+func (c *CommentHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
+	userIDAny := r.Context().Value("user_id")
+	userID := userIDAny.(crypto.UUID)
 	
-	query := r.URL.Query() 
-	n := query.Get("offset") 
-	offset, _ := strconv.Atoi(n) // I dont need to check error because if it failed then it will be 0   			
-	if offset < 0 {
-		offset = 0 //fallbacking to 0
+
+	commentID, err := crypto.ParseUUID(r.PathValue("id")) 
+	if err != nil {
+		Error(domain.Error{Message: "invalid comment id", Code: domain.BadFormatCode}, w)	
+		return
+	}
+	comment, err := c.commentSvc.GetComment(r.Context(), commentID)
+	if err != nil {
+		Error(err, w)
+		return
+	}
+	if comment.Author.ID.Value != userID.Value {
+			Error(domain.Error{Message: "unauthorized action", Code: domain.UnauthorizedCode}, w)	
+		return
+	}
+	err =c.commentSvc.DeleteComment(r.Context(), commentID)
+	if err != nil {
+		Error(err, w)
+		return
 	}
 
+	if err := json.NewEncoder(w).Encode("success"); err != nil {
+		http.Error(w, "uknown error", http.StatusInternalServerError)
+		return
+	}
 
-	comments, err := p.commentSvc.GetComments(r.Context(), 20, offset)
+}
+
+func (c *CommentHandler) GetComments(w http.ResponseWriter, r *http.Request) {
+	
+	id, err := crypto.ParseUUID(r.PathValue("id")) 
+	if err != nil {
+			Error(domain.Error{Message: "invalid id", Code: domain.BadFormatCode}, w)
+			return
+	}		
+
+
+	comments, err := c.commentSvc.GetComments(r.Context(), id)
 	if err != nil {
 		Error(err, w)
 		return
@@ -80,13 +111,13 @@ func (p *CommentHandler) GetComments(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (p *CommentHandler) GetComment(w http.ResponseWriter, r *http.Request) {
+func (c *CommentHandler) GetComment(w http.ResponseWriter, r *http.Request) {
 	commentID, err := crypto.ParseUUID(r.PathValue("id")) 
 	if err != nil {
 		Error(domain.Error{Message: "invalid comment id", Code: domain.BadFormatCode}, w)	
 		return
 	}
-	comment, err := p.commentSvc.GetComment(r.Context(), commentID)
+	comment, err :=c.commentSvc.GetComment(r.Context(), commentID)
 	if err != nil {
 		Error(err, w)
 		return
@@ -99,7 +130,7 @@ func (p *CommentHandler) GetComment(w http.ResponseWriter, r *http.Request) {
 	
 }
 
-func (p *CommentHandler) PatchComment(w http.ResponseWriter, r *http.Request) {
+func (c *CommentHandler) PatchComment(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
 	userID := userIDAny.(crypto.UUID)
 	commentID, err := crypto.ParseUUID(r.PathValue("id")) 
@@ -121,7 +152,7 @@ func (p *CommentHandler) PatchComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	comment, err := p.commentSvc.GetComment(r.Context(), commentID)
+	comment, err :=c.commentSvc.GetComment(r.Context(), commentID)
 	if err != nil {
 		Error(err, w)
 		return
@@ -131,7 +162,7 @@ func (p *CommentHandler) PatchComment(w http.ResponseWriter, r *http.Request) {
 		Error(domain.Error{Message: "unauthorized action", Code: domain.UnauthorizedCode}, w)
 		return
 	}
-	err = p.commentSvc.PatchComment(r.Context(), editCommentObject, commentID)
+	err =c.commentSvc.PatchComment(r.Context(), editCommentObject, commentID)
 	if err := json.NewEncoder(w).Encode(comment.ID); err != nil {
 		http.Error(w, "uknown error", http.StatusInternalServerError)
 		return

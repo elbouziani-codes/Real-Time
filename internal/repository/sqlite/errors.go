@@ -17,6 +17,9 @@ func TranslateError(constraintError error) error {
 	if sql.ErrNoRows == constraintError {
 		return domain.Error{Message: "not found", Code: domain.NotFoundCode}
 	}
+	if strings.Contains(constraintError.Error(), "parent") {
+		return domain.Error{Message: "not found", Code: domain.NotFoundCode}
+	}
 	if errors.As(constraintError, &err) {
 		message := err.Error()
 		switch {

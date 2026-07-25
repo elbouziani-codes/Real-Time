@@ -1,4 +1,5 @@
 package repository
+
 import (
 	"fmt"
 	"context"
@@ -20,9 +21,8 @@ const getCommentsQuery = `
 SELECT C.id,  C.content, C.created_at, C.parent_id, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at
 FROM comments C  
 JOIN users U 
-ON C.parent_id = U.id
-ORDER BY C.created_at DESC 
-LIMIT ? OFFSET ?
+ON C.author_id = U.id
+WHERE C.parent_id = ?
 `
 
 func scanComment(row scanner) (*domain.CommentInfo, error) {
@@ -74,8 +74,8 @@ func (p *commentRepo) GetComment(ctx context.Context, commentID crypto.UUID) (*d
 //						ORDER BY created_at DESC 
 //						LIMIT ? OFFSET ?; `
 
-func (p *commentRepo) GetComments(ctx context.Context, limit, offset int) ([]*domain.CommentInfo, error) {
-	rows, err := p.db.QueryContext(ctx, getCommentsQuery, limit, offset)	
+func (p *commentRepo) GetComments(ctx context.Context, parentID crypto.UUID) ([]*domain.CommentInfo, error) {
+	rows, err := p.db.QueryContext(ctx, getCommentsQuery, parentID.Value)	
 	
 	if err != nil {
 		return nil, sqlite.TranslateError(err)	
