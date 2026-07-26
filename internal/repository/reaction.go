@@ -17,13 +17,6 @@ func NewReactionRepo(db DBTX) *reactionRepo {
 }
 
 
-const getReactionsQuery = `
-SELECT C.id,  C.content, C.created_at, C.parent_id, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at
-FROM reactions C  
-JOIN users U 
-ON C.author_id = U.id
-WHERE C.parent_id = ?
-`
 
 func scanReaction(row scanner) (*domain.ReactionInfo, error) {
 	reaction := domain.ReactionInfo{}
@@ -48,7 +41,7 @@ func scanReaction(row scanner) (*domain.ReactionInfo, error) {
 const saveReactionQuery = `INSERT INTO reactions (id, parent_id, author_id, is_like) VALUES(?, ?, ?, ?)`
 
 func (p *reactionRepo) SaveReaction(ctx context.Context, reaction domain.Reaction) error {
-	_, err := p.db.ExecContext(ctx, saveReactionQuery, reaction.ID.Value, reaction.ParentID.Value, reaction.AuthorID.Value, reaction.Content)
+	_, err := p.db.ExecContext(ctx, saveReactionQuery, reaction.ID.Value, reaction.ParentID.Value, reaction.AuthorID.Value, reaction.IsLike)
 	if err != nil {
 		return sqlite.TranslateError(err)
 	}
@@ -56,11 +49,11 @@ func (p *reactionRepo) SaveReaction(ctx context.Context, reaction domain.Reactio
 }
 
 const getReactionQuery = `
-SELECT C.id,  C.content, C.created_at, C.parent_id, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at
-FROM reactions C  
+SELECT R.id,  R.is_like, R.created_at, R.parent_id, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at
+FROM reactions R  
 JOIN users U 
-ON C.author_id = U.id
-WHERE C.id = ?
+ON R.author_id = U.id
+WHERE R.id = ?
 `
 
 
@@ -69,12 +62,27 @@ func (p *reactionRepo) GetReaction(ctx context.Context, reactionID crypto.UUID) 
 	return scanReaction(row) 
 }
 
+const getReactionWithUserAndParentQuery = `
+SELECT R.id,  R.is_like, R.created_at, R.parent_id, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at
+FROM reactions R  
+JOIN users U 
+ON R.author_id = U.id
+WHERE R.parent_id = ? AND R.author_id = ?
+`
+func (p *reactionRepo) GetReactionByUserAndParent(ctx context.Context, parentID, userID crypto.UUID) (*domain.ReactionInfo, error) {
+	row := p.db.QueryRowContext(ctx, getReactionWithUserAndParentQuery, parentID.Value, userID.Value)	
+	return scanReaction(row) 
+}
 
-//const getReactionsQuery = `SELECT id, author_id, title, content, created_at, updated_at FROM reactions 
-//						ORDER BY created_at DESC 
-//						LIMIT ? OFFSET ?; `
 
-/*func (p *reactionRepo) GetReactions(ctx context.Context, parentID crypto.UUID) ([]*domain.ReactionInfo, error) {
+const getReactionsQuery = `SELECT R.id,  R.is_like, R.created_at, R.parent_id, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at
+						FROM reactions R  
+						JOIN users U 
+						ON R.author_id = U.id 
+						ORDER BY R.created_at DESC 
+						LIMIT ? OFFSET ?; `
+
+func (p *reactionRepo) GetReactions(ctx context.Context, parentID crypto.UUID) ([]*domain.ReactionInfo, error) {
 	rows, err := p.db.QueryContext(ctx, getReactionsQuery, parentID.Value)	
 	
 	if err != nil {
@@ -91,7 +99,7 @@ func (p *reactionRepo) GetReaction(ctx context.Context, reactionID crypto.UUID) 
 		reactions = append(reactions, reaction)
 	}
 	return reactions, nil 
-}*/
+}
 
 const deleteReactionQuery = `DELETE FROM reactions WHERE id = ?`
 
@@ -102,9 +110,10 @@ func (p *reactionRepo) DeleteReaction(ctx context.Context, reactionID crypto.UUI
 	}
 	return nil
 }
+const updateReactionQuery = `UPDATE reactions SET is_like = ? WHERE  id = ?`
 
-func (p *reactionRepo) ExecPatchQuery(ctx context.Context, query string, reactionID crypto.UUID, args []any) error {
-	result, err := p.db.ExecContext(ctx, query, append(args, reactionID.Value)...) 	
+func (p *reactionRepo) UpdateReaction(ctx context.Context, reactionID crypto.UUID, isLike bool) error {
+	result, err := p.db.ExecContext(ctx, updateReactionQuery, isLike, reactionID.Value) 	
 	if err != nil {
 		return err
 	}

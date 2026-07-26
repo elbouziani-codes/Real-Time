@@ -27,6 +27,8 @@ CREATE TABLE
 		author_id CHAR(36) REFERENCES users (id) ON DELETE CASCADE,
 		title TEXT NOT NULL, 
 		content TEXT NOT NULL,
+		likes_count INTEGER DEFAULT 0,
+		dislikes_count INTEGER DEFAULT 0,
 		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
 		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
 	);
@@ -37,14 +39,16 @@ CREATE TABLE
 		author_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 		parent_id CHAR(36) NOT NULL,
 		content TEXT NOT NULL,
+		likes_count INTEGER DEFAULT 0,
+		dislikes_count INTEGER DEFAULT 0,
 		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
 		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
 	);
 
 CREATE TABLE
-	IF NOT EXISTS likes (
+	IF NOT EXISTS reactions (
 		id CHAR(36) PRIMARY KEY,
-		user_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+		author_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 		parent_id CHAR(36) NOT NULL,	
 		is_like BOOLEAN NOT NULL,
 		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
@@ -99,27 +103,77 @@ BEGIN
 	END;
 END;
 CREATE TRIGGER IF NOT EXISTS likes_satisfy
-BEFORE INSERT ON likes 
+BEFORE INSERT ON reactions 
 BEGIN
 	SELECT CASE	
 		WHEN NOT EXISTS(SELECT * FROM comments WHERE id = NEW.parent_id)
 		AND NOT EXISTS(SELECT * FROM posts WHERE id = NEW.parent_id) 
 		THEN RAISE(ABORT, "parent not exists")
-	END;
+	END; 
+END;
+CREATE TRIGGER IF NOT EXISTS likes_insert
+AFTER INSERT ON reactions 
+BEGIN
+	UPDATE comments  SET likes_count = likes_count+1 
+	WHERE id = NEW.parent_id AND NEW.is_like = TRUE; 
+
+	UPDATE posts  SET likes_count = likes_count+1 
+	WHERE id = NEW.parent_id AND NEW.is_like = TRUE;   
+
+	UPDATE comments  SET dislikes_count = dislikes_count+1 
+	WHERE id = NEW.parent_id AND NEW.is_like = FALSE;   
+
+	UPDATE posts  SET dislikes_count = dislikes_count+1 
+	WHERE id = NEW.parent_id AND NEW.is_like = FALSE;   
+
+END;
+CREATE TRIGGER IF NOT EXISTS likes_update
+AFTER UPDATE ON reactions 
+BEGIN
+	UPDATE comments  SET likes_count = likes_count+1, 
+	dislikes_count = dislikes_count-1 
+	WHERE id = NEW.parent_id AND NEW.is_like = TRUE ;  
+
+	UPDATE posts  SET likes_count = likes_count+1, 
+	dislikes_count = dislikes_count-1 
+	WHERE id = NEW.parent_id AND NEW.is_like = TRUE ;  
+
+	UPDATE comments  SET dislikes_count = dislikes_count+1, 
+	likes_count = likes_count-1 
+	WHERE id = NEW.parent_id AND NEW.is_like = FALSE;   
+
+	UPDATE posts  SET dislikes_count = dislikes_count+1, 
+	likes_count = likes_count-1
+	WHERE id = NEW.parent_id AND NEW.is_like = FALSE;   	
+END;
+CREATE TRIGGER IF NOT EXISTS likes_delete
+AFTER DELETE ON reactions 
+BEGIN
+	UPDATE comments  SET likes_count = likes_count-1 
+	WHERE id = OLD.parent_id AND OLD.is_like = TRUE ;  
+
+	UPDATE posts  SET likes_count = likes_count-1 
+	WHERE id = OLD.parent_id AND OLD.is_like = TRUE ;  
+
+	UPDATE comments  SET dislikes_count = dislikes_count-1 
+	WHERE id = OLD.parent_id AND OLD.is_like = FALSE;   
+
+	UPDATE posts  SET dislikes_count = dislikes_count-1 
+	WHERE id = OLD.parent_id AND OLD.is_like = FALSE;   	
 END;
 
 CREATE TRIGGER IF NOT EXISTS cascade_delete_poosts 
 AFTER DELETE ON posts 
 BEGIN
 	DELETE FROM comments WHERE old.id = parent_id;	
-	DELETE FROM likes WHERE old.id = parent_id;	
+	DELETE FROM reaction WHERE old.id = parent_id;	
 END;
 
 CREATE TRIGGER IF NOT EXISTS cascade_delete_comments 
 AFTER DELETE ON comments 
 BEGIN
 	DELETE FROM comments WHERE old.id = parent_id;	
-	DELETE FROM likes WHERE old.id = parent_id;	
+	DELETE FROM reactions WHERE old.id = parent_id;	
 
 END;
 

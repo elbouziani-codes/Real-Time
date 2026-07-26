@@ -20,6 +20,8 @@ type PostInfo struct {
 	Author UserProfile
 	Title     string
 	Content   string
+	Likes 	  int
+	DisLikes   int
 	CreatedAt int
 	UpdatedAt int
 }

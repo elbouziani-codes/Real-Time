@@ -18,6 +18,8 @@ type CommentInfo struct {
 	ID        crypto.UUID
 	ParentID  crypto.UUID
 	Author 	  UserProfile
+	Likes 	  int
+	DisLike   int
 	Content   string
 	CreatedAt int
 	UpdatedAt int

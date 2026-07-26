@@ -17,7 +17,7 @@ func NewPostRepo(db DBTX) *postRepo {
 
 
 const getPostsQuery = `
-SELECT P.id, P.title, P.content, P.created_at, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at
+SELECT P.id, P.title, P.content, likes_count, dislikes_count, P.created_at, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at
 FROM posts P  
 JOIN users U 
 ON P.author_id = U.id
@@ -31,6 +31,8 @@ func scanPost(row scanner) (*domain.PostInfo, error) {
 		&post.ID.Value,
 		&post.Title,
 		&post.Content,
+		&post.Likes,
+		&post.DisLikes,
 		&post.CreatedAt,
 		&post.Author.ID.Value,
 		&post.Author.NickName,
@@ -56,7 +58,7 @@ func (p *postRepo) SavePost(ctx context.Context, post domain.Post) error {
 }
 
 const getPostQuery = `
-SELECT P.id, P.title, P.content, P.created_at, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at
+SELECT P.id, P.title, P.content, likes_count, dislikes_count, P.created_at, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at
 FROM posts P  
 JOIN users U 
 ON P.author_id = U.id
