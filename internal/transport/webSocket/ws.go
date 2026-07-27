@@ -84,10 +84,10 @@ func (wss HandlerWs) engineMessages(ctx context.Context, sender *Client) {
 		}
 		if wsRequest.RequestType == "typing" {
 			
-			wss.sendTypingReceiver(wsRequest.A, sender.userId)
+			wss.sendTypingReceiver(wsRequest.Destination, sender.userId)
 			continue
 		}
-		chatId, err := wss.GetRoom(ctx, sender.userId,wsRequest.A)
+		chatId, err := wss.GetRoom(ctx, sender.userId,wsRequest.Destination)
 		if err != nil {
 			wss.responseWrite(crypto.Nil, 404, err.Error(), sender.userId, sender)
 			continue
@@ -103,9 +103,9 @@ func (wss HandlerWs) engineMessages(ctx context.Context, sender *Client) {
 	}
 }
 
-func (wss HandlerWs) sendReceiver(wsRequest domain.WsRequest, messageID crypto.UUID, senderID crypto.UUID) {
+func (wss HandlerWs) sendReceiver(wsRequest *domain.WsParsedRequest, messageID crypto.UUID, senderID crypto.UUID) {
 	wss.hub.mu.RLock()
-	receiver := wss.hub.clients[wsRequest.A]
+	receiver := wss.hub.clients[wsRequest.Destination]
 	wss.hub.mu.RUnlock()
 	if receiver != nil {
 		wss.responseWrite(messageID, 200, wsRequest.Content, senderID, receiver)
@@ -121,33 +121,32 @@ func (wss HandlerWs) sendTypingReceiver(receiverID crypto.UUID, senderID crypto.
 	}
 }
 
-func (wss HandlerWs) readInputMessage(ctx context.Context, client *Client) (error, domain.WsRequest) {
+func (wss HandlerWs) readInputMessage(ctx context.Context, client *Client) (error, *domain.WsParsedRequest) {
 	var wsRequest domain.WsRequest
 	err := client.conn.ReadJSON(&wsRequest)
 	if err != nil {
-		return errors.New("Close"), domain.WsRequest{}
+		return errors.New("Close"), &domain.WsParsedRequest{}
 	}
-	err = wsRequest.ValidRequest()
+	wsRequestParse, err := wsRequest.ValidRequest()
 	if err != nil {
 		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client)
-		return err, domain.WsRequest{}
+		return err, &domain.WsParsedRequest{}
 	}
-	wsRequest.A , err = crypto.ParseUUID(wsRequest.Destination)
-	_, err = wss.svcUser.GetByID(ctx, wsRequest.A)
+	_, err = wss.svcUser.GetByID(ctx, wsRequestParse.Destination)
 
 	if err != nil {
 					fmt.Println(err)
 
 		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client)
-		return err, domain.WsRequest{}
+		return err, &domain.WsParsedRequest{}
 	}
 
-	if client.userId.Value == wsRequest.A.Value {
+	if client.userId.Value == wsRequestParse.Destination.Value {
 		wss.responseWrite(crypto.Nil, 404, "Error in sender == Destination", client.userId, client)
-		return domain.Error{Message: "Error in sender == Destination", Code: domain.ConflictCode}, domain.WsRequest{}
+		return domain.Error{Message: "Error in sender == Destination", Code: domain.ConflictCode}, &domain.WsParsedRequest{}
 	}
 
-	return nil, wsRequest
+	return nil, wsRequestParse
 }
 
 func (wss HandlerWs) responseWrite(id crypto.UUID, codeError int, content string, SenderID crypto.UUID, receiver *Client) {
