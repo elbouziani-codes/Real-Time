@@ -2,28 +2,34 @@ package domain
 
 import (
 	"realTime/crypto"
-	"slices"
 )
-
-type Message struct {
-	ID       crypto.UUID
-	SenderID crypto.UUID
-	ChatID   crypto.UUID
-	Content  string
-}
 
 type ChatRoomOrigin struct {
 	ID          crypto.UUID
-	Particpants []crypto.UUID
+	Me 			crypto.UUID	
+	Freind 		crypto.UUID
 }
 
 type ChatRoomInput struct {
-	ID          string
-	Particpants []string
+	ID          string    	`json:"id"`
+	Me 			string		`json:"me"`
+	Freind 		string 		`json:"freind"`
 }
-
+type MessageOutput struct {
+	ID      	crypto.UUID 	`json:"id"`
+	Code    	int         	`json:"code"`
+	Sender  	crypto.UUID 	`json:"sender"`
+	ChatID   	crypto.UUID 	`json:"chat_id"`
+	Content 	string       	`json:"content"`
+	Created_at 	int64			`json:"created_at"`
+}
+type ChatRoomOutput struct {
+	ID          string    		`json:"id"`
+	Me 			[]MessageOutput `json:"me"`
+	Freind 		[]MessageOutput `json:"freind"`
+}
 func (chatInput *ChatRoomInput) ValidateAndParse(me crypto.UUID) (error, *ChatRoomOrigin){
-	if len(chatInput.Particpants) != 2 || (chatInput.Particpants[0] == "" || chatInput.Particpants[1] == "") || chatInput.Particpants[1] == chatInput.Particpants[0]{
+	if (chatInput.Me == ""  || chatInput.Freind == "") || chatInput.Me == chatInput.Freind{
 		return Error{Message: "error in slice Particpants", Code: 404}, &ChatRoomOrigin{}
 	}
 	if chatInput.ID == "" {
@@ -33,7 +39,7 @@ func (chatInput *ChatRoomInput) ValidateAndParse(me crypto.UUID) (error, *ChatRo
 	if err != nil {
 		return err, &ChatRoomOrigin{}
 	}
-	if slices.Contains(chatRoomOrigin.Particpants, me){
+	if chatRoomOrigin.Me !=  me{
 		return Error{Message: "error in ID pirmession for entre this Chatroom", Code: 404}, &ChatRoomOrigin{}
 	}
 	return nil, chatRoomOrigin
@@ -46,13 +52,20 @@ func (chatInput *ChatRoomInput) ParseUUID() (error, *ChatRoomOrigin){
 		return Error{Message: "error in Parse ID chatRoom", Code: 404}, &ChatRoomOrigin{}
 	}
 	chatRoomOrigin.ID = tab
-	for i := 0; i < len(chatInput.Particpants); i++ {
-		tab ,err := crypto.ParseUUID(chatInput.Particpants[i])
-		if err != nil {
-			return Error{Message: "error in Parse ID chatRoom", Code: 404}, &ChatRoomOrigin{}
-		}
-		chatRoomOrigin.Particpants = append(chatRoomOrigin.Particpants, tab)
+	
+	tab ,err = crypto.ParseUUID(chatInput.Me)
+	if err != nil {
+		return Error{Message: "error in Parse ID chatRoom", Code: 404}, &ChatRoomOrigin{}
 	}
+	chatRoomOrigin.Me = tab
+
+	tab ,err = crypto.ParseUUID(chatInput.Freind)
+	if err != nil {
+		return Error{Message: "error in Parse ID chatRoom", Code: 404}, &ChatRoomOrigin{}
+	}
+	chatRoomOrigin.Freind = tab
+
+
 	return nil, &chatRoomOrigin
 
 }

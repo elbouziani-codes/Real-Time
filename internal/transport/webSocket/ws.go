@@ -3,7 +3,6 @@ package ws
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"sync"
 
@@ -31,11 +30,11 @@ type ChatService interface {
 	IsChatNotFound(error) bool
 	CheckRoomChat(context.Context, []crypto.UUID) (crypto.UUID, error)
 	CreateRoomChat(context.Context, []crypto.UUID) (crypto.UUID, error)
-	SendMessageRoomChat(context.Context, string, crypto.UUID, crypto.UUID) (crypto.UUID, error)
+	SendMessageRoomChat(context.Context, string, crypto.UUID, crypto.UUID) (crypto.UUID, int64, error)
 }
 
-func NewHandleWs(svcChat ChatService, svcUser UserService) HandlerWs {
-	return HandlerWs{
+func NewHandleWs(svcChat ChatService, svcUser UserService) *HandlerWs {
+	return &HandlerWs{
 		svcChat: svcChat,
 		svcUser: svcUser,
 		hub: &hub{
@@ -44,12 +43,7 @@ func NewHandleWs(svcChat ChatService, svcUser UserService) HandlerWs {
 	}
 }
 
-type MessageOutput struct {
-	ID      crypto.UUID `json:"id"`
-	Code    int         `json:"code"`
-	Sender  crypto.UUID `json:"sender"`
-	Content string      `json:"content"`
-}
+
 
 type Client struct {
 	userId crypto.UUID
@@ -63,7 +57,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func (wss HandlerWs) ChatWs(w http.ResponseWriter, r *http.Request) {
+func (wss *HandlerWs) ChatWs(w http.ResponseWriter, r *http.Request) {
 	client, err := wss.AddClient(w, r)
 	if err != nil {
 		return
@@ -71,7 +65,7 @@ func (wss HandlerWs) ChatWs(w http.ResponseWriter, r *http.Request) {
 	go wss.engineMessages(r.Context(), client)
 }
 
-func (wss HandlerWs) engineMessages(ctx context.Context, sender *Client) {
+func (wss *HandlerWs) engineMessages(ctx context.Context, sender *Client) {
 	defer func() {
 		wss.DeleteClient(sender)
 	}()
@@ -82,46 +76,48 @@ func (wss HandlerWs) engineMessages(ctx context.Context, sender *Client) {
 		} else if err != nil {
 			continue
 		}
-		if wsRequest.RequestType == "typing" {
-			
-			wss.sendTypingReceiver(wsRequest.Destination, sender.userId)
-			continue
-		}
 		chatId, err := wss.GetRoom(ctx, sender.userId,wsRequest.Destination)
 		if err != nil {
-			wss.responseWrite(crypto.Nil, 404, err.Error(), sender.userId, sender)
+			wss.responseWrite(crypto.Nil, 404, err.Error(), sender.userId, sender , chatId ,0)
 			continue
 		}
+		
+		if wsRequest.RequestType == "typing" {
+			
+			wss.sendTypingReceiver(wsRequest.Destination, sender.userId , chatId)
+			continue
+		}
+		
 
-		messageID, err := wss.svcChat.SendMessageRoomChat(ctx, wsRequest.Content, sender.userId, chatId)
+		messageID, createAt, err := wss.svcChat.SendMessageRoomChat(ctx, wsRequest.Content, sender.userId, chatId)
 		if err != nil {
-			wss.responseWrite(crypto.Nil, 404, err.Error(), sender.userId, sender)
+			wss.responseWrite(crypto.Nil, 404, err.Error(), sender.userId, sender , chatId ,createAt)
 			continue
 		}
 
-		wss.sendReceiver(wsRequest, messageID, sender.userId)
+		wss.sendReceiver(wsRequest, messageID, sender.userId ,chatId ,createAt)
 	}
 }
 
-func (wss HandlerWs) sendReceiver(wsRequest *domain.WsParsedRequest, messageID crypto.UUID, senderID crypto.UUID) {
+func (wss *HandlerWs) sendReceiver(wsRequest *domain.WsParsedRequest, messageID crypto.UUID, senderID crypto.UUID , chatId crypto.UUID , create_at int64) {
 	wss.hub.mu.RLock()
 	receiver := wss.hub.clients[wsRequest.Destination]
 	wss.hub.mu.RUnlock()
 	if receiver != nil {
-		wss.responseWrite(messageID, 200, wsRequest.Content, senderID, receiver)
+		wss.responseWrite(messageID, 200, wsRequest.Content, senderID, receiver,chatId,create_at)
 	}
 }
 
-func (wss HandlerWs) sendTypingReceiver(receiverID crypto.UUID, senderID crypto.UUID) {
+func (wss *HandlerWs) sendTypingReceiver(receiverID crypto.UUID, senderID crypto.UUID,chatId crypto.UUID) {
 	wss.hub.mu.RLock()
 	receiver := wss.hub.clients[receiverID]
 	wss.hub.mu.RUnlock()
 	if receiver != nil {
-		wss.responseWrite(crypto.Nil, 2, "typing", senderID, receiver)
+		wss.responseWrite(crypto.Nil, 2, "typing", senderID, receiver , chatId ,0)
 	}
 }
 
-func (wss HandlerWs) readInputMessage(ctx context.Context, client *Client) (error, *domain.WsParsedRequest) {
+func (wss *HandlerWs) readInputMessage(ctx context.Context, client *Client) (error, *domain.WsParsedRequest) {
 	var wsRequest domain.WsRequest
 	err := client.conn.ReadJSON(&wsRequest)
 	if err != nil {
@@ -129,28 +125,26 @@ func (wss HandlerWs) readInputMessage(ctx context.Context, client *Client) (erro
 	}
 	wsRequestParse, err := wsRequest.ValidRequest()
 	if err != nil {
-		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client)
+		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client , crypto.Nil,0)
 		return err, &domain.WsParsedRequest{}
 	}
 	_, err = wss.svcUser.GetByID(ctx, wsRequestParse.Destination)
 
 	if err != nil {
-					fmt.Println(err)
-
-		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client)
+		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client, crypto.Nil,0)
 		return err, &domain.WsParsedRequest{}
 	}
 
 	if client.userId.Value == wsRequestParse.Destination.Value {
-		wss.responseWrite(crypto.Nil, 404, "Error in sender == Destination", client.userId, client)
+		wss.responseWrite(crypto.Nil, 404, "Error in sender == Destination", client.userId, client, crypto.Nil,0)
 		return domain.Error{Message: "Error in sender == Destination", Code: domain.ConflictCode}, &domain.WsParsedRequest{}
 	}
 
 	return nil, wsRequestParse
 }
 
-func (wss HandlerWs) responseWrite(id crypto.UUID, codeError int, content string, SenderID crypto.UUID, receiver *Client) {
-	MessageOutput := MessageOutput{ID: id, Code: codeError, Content: content, Sender: SenderID}
+func (wss *HandlerWs) responseWrite(id crypto.UUID, codeError int, content string, SenderID crypto.UUID, receiver *Client, chatID crypto.UUID, createdAt int64) {
+	MessageOutput := domain.MessageOutput{ID: id, Code: codeError, Content: content, Sender: SenderID, ChatID: chatID, Created_at: createdAt}
 	receiver.mu.Lock()
 	defer receiver.mu.Unlock()
 	err := receiver.conn.WriteJSON(&MessageOutput)
@@ -161,7 +155,7 @@ func (wss HandlerWs) responseWrite(id crypto.UUID, codeError int, content string
 	}
 }
 
-func (wss HandlerWs) GetRoom(ctx context.Context, userId crypto.UUID, ReceiverID crypto.UUID) (crypto.UUID, error) {
+func (wss *HandlerWs) GetRoom(ctx context.Context, userId crypto.UUID, ReceiverID crypto.UUID) (crypto.UUID, error) {
 	userIDs := []crypto.UUID{userId, ReceiverID}
 	idChat, err := wss.svcChat.CheckRoomChat(ctx, userIDs)
 	if wss.svcChat.IsChatNotFound(err) {
@@ -175,33 +169,31 @@ func (wss HandlerWs) GetRoom(ctx context.Context, userId crypto.UUID, ReceiverID
 	return idChat, err
 }
 
-func (wss HandlerWs) DeleteClient(client *Client) {
+func (wss *HandlerWs) DeleteClient(client *Client) {
 	wss.hub.mu.Lock()
-	defer wss.hub.mu.Unlock()
 
 	current, exists := wss.hub.clients[client.userId]
 
-	if !exists {
-		return
-	}
-
-	if current != client {
+	if !exists || current != client {
+		wss.hub.mu.Unlock()
 		return
 	}
 
 	delete(wss.hub.clients, client.userId)
 
+	wss.hub.mu.Unlock()
+
 	client.conn.Close()
 }
 
-func (wss HandlerWs) AddClient(w http.ResponseWriter, r *http.Request) (*Client, error) {
+func (wss *HandlerWs) AddClient(w http.ResponseWriter, r *http.Request) (*Client, error) {
 	userIDAny := r.Context().Value("user_id")
 	userID, _ := userIDAny.(crypto.UUID)
 	wss.hub.mu.Lock()
 	oldClient, ok := wss.hub.clients[userID]
 	wss.hub.mu.Unlock()
 	if ok {
-		wss.responseWrite(crypto.Nil, 1, "Close WebSocket Connection and Disable Chat Page", oldClient.userId, oldClient)
+		wss.responseWrite(crypto.Nil, 1, "Close WebSocket Connection and Disable Chat Page", oldClient.userId, oldClient ,crypto.Nil,0)
 		wss.DeleteClient(oldClient)
 	}
 

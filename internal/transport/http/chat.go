@@ -21,8 +21,8 @@ type hub struct {
 type ChatService interface {
 	IsChatNotFound(error) bool
 	CheckRoomChat(context.Context, []crypto.UUID) (crypto.UUID, error)
-	CreateRoomChat(context.Context, []crypto.UUID) (crypto.UUID, error)
-	SendMessageRoomChat(context.Context, string, crypto.UUID, crypto.UUID) (crypto.UUID, error)
+	GetMessages(context.Context, crypto.UUID, int) ([]domain.MessageOutput, error)
+	splitMessages([]domain.MessageOutput, crypto.UUID, crypto.UUID) ([]domain.MessageOutput, []domain.MessageOutput, error)
 }
 func NewHandleChat(chatService ChatService, userService UserService) *HandlerChat{
 	return &HandlerChat{ChatService: chatService , UserService:userService , hub: hub{lengthAllRead:0}}
@@ -49,7 +49,18 @@ func (chat *HandlerChat) Chat(w http.ResponseWriter , r *http.Request){
 	}else if chat.ChatService.IsChatNotFound(err){
 		return
 	}
+	messages, err := chat.ChatService.GetMessages(r.Context(), chatRoomOrigin.ID, chat.hub.lengthAllRead)
+	if err != nil{
+		http.Error(w,err.Error(), 404)
+		return
+	}
+	messagesMe, messagesFreind, err := chat.ChatService.splitMessages(messages, chatRoomOrigin.Me, chatRoomOrigin.Freind)
+	if err != nil{
+		http.Error(w,err.Error(), 404)
+		return
+	}
 	
+	Response := domain.ChatRoomOutput{ID:chatRoomInput.ID, Me:messagesMe, Freind:messagesFreind}
 }
 
 func (chat *HandlerChat) CheckRoomChat(ctx context.Context, chatRoomOrigin *domain.ChatRoomOrigin) error{

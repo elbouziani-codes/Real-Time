@@ -75,7 +75,8 @@ CREATE TABLE
 		id CHAR(36) PRIMARY KEY,
 		user_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 		conversation_id CHAR(36) NOT NULL REFERENCES conversations (id) ON DELETE CASCADE,
-		joined_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
+		joined_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
+		UNIQUE(user_id, conversation_id)
 	);
 
 	CREATE TABLE
