@@ -104,7 +104,7 @@ func (q *ChatRepo) GetMessages(ctx context.Context, chatID crypto.UUID, limit, o
 	defer rows.Close()
 	for rows.Next() {
 		var message domain.MessageOutput
-		err := rows.Scan(&message.ID, &message.Sender, &message.ChatID, &message.Content, &message.Created_at)
+		err := rows.Scan(&message.ID, &message.Sender, &message.ChatID.Value, &message.Content, &message.Created_at)
 		if err != nil { 
 			return nil, sqlite.TranslateError(err)
 		}

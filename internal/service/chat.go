@@ -87,18 +87,3 @@ func (c *chatService) GetMessages(ctx context.Context,chatID crypto.UUID, length
 	}
 	return messages, err
 }
-
-func (c *chatService) splitMessages(messages []domain.MessageOutput, me crypto.UUID, friend crypto.UUID) ([]domain.MessageOutput, []domain.MessageOutput, error) {
-	messagesMe := make([]domain.MessageOutput, 0)
-	messagesFriend := make([]domain.MessageOutput, 0)
-	for i := 0; i < len(messages); i++ {
-		if messages[i].Sender == me {
-			messagesMe = append(messagesMe, messages[i])
-		}else if messages[i].Sender == friend{
-			messagesFriend = append(messagesFriend, messages[i])
-		}else{
-			return nil, nil, domain.Error{Message: "error in messages ", Code: 500}
-		}
-	}
-	return messagesMe, messagesFriend, nil
-}

@@ -19,10 +19,9 @@ type ChatService interface {
 	IsChatNotFound(error) bool
 	CheckRoomChat(context.Context, []crypto.UUID) (crypto.UUID, error)
 	GetMessages(context.Context, crypto.UUID, int) ([]domain.MessageOutput, error)
-	splitMessages([]domain.MessageOutput, crypto.UUID, crypto.UUID) ([]domain.MessageOutput, []domain.MessageOutput, error)
 }
 func NewHandleChat(chatService ChatService, userService UserService) *HandlerChat{
-	return &HandlerChat{ChatService: chatService , UserService:userService}
+	return &HandlerChat{ChatService: chatService, UserService: userService}
 }
 func (chat *HandlerChat) Chat(w http.ResponseWriter , r *http.Request){
 	userIDAny := r.Context().Value("user_id")

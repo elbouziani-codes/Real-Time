@@ -39,10 +39,12 @@ func main() {
 	authHandler := handler.NewAuthHandler(authSvc, userSvc)
 	postHandler := handler.NewPostHandler(postSvc)
 	testHandler := handler.NewTestHandler(authSvc, userSvc)
-	chatHandler := ws.NewHandleWs(charSvc, userSvc)
+	wsHandler := ws.NewHandleWs(charSvc, userSvc)
+	chatHandler := handler.NewHandleChat(charSvc, userSvc)
+
 
 	middleware := middleware.NewMiddleware(authSvc)
-	router := handler.NewRouter(authHandler, postHandler, &testHandler, chatHandler, middleware)
+	router := handler.NewRouter(authHandler, postHandler, &testHandler, wsHandler, chatHandler, middleware)
 	http.ListenAndServe(":8081", router)
 	log.Println("Database Initialised")
 }
