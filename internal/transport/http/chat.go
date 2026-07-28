@@ -12,12 +12,9 @@ import (
 type HandlerChat struct {
 	ChatService ChatService
 	UserService UserService
-	hub         hub
 }
 
-type hub struct {
-	lengthAllRead int
-}
+
 type ChatService interface {
 	IsChatNotFound(error) bool
 	CheckRoomChat(context.Context, []crypto.UUID) (crypto.UUID, error)
@@ -25,7 +22,7 @@ type ChatService interface {
 	splitMessages([]domain.MessageOutput, crypto.UUID, crypto.UUID) ([]domain.MessageOutput, []domain.MessageOutput, error)
 }
 func NewHandleChat(chatService ChatService, userService UserService) *HandlerChat{
-	return &HandlerChat{ChatService: chatService , UserService:userService , hub: hub{lengthAllRead:0}}
+	return &HandlerChat{ChatService: chatService , UserService:userService}
 }
 func (chat *HandlerChat) Chat(w http.ResponseWriter , r *http.Request){
 	userIDAny := r.Context().Value("user_id")
@@ -47,24 +44,29 @@ func (chat *HandlerChat) Chat(w http.ResponseWriter , r *http.Request){
 		http.Error(w,err.Error(), 404)
 		return
 	}else if chat.ChatService.IsChatNotFound(err){
+		Response := domain.ChatRoomOutput{ID:chatRoomInput.ID, Messages:[]domain.MessageOutput{}}
+		err = json.NewEncoder(w).Encode(&Response)
+		if err != nil{
+			http.Error(w,err.Error(), 404)
+			return
+		}
 		return
 	}
-	messages, err := chat.ChatService.GetMessages(r.Context(), chatRoomOrigin.ID, chat.hub.lengthAllRead)
+	messages, err := chat.ChatService.GetMessages(r.Context(), chatRoomOrigin.ID, chatRoomInput.Offset)
 	if err != nil{
 		http.Error(w,err.Error(), 404)
 		return
 	}
-	messagesMe, messagesFreind, err := chat.ChatService.splitMessages(messages, chatRoomOrigin.Me, chatRoomOrigin.Freind)
+	Response := domain.ChatRoomOutput{ID:chatRoomInput.ID, Messages: messages}
+	err = json.NewEncoder(w).Encode(&Response)
 	if err != nil{
 		http.Error(w,err.Error(), 404)
 		return
 	}
-	
-	Response := domain.ChatRoomOutput{ID:chatRoomInput.ID, Me:messagesMe, Freind:messagesFreind}
 }
 
 func (chat *HandlerChat) CheckRoomChat(ctx context.Context, chatRoomOrigin *domain.ChatRoomOrigin) error{
-	idChat, err := chat.ChatService.CheckRoomChat(ctx, chatRoomOrigin.Particpants)
+	idChat, err := chat.ChatService.CheckRoomChat(ctx, []crypto.UUID{chatRoomOrigin.Me, chatRoomOrigin.Freind})
 	if err != nil{
 		return err
 	}

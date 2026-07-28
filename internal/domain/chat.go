@@ -14,6 +14,7 @@ type ChatRoomInput struct {
 	ID          string    	`json:"id"`
 	Me 			string		`json:"me"`
 	Freind 		string 		`json:"freind"`
+	Offset		int			`json:"offset"`
 }
 type MessageOutput struct {
 	ID      	crypto.UUID 	`json:"id"`
@@ -25,8 +26,8 @@ type MessageOutput struct {
 }
 type ChatRoomOutput struct {
 	ID          string    		`json:"id"`
-	Me 			[]MessageOutput `json:"me"`
-	Freind 		[]MessageOutput `json:"freind"`
+	Messages 	[]MessageOutput `json:"me"`
+
 }
 func (chatInput *ChatRoomInput) ValidateAndParse(me crypto.UUID) (error, *ChatRoomOrigin){
 	if (chatInput.Me == ""  || chatInput.Freind == "") || chatInput.Me == chatInput.Freind{
