@@ -25,7 +25,6 @@ type WsParsedRequest struct {
 }
 
 func (wsR *WsRequest) ValidRequest() (*WsParsedRequest, error) {
-	var parsed WsParsedRequest
 	if wsR.RequestType != "message" && wsR.RequestType != "typing" {
 		return nil, Error{Message: "Error in Type Request", Code: BadFormatCode}
 	}
@@ -41,11 +40,14 @@ func (wsR *WsRequest) ValidRequest() (*WsParsedRequest, error) {
 			return nil, Error{Message: "error in ID Message", Code: BadFormatCode}
 		}
 	}
-
 	Destination, err := crypto.ParseUUID(wsR.Destination)
 	if err != nil{
 		return nil, Error{Message: "error in ID Message", Code: BadFormatCode}
 	}
+	var parsed WsParsedRequest
+	parsed.RequestType = wsR.RequestType
+	parsed.Mod = wsR.Mod
+	parsed.Content = wsR.Content
 	parsed.Destination = Destination
 	return &parsed, nil
 }

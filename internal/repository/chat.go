@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"realTime/crypto"
 	"realTime/internal/domain"
@@ -28,7 +29,8 @@ func NewChatRepo(db DBTX) *ChatRepo { // repository(for all cases)
 const createChatQuery = `INSERT into conversations (id) VALUES (?)`
 
 func (q *ChatRepo) CreateConversation(ctx context.Context, chatID crypto.UUID, tx *sql.Tx) error {
-	_, err := tx.ExecContext(ctx, createChatQuery, chatID)
+	_, err := tx.ExecContext(ctx, createChatQuery, chatID.Value)
+	fmt.Println(err)
 	return sqlite.TranslateError(err)
 }
 
@@ -47,8 +49,9 @@ func (q *ChatRepo) CreateConversationWithParticipants(ctx context.Context, chatI
 	}
 
 	for i, userID := range userIDs {
-		_, err = tx.ExecContext(ctx, CreateConversationParticipantsQuery, idUUID[i], userID, chatID)
+		_, err = tx.ExecContext(ctx, CreateConversationParticipantsQuery, idUUID[i].Value, userID.Value, chatID.Value)
 		if err != nil {
+			fmt.Println(err)
 			return sqlite.TranslateError(err)
 		}
 	}
@@ -116,9 +119,10 @@ func (q *ChatRepo) GetMessages(ctx context.Context, chatID crypto.UUID, limit, o
 const sendMessageQuery = `INSERT INTO messages (id, sender_id, content, conversation_id) VALUES (?, ?, ?, ?) RETURNING created_at`
 
 func (q *ChatRepo) SendMessage(ctx context.Context, message domain.MessageOutput) (int64, error) {
+	fmt.Println(message)
 	var createdAt int64
 
-	err := q.db.QueryRowContext(ctx, sendMessageQuery, message.ID, message.Sender, message.Content, message.ChatID).Scan(&createdAt)
+	err := q.db.QueryRowContext(ctx, sendMessageQuery, message.ID.Value, message.Sender.Value, message.Content, message.ChatID.Value).Scan(&createdAt)
 	if err != nil {
 		return -1, sqlite.TranslateError(err)
 	}

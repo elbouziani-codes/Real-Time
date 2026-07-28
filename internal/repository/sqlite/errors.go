@@ -3,12 +3,15 @@ package sqlite
 import (
 	"database/sql"
 	"errors"
-	"github.com/mattn/go-sqlite3"
+	"fmt"
 	"realTime/internal/domain"
 	"strings"
+
+	"github.com/mattn/go-sqlite3"
 )
 
 func TranslateError(constraintError error) error {
+	fmt.Println(constraintError)
 	if constraintError == nil {
 		return constraintError
 	}
