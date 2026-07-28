@@ -30,7 +30,6 @@ const createChatQuery = `INSERT into conversations (id) VALUES (?)`
 
 func (q *ChatRepo) CreateConversation(ctx context.Context, chatID crypto.UUID, tx *sql.Tx) error {
 	_, err := tx.ExecContext(ctx, createChatQuery, chatID.Value)
-	fmt.Println(err)
 	return sqlite.TranslateError(err)
 }
 
@@ -51,7 +50,6 @@ func (q *ChatRepo) CreateConversationWithParticipants(ctx context.Context, chatI
 	for i, userID := range userIDs {
 		_, err = tx.ExecContext(ctx, CreateConversationParticipantsQuery, idUUID[i].Value, userID.Value, chatID.Value)
 		if err != nil {
-			fmt.Println(err)
 			return sqlite.TranslateError(err)
 		}
 	}
@@ -95,8 +93,9 @@ const getMessagesQuery = `
 	OFFSET ?
 `
 
-func (q *ChatRepo) GetMessages(ctx context.Context, chatID crypto.UUID, limit, offset int) ([]domain.MessageOutput, error) {
-	rows, err := q.db.QueryContext(ctx, getMessagesQuery, chatID, limit, offset) // must be updated later
+func (q *ChatRepo) GetMessages(ctx context.Context, chatID crypto.UUID, offset, limit int) ([]domain.MessageOutput, error) {
+	fmt.Println(chatID, limit, offset)
+	rows, err := q.db.QueryContext(ctx, getMessagesQuery, chatID.Value, limit, offset) // must be updated later
 	if err != nil {
 		return nil, sqlite.TranslateError(err)
 	}
@@ -104,7 +103,7 @@ func (q *ChatRepo) GetMessages(ctx context.Context, chatID crypto.UUID, limit, o
 	defer rows.Close()
 	for rows.Next() {
 		var message domain.MessageOutput
-		err := rows.Scan(&message.ID, &message.Sender, &message.ChatID.Value, &message.Content, &message.Created_at)
+		err := rows.Scan(&message.ID.Value, &message.Sender.Value, &message.ChatID.Value, &message.Content, &message.Created_at)
 		if err != nil { 
 			return nil, sqlite.TranslateError(err)
 		}
@@ -119,7 +118,6 @@ func (q *ChatRepo) GetMessages(ctx context.Context, chatID crypto.UUID, limit, o
 const sendMessageQuery = `INSERT INTO messages (id, sender_id, content, conversation_id) VALUES (?, ?, ?, ?) RETURNING created_at`
 
 func (q *ChatRepo) SendMessage(ctx context.Context, message domain.MessageOutput) (int64, error) {
-	fmt.Println(message)
 	var createdAt int64
 
 	err := q.db.QueryRowContext(ctx, sendMessageQuery, message.ID.Value, message.Sender.Value, message.Content, message.ChatID.Value).Scan(&createdAt)

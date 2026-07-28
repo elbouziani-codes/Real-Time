@@ -30,6 +30,7 @@ type ChatRoomOutput struct {
 
 }
 func (chatInput *ChatRoomInput) ValidateAndParse(me crypto.UUID) (error, *ChatRoomOrigin){
+	
 	if (chatInput.Me == ""  || chatInput.Freind == "") || chatInput.Me == chatInput.Freind{
 		return Error{Message: "error in slice Particpants", Code: 404}, &ChatRoomOrigin{}
 	}
@@ -40,7 +41,8 @@ func (chatInput *ChatRoomInput) ValidateAndParse(me crypto.UUID) (error, *ChatRo
 	if err != nil {
 		return err, &ChatRoomOrigin{}
 	}
-	if chatRoomOrigin.Me !=  me{
+
+	if chatRoomOrigin.Me.Value !=  me.Value{
 		return Error{Message: "error in ID pirmession for entre this Chatroom", Code: 404}, &ChatRoomOrigin{}
 	}
 	return nil, chatRoomOrigin

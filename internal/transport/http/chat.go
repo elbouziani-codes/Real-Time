@@ -37,7 +37,6 @@ func (chat *HandlerChat) Chat(w http.ResponseWriter , r *http.Request){
 		http.Error(w,err.Error(), 404)
 		return
 	}
-
 	err = chat.CheckRoomChat(r.Context(), chatRoomOrigin)
 	if err != nil{
 		http.Error(w,err.Error(), 404)
@@ -70,7 +69,7 @@ func (chat *HandlerChat) CheckRoomChat(ctx context.Context, chatRoomOrigin *doma
 		return err
 	}
 	if idChat != chatRoomOrigin.ID{
-		return domain.Error{Message: "Error in ID Chat NOT Valid", Code: 404}
+		return domain.Error{Message: "Error in ID Chat NOT Valid", Code: 401}
 	}
 	return nil
 }

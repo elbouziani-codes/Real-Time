@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"realTime/crypto"
 	"realTime/internal/domain"
 	"realTime/internal/repository/sqlite"
@@ -29,7 +28,6 @@ func scanSession(row scanner) (domain.Session, error) {
 		&session.CreatedAt,
 		&session.ExpireAt)
 	if err != nil {
-		fmt.Println(err)
 		return domain.Session{}, sqlite.TranslateError(err)
 	}
 	/*
@@ -44,7 +42,6 @@ func scanSession(row scanner) (domain.Session, error) {
 			return session, err
 
 		}*/
-	fmt.Println(session)
 	return session, nil
 }
 
@@ -53,7 +50,6 @@ const createSessionQuery = `
 `
 
 func (a *AuthRepo) SaveSession(ctx context.Context, sessionID, userID crypto.UUID) error {
-	fmt.Println(userID, sessionID)
 	_, err := a.db.ExecContext(ctx, createSessionQuery, sessionID.Value, userID.Value)
 	if err != nil {
 		return sqlite.TranslateError(err)

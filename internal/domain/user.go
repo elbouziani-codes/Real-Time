@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"realTime/crypto"
 	"regexp"
 	"strings"
@@ -41,7 +40,6 @@ func ValueidateUserInfo(registerRequest RegisterRequest) (User, error) {
 	user.FirstName = strings.TrimSpace(registerRequest.FirstName)
 	user.Gender = strings.TrimSpace(registerRequest.Gender)
 	user.Age = registerRequest.Age
-	fmt.Println(registerRequest)
 	if len(user.Password) < 8 || len(user.Password) > 20 {
 		return user, Error{Message: "password length must be between 8 and 20", Code: BadFormatCode}
 	}

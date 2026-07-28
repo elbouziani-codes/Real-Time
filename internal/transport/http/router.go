@@ -15,7 +15,7 @@ func NewRouter(authHandler *AuthHandler, postHandler *PostHandler, testHandler *
 
 	router.HandleFunc("POST /api/register", authHandler.Register)
 	router.HandleFunc("POST /api/login", authHandler.Login)
-	router.HandleFunc("POST /api/getMessage", chatHandler.Chat)
+	router.Handle("POST /api/getMessage", middleware.Auth(http.HandlerFunc(chatHandler.Chat)))
 	router.Handle("GET /api/posts", middleware.Auth(http.HandlerFunc(postHandler.GetPosts)))
 	router.Handle("GET /api/ws", middleware.Auth(http.HandlerFunc(wsHander.ChatWs)))
 	router.Handle("POST /api/posts", middleware.Auth(http.HandlerFunc(postHandler.CreatePost)))

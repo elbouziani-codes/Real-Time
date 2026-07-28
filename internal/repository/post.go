@@ -61,12 +61,10 @@ func (p *postRepo) GetPosts(ctx context.Context, limit, offset int) ([]*domain.P
 	defer rows.Close()
 	var posts []*domain.Post
 	for rows.Next() {
-		fmt.Println("a")
 		post, err := scanPost(rows)
 		if err != nil {
 			return nil, sqlite.TranslateError(err)	
 		}
-		fmt.Println(posts)
 		posts = append(posts, post)
 	}
 	return posts, nil 

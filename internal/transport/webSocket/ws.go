@@ -3,7 +3,6 @@ package ws
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"sync"
 
@@ -84,7 +83,6 @@ func (wss *HandlerWs) engineMessages(ctx context.Context, sender *Client) {
 		}
 		
 		if wsRequest.RequestType == "typing" {
-			fmt.Println("dddddfddddd")
 			wss.sendTypingReceiver(wsRequest.Destination, sender.userId , chatId)
 			continue
 		}
@@ -140,7 +138,6 @@ func (wss *HandlerWs) readInputMessage(ctx context.Context, client *Client) (err
 		wss.responseWrite(crypto.Nil, 404, "Error in sender == Destination", client.userId, client, crypto.Nil,0)
 		return domain.Error{Message: "Error in sender == Destination", Code: domain.ConflictCode}, &domain.WsParsedRequest{}
 	}
-fmt.Println("conetnt", wsRequestParse.Content)
 	return nil, wsRequestParse
 }
 

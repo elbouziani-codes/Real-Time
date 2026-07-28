@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"realTime/crypto"
 	"realTime/internal/domain"
@@ -130,7 +129,6 @@ func (a *AuthHandler) setCookie(w http.ResponseWriter, sessionID crypto.UUID) {
 	http.SetCookie(w, cookie)
 }
 func Error(err error, w http.ResponseWriter) {
-	fmt.Println(err)
 	var valErr domain.Error
 	if errors.As(err, &valErr) {
 		switch valErr.Code {

@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"realTime/crypto"
 	"realTime/internal/domain"
 	"time"
@@ -46,7 +45,6 @@ func (a *AuthService) CreateSession(ctx context.Context, userID crypto.UUID) (cr
 func (a *AuthService) ValueidateSession(ctx context.Context, sessionID crypto.UUID) (domain.Session, error) {
 	session, err := a.authRepo.GetByID(ctx, sessionID)
 	if err != nil {
-		fmt.Println("exit", sessionID)
 		return domain.Session{}, err
 	}
 	if time.Now().Unix() > session.ExpireAt {
@@ -79,7 +77,6 @@ func (a *AuthService) Login(ctx context.Context, creds domain.Credentials, idTyp
 	var hashedPassword string
 	if idType == domain.EmailType {
 		user, err := a.userGetter.GetByEmail(ctx, creds.Identifier)
-		fmt.Println(err)
 		if err != nil {
 			return crypto.Nil, domain.Error{Message: "invalid credentials", Code: domain.UnauthorizedCode}
 
