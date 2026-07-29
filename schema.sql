@@ -37,6 +37,7 @@ CREATE TABLE
 	IF NOT EXISTS categories (
 		id CHAR(36) PRIMARY KEY,
 		title TEXT NOT NULL, 
+		icon TEXT NOT NULL,
 		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
 	);
 

@@ -34,7 +34,7 @@ func (p *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := domain.ValueidatePostRequest(request)
+	post, err := domain.ValidatePostRequest(request)
 	if err != nil {
 		Error(err, w)
 		return
@@ -63,7 +63,7 @@ func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 		offset = 0 //fallbacking to 0
 	}
 
-
+	
 	posts, err := p.postSvc.GetPosts(r.Context(), userID, 20, offset)
 	if err != nil {
 		Error(err, w)

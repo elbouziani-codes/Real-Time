@@ -21,6 +21,7 @@ type AuthService interface {
 
 type UserService interface {
 	CreateUser(context.Context, *domain.User) error
+	GetUser(context.Context, crypto.UUID, crypto.UUID) (*domain.UserProfile, error)
 }
 
 type AuthHandler struct {
@@ -53,7 +54,24 @@ type userInfo struct {
 	Email    string
 	Age      int
 }
+func (a *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
+	userIDAny := r.Context().Value("user_id")
+	userID := userIDAny.(crypto.UUID)
+	
+	user, err := a.userSvc.GetUser(r.Context(), userID, userID)
+	if err != nil {
+		Error(err, w)
+		return
+	}
+	
+	
+	
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		http.Error(w, "uknown error", http.StatusInternalServerError)
+		return
+	}
 
+}
 func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	registerRequest := domain.RegisterRequest{}
 	defer r.Body.Close()

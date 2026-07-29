@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+
+
 type Post struct {
 	ID       crypto.UUID
 	AuthorID crypto.UUID
@@ -43,7 +45,7 @@ type CreatePostRequest struct {
 	Content string `json:"content"`
 }
 
-func ValueidatePostRequest(request CreatePostRequest) (Post, error) {
+func ValidatePostRequest(request CreatePostRequest) (Post, error) {
 	post := Post{}
 	request.Title = strings.TrimSpace(request.Title)
 	request.Content = strings.TrimSpace(request.Content)
@@ -117,7 +119,7 @@ type GetPostsRequest struct {
 	Limit   int  `json:"limit"`
 }
 
-func ValueidateGetPostsRequest(request GetPostsRequest) (error) {
+func ValidateGetPostsRequest(request GetPostsRequest) (error) {
 	if request.Offset <= 0 || request.Limit <= 0 {
 			return Error{Message: "invalid filters", Code: BadFormatCode}		
 	}	
