@@ -11,8 +11,8 @@ import (
 
 type postService interface {
 	CreatePost(context.Context, *domain.Post) error
-	GetPost(context.Context, crypto.UUID) (*domain.PostInfo, error)
-	GetPosts(context.Context, int, int) ([]*domain.PostInfo, error)
+	GetPost(context.Context, crypto.UUID, crypto.UUID) (*domain.PostInfo, error)
+	GetPosts(context.Context, crypto.UUID, int, int) ([]*domain.PostInfo, error)
 	PatchPost(context.Context, domain.PatchPostRequest, crypto.UUID) (error)
 }
 
@@ -54,7 +54,8 @@ func (p *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
-	
+	userIDAny := r.Context().Value("user_id")
+	userID := userIDAny.(crypto.UUID)
 	query := r.URL.Query() 
 	n := query.Get("offset") 
 	offset, _ := strconv.Atoi(n) // I dont need to check error because if it failed then it will be 0   			
@@ -63,7 +64,7 @@ func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	posts, err := p.postSvc.GetPosts(r.Context(), 20, offset)
+	posts, err := p.postSvc.GetPosts(r.Context(), userID, 20, offset)
 	if err != nil {
 		Error(err, w)
 		return
@@ -78,12 +79,14 @@ func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
+	userIDAny := r.Context().Value("user_id")
+	userID := userIDAny.(crypto.UUID)
 	postID, err := crypto.ParseUUID(r.PathValue("id")) 
 	if err != nil {
 		Error(domain.Error{Message: "invalid post id", Code: domain.BadFormatCode}, w)	
 		return
 	}
-	post, err := p.postSvc.GetPost(r.Context(), postID)
+	post, err := p.postSvc.GetPost(r.Context(), userID, postID)
 	if err != nil {
 		Error(err, w)
 		return
@@ -118,7 +121,7 @@ func (p *PostHandler) PatchPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := p.postSvc.GetPost(r.Context(), postID)
+	post, err := p.postSvc.GetPost(r.Context(), userID, postID)
 	if err != nil {
 		Error(err, w)
 		return

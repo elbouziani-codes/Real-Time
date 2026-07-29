@@ -25,12 +25,19 @@ CREATE TABLE
 	IF NOT EXISTS posts (
 		id CHAR(36) PRIMARY KEY,
 		author_id CHAR(36) REFERENCES users (id) ON DELETE CASCADE,
+		category CHAR(36) REFERENCES categories (id) ON DELETE CASCADE,
 		title TEXT NOT NULL, 
 		content TEXT NOT NULL,
 		likes_count INTEGER DEFAULT 0,
 		dislikes_count INTEGER DEFAULT 0,
 		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
 		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
+	);
+CREATE TABLE
+	IF NOT EXISTS categories (
+		id CHAR(36) PRIMARY KEY,
+		title TEXT NOT NULL, 
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
 	);
 
 CREATE TABLE
@@ -44,6 +51,7 @@ CREATE TABLE
 		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
 		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
 	);
+
 
 CREATE TABLE
 	IF NOT EXISTS reactions (

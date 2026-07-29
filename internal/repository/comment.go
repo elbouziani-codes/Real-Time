@@ -1,5 +1,6 @@
 package repository
 
+
 import (
 	"fmt"
 	"context"
@@ -18,10 +19,12 @@ func NewCommentRepo(db DBTX) *commentRepo {
 
 
 const getCommentsQuery = `
-SELECT C.id,  C.content, C.created_at, C.parent_id, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at
+SELECT C.id,  C.content, C.created_at, C.parent_id, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at, COALESCE(R.id, '00000000-0000-0000-0000-000000000000'), COALESCE(R.is_like, FALSE) 
 FROM comments C  
 JOIN users U 
 ON C.author_id = U.id
+LEFT JOIN  reactions R  
+ON R.author_id = ? AND C.id = R.parent.id  
 WHERE C.parent_id = ?
 `
 
@@ -38,7 +41,9 @@ func scanComment(row scanner) (*domain.CommentInfo, error) {
 		&comment.Author.FirstName,
 		&comment.Author.Gender,
 		&comment.Author.Age,
-		&comment.Author.CreatedAt)
+		&comment.Author.CreatedAt,
+		&comment.LikeInfo.ID.Value,
+		&comment.LikeInfo.IsLike)
 	if err != nil {
 		return nil, sqlite.TranslateError(err)
 	}
@@ -56,16 +61,18 @@ func (p *commentRepo) SaveComment(ctx context.Context, comment domain.Comment) e
 }
 
 const getCommentQuery = `
-SELECT C.id,  C.content, C.created_at, C.parent_id, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at
+SELECT C.id,  C.content, C.created_at, C.parent_id, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at, COALESCE(R.id, '00000000-0000-0000-0000-000000000000'), COALESCE(R.is_like, FALSE)
 FROM comments C  
 JOIN users U 
 ON C.author_id = U.id
+LEFT JOIN  reactions R  
+ON R.author_id = ? AND C.id = R.parent.id  
 WHERE C.id = ?
 `
 
 
-func (p *commentRepo) GetComment(ctx context.Context, commentID crypto.UUID) (*domain.CommentInfo, error) {
-	row := p.db.QueryRowContext(ctx, getCommentQuery, commentID.Value)	
+func (p *commentRepo) GetComment(ctx context.Context, userID, commentID crypto.UUID) (*domain.CommentInfo, error) {
+	row := p.db.QueryRowContext(ctx, getCommentQuery, userID.Value, commentID.Value)	
 	return scanComment(row) 
 }
 
@@ -74,8 +81,8 @@ func (p *commentRepo) GetComment(ctx context.Context, commentID crypto.UUID) (*d
 //						ORDER BY created_at DESC 
 //						LIMIT ? OFFSET ?; `
 
-func (p *commentRepo) GetComments(ctx context.Context, parentID crypto.UUID) ([]*domain.CommentInfo, error) {
-	rows, err := p.db.QueryContext(ctx, getCommentsQuery, parentID.Value)	
+func (p *commentRepo) GetComments(ctx context.Context, userID, parentID crypto.UUID) ([]*domain.CommentInfo, error) {
+	rows, err := p.db.QueryContext(ctx, getCommentsQuery, userID.Value, parentID.Value)	
 	
 	if err != nil {
 		return nil, sqlite.TranslateError(err)	

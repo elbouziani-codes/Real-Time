@@ -10,9 +10,9 @@ import (
 
 type commentService interface {
 	CreateComment(context.Context, *domain.Comment) error
-	GetComment(context.Context, crypto.UUID) (*domain.CommentInfo, error)
+	GetComment(context.Context, crypto.UUID, crypto.UUID) (*domain.CommentInfo, error)
 	DeleteComment(context.Context, crypto.UUID) (error)
-	GetComments(context.Context, crypto.UUID) ([]*domain.CommentInfo, error)
+	GetComments(context.Context, crypto.UUID, crypto.UUID) ([]*domain.CommentInfo, error)
 	PatchComment(context.Context, domain.PatchCommentRequest, crypto.UUID) (error)
 }
 
@@ -66,7 +66,7 @@ func (c *CommentHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 		Error(domain.Error{Message: "invalid comment id", Code: domain.BadFormatCode}, w)	
 		return
 	}
-	comment, err := c.commentSvc.GetComment(r.Context(), commentID)
+	comment, err := c.commentSvc.GetComment(r.Context(), userID, commentID)
 	if err != nil {
 		Error(err, w)
 		return
@@ -89,7 +89,9 @@ func (c *CommentHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *CommentHandler) GetComments(w http.ResponseWriter, r *http.Request) {
-	
+	userIDAny := r.Context().Value("user_id")
+	userID := userIDAny.(crypto.UUID)
+
 	id, err := crypto.ParseUUID(r.PathValue("id")) 
 	if err != nil {
 			Error(domain.Error{Message: "invalid id", Code: domain.BadFormatCode}, w)
@@ -97,7 +99,7 @@ func (c *CommentHandler) GetComments(w http.ResponseWriter, r *http.Request) {
 	}		
 
 
-	comments, err := c.commentSvc.GetComments(r.Context(), id)
+	comments, err := c.commentSvc.GetComments(r.Context(), userID, id)
 	if err != nil {
 		Error(err, w)
 		return
@@ -112,12 +114,15 @@ func (c *CommentHandler) GetComments(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *CommentHandler) GetComment(w http.ResponseWriter, r *http.Request) {
+	userIDAny := r.Context().Value("user_id")
+	userID := userIDAny.(crypto.UUID)
+
 	commentID, err := crypto.ParseUUID(r.PathValue("id")) 
 	if err != nil {
 		Error(domain.Error{Message: "invalid comment id", Code: domain.BadFormatCode}, w)	
 		return
 	}
-	comment, err :=c.commentSvc.GetComment(r.Context(), commentID)
+	comment, err :=c.commentSvc.GetComment(r.Context(), userID, commentID)
 	if err != nil {
 		Error(err, w)
 		return
@@ -152,7 +157,7 @@ func (c *CommentHandler) PatchComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	comment, err :=c.commentSvc.GetComment(r.Context(), commentID)
+	comment, err :=c.commentSvc.GetComment(r.Context(), userID, commentID)
 	if err != nil {
 		Error(err, w)
 		return

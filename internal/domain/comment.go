@@ -21,6 +21,7 @@ type CommentInfo struct {
 	Likes 	  int
 	DisLike   int
 	Content   string
+	LikeInfo  LikeInfo
 	CreatedAt int
 	UpdatedAt int
 }

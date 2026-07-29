@@ -13,9 +13,9 @@ type commentService struct {
 
 type CommentRepo interface {
 	SaveComment(context.Context, domain.Comment) error
-	GetComment(context.Context, crypto.UUID) (*domain.CommentInfo, error)
+	GetComment(context.Context, crypto.UUID, crypto.UUID) (*domain.CommentInfo, error)
 	DeleteComment(context.Context, crypto.UUID) (error)
-	GetComments(context.Context, crypto.UUID) ([]*domain.CommentInfo, error)	
+	GetComments(context.Context, crypto.UUID, crypto.UUID) ([]*domain.CommentInfo, error)	
 	ExecPatchQuery(context.Context, string, crypto.UUID, []any) error 
 }
 
@@ -36,8 +36,8 @@ func (p *commentService) CreateComment(ctx context.Context, comment *domain.Comm
 	return nil
 }
 
-func (p *commentService) GetComment(ctx context.Context, commentID crypto.UUID) (*domain.CommentInfo, error) {
-	return  p.commentRepo.GetComment(ctx, commentID) 
+func (p *commentService) GetComment(ctx context.Context, userID, commentID crypto.UUID) (*domain.CommentInfo, error) {
+	return  p.commentRepo.GetComment(ctx, userID, commentID) 
 }
 
 func (p *commentService) DeleteComment(ctx context.Context, commentID crypto.UUID) (error) {
@@ -51,8 +51,8 @@ func (p *commentService) PatchComment(ctx context.Context, editObject domain.Pat
 }
 
 
-func (p *commentService) GetComments(ctx context.Context, parentID crypto.UUID) ([]*domain.CommentInfo, error) {
-	return p.commentRepo.GetComments(context.Background(), parentID)
+func (p *commentService) GetComments(ctx context.Context, userID, parentID crypto.UUID) ([]*domain.CommentInfo, error) {
+	return p.commentRepo.GetComments(context.Background(), userID, parentID)
 }
 
 
