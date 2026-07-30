@@ -77,3 +77,32 @@ h6 {
 textarea {
     resize: vertical;
 }
+body{
+
+    background:linear-gradient(
+        135deg,
+        var(--secondary),
+        var(--primary-dark),
+        var(--primary)
+    );
+
+    background-size:400% 400%;
+
+    animation:bgMove 15s ease infinite;
+}
+
+@keyframes bgMove{
+
+    0%{
+        background-position:left;
+    }
+
+    50%{
+        background-position:right;
+    }
+
+    100%{
+        background-position:left;
+    }
+
+}

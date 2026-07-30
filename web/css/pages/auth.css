@@ -1,0 +1,649 @@
+/* =====================================================
+   AUTH PAGE
+   Login / Register Page Styles
+===================================================== */
+
+
+/* =====================================================
+   Page Background
+===================================================== */
+
+
+/* =====================================================
+   Main Layout
+===================================================== */
+
+.auth {
+
+    display:flex;
+
+    min-height:100vh;
+}
+
+
+
+/* =====================================================
+   Left Section
+===================================================== */
+
+.auth-left {
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    padding:50px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--primary-dark)
+        );
+
+    animation:slideLeft .8s ease;
+}
+
+
+
+.auth-left h1 {
+
+    font-size:48px;
+
+    margin-bottom:20px;
+
+    animation:float 4s ease infinite;
+}
+
+
+
+.auth-left p {
+
+    font-size:18px;
+
+    max-width:400px;
+
+    text-align:center;
+
+    color:var(--text-light);
+
+}
+
+
+
+/* =====================================================
+   Right Section
+===================================================== */
+
+.auth-right {
+
+    flex:1;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:var(--bg);
+
+    animation:slideRight .8s ease;
+}
+
+
+
+/* =====================================================
+   Auth Card
+===================================================== */
+
+
+.card {
+
+    width:420px;
+
+    padding:35px;
+
+    position:relative;
+    z-index:1;
+    overflow:hidden;
+
+    isolation:isolate;
+
+    background:var(--surface);
+
+    border-radius:var(--radius-lg);
+
+    border:1px solid var(--border);
+
+    box-shadow:var(--shadow-lg);
+
+    backdrop-filter:blur(15px);
+
+    animation:fadeUp .7s ease;
+
+    transition:var(--transition);
+}
+
+
+
+/* Card hover */
+
+.card:hover {
+
+    transform:
+
+        translateY(-6px)
+
+        scale(1.01);
+
+}
+
+
+
+/* Card Glow */
+
+.card::before {
+
+    content:"";
+
+    position:absolute;
+
+    inset:-50%;
+
+    z-index:-1;
+
+    background:
+
+        radial-gradient(
+
+            circle,
+
+            rgba(255,255,255,.12),
+
+            transparent 60%
+
+        );
+
+
+    animation:rotate 10s linear infinite;
+
+}
+
+
+
+/* =====================================================
+   Tabs
+===================================================== */
+
+.tabs {
+
+    display:flex;
+
+    margin-bottom:25px;
+
+}
+
+
+
+.tabs button {
+
+    flex:1;
+
+    padding:14px;
+
+    position:relative;
+
+    overflow:hidden;
+
+    background:var(--surface-light);
+
+    color:var(--text);
+
+    transition:var(--transition);
+
+}
+
+
+
+/* Active tab */
+
+.tabs button.active {
+
+    background:var(--primary);
+
+}
+
+
+
+/* Tab underline animation */
+
+.tabs button::after {
+
+    content:"";
+
+    position:absolute;
+
+    bottom:0;
+
+    left:50%;
+
+    width:0;
+
+    height:3px;
+
+    background:var(--text);
+
+    transition:var(--transition);
+
+}
+
+
+
+.tabs button.active::after {
+
+    left:0;
+
+    width:100%;
+
+}
+
+
+
+/* =====================================================
+   Forms
+===================================================== */
+
+form {
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:15px;
+
+    animation:fade .4s ease;
+
+}
+
+
+
+form h2 {
+
+    text-align:center;
+
+    margin-bottom:10px;
+
+}
+
+
+
+/* Inputs */
+
+input,
+select {
+
+    padding:13px;
+
+    border:none;
+
+    border-radius:var(--radius-md);
+
+    background:var(--surface-light);
+
+    color:var(--text);
+
+    border:1px solid transparent;
+
+    transition:var(--transition);
+
+}
+
+
+
+input::placeholder {
+
+    color:var(--text-muted);
+
+}
+
+
+
+/* Input Focus */
+
+input:focus,
+select:focus {
+
+    outline:none;
+
+    transform:scale(1.02);
+
+    border-color:var(--primary-light);
+
+    box-shadow:
+
+        0 0 0 3px rgba(3,83,164,.35);
+
+}
+
+
+
+/* =====================================================
+   Buttons
+===================================================== */
+
+button {
+
+    cursor:pointer;
+
+    position:relative;
+
+    overflow:hidden;
+
+    transition:var(--transition);
+
+}
+
+
+
+/* Submit Button */
+
+button[type="submit"] {
+
+    padding:14px;
+
+    background:var(--primary);
+
+    color:var(--text);
+
+    border-radius:var(--radius-md);
+
+    font-size:16px;
+
+}
+
+
+
+button[type="submit"]:hover {
+
+    filter:brightness(1.15);
+
+    transform:translateY(-2px);
+
+    box-shadow:var(--shadow-md);
+
+}
+
+
+
+button:active {
+
+    transform:scale(.96);
+
+}
+
+
+
+/* Ripple effect */
+
+button::before {
+
+    content:"";
+
+    position:absolute;
+
+    width:20px;
+
+    height:20px;
+
+    left:50%;
+
+    top:50%;
+
+    background:white;
+
+    border-radius:50%;
+
+    opacity:.15;
+
+    transform:
+
+        translate(-50%,-50%)
+
+        scale(0);
+
+    transition:.6s;
+
+}
+
+
+
+button:hover::before {
+
+    transform:
+
+        translate(-50%,-50%)
+
+        scale(20);
+
+}
+
+
+
+/* =====================================================
+   Utilities
+===================================================== */
+
+.hidden {
+
+    display:none;
+}
+
+
+
+/* =====================================================
+   Animations
+===================================================== */
+
+
+/* Card */
+
+@keyframes fadeUp {
+
+    from {
+
+        opacity:0;
+
+        transform:
+
+            translateY(40px)
+
+            scale(.95);
+
+    }
+
+
+    to {
+
+        opacity:1;
+
+        transform:none;
+
+    }
+
+}
+
+
+
+/* Form */
+
+@keyframes fade {
+
+    from {
+
+        opacity:0;
+
+        transform:translateX(20px);
+
+    }
+
+
+    to {
+
+        opacity:1;
+
+        transform:none;
+
+    }
+
+}
+
+
+
+/* Left animation */
+
+@keyframes slideLeft {
+
+    from {
+
+        opacity:0;
+
+        transform:translateX(-60px);
+
+    }
+
+
+    to {
+
+        opacity:1;
+
+        transform:none;
+
+    }
+
+}
+
+
+
+/* Right animation */
+
+@keyframes slideRight {
+
+    from {
+
+        opacity:0;
+
+        transform:translateX(60px);
+
+    }
+
+
+    to {
+
+        opacity:1;
+
+        transform:none;
+
+    }
+
+}
+
+
+
+/* Floating title */
+
+@keyframes float {
+
+    0%,
+    100% {
+
+        transform:translateY(0);
+
+    }
+
+
+    50% {
+
+        transform:translateY(-8px);
+
+    }
+
+}
+
+
+
+/* Rotate glow */
+
+@keyframes rotate {
+
+    from {
+
+        transform:rotate(0deg);
+
+    }
+
+
+    to {
+
+        transform:rotate(360deg);
+
+    }
+
+}
+
+
+
+/* =====================================================
+   Responsive
+===================================================== */
+
+@media(max-width:900px) {
+
+
+    .auth {
+
+        flex-direction:column;
+
+    }
+
+
+    .auth-left {
+
+        min-height:220px;
+
+    }
+
+
+    .card {
+
+        width:95%;
+
+    }
+
+}
+
+
+
+/* =====================================================
+   Accessibility
+===================================================== */
+
+@media(prefers-reduced-motion:reduce) {
+
+
+    *,
+    *::before,
+    *::after {
+
+        animation:none !important;
+
+        transition:none !important;
+
+    }
+
+}
