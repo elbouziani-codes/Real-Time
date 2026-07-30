@@ -1,40 +1,14 @@
 :root {
 
     /* =====================================================
-    Brand Colors
+       Brand Colors
     ===================================================== */
-/*
-    --primary: #4f46e5;
-    --primary-light: #6366f1;
-    --primary-dark: #3730a3;
-    --secondary: #0f172a;
 
-    --primary: #2563eb;
-    --primary-light: #60a5fa;
-    --primary-dark: #1d4ed8;
-    --secondary: #ffffff;
+    --primary: #14b8a6;
+    --primary-light: #5eead4;
+    --primary-dark: #0f766e;
 
-    --primary: #6366f1;
-    --primary-light: #a5b4fc;
-    --primary-dark: #4338ca;
-    --secondary: #f8fafc;
-
-    --primary: #7c3aed;        
-    --primary-light: #a78bfa;  
-    --primary-dark: #5b21b6;   
-    --secondary: #faf5ff;
-
-    --primary: #0891b2;        
-    --primary-light: #22d3ee;  
-    --primary-dark: #155e75;   
-    --secondary: #ecfeff; 
-*/
-
-    --primary: #059669;
-    --primary-light: #34d399;
-    --primary-dark: #047857;
-
-    --secondary: #ecfdf5;
+    --secondary: #18181b;
 
 
 
@@ -42,9 +16,9 @@
        Accent
     ===================================================== */
 
-    --accent: #06b6d4;
-    --accent-light: #22d3ee;
-    --accent-dark: #0891b2;
+    --accent: #fb7185;
+    --accent-light: #fda4af;
+    --accent-dark: #be123c;
 
 
 
@@ -52,13 +26,13 @@
        Background System
     ===================================================== */
 
-    --bg: #020617;
+    --bg: #0f1115;
 
-    --surface: #0f172a;
+    --surface: #181b21;
 
-    --surface-light: #1e293b;
+    --surface-light: #242933;
 
-    --surface-hover: #334155;
+    --surface-hover: #323846;
 
 
 
@@ -70,12 +44,12 @@
 
     --text-color: #f8fafc;
 
-    --text-light: #cbd5e1;
+    --text-light: #d1d5db;
 
-    --text-muted: #94a3b8;
+    --text-muted: #9ca3af;
 
 
-    --heading-color:#f8fafc;
+    --heading-color:#ffffff;
 
 
 
@@ -84,7 +58,7 @@
     ===================================================== */
 
     --border:
-        rgba(148,163,184,0.15);
+        rgba(94,234,212,0.16);
 
 
 
@@ -102,12 +76,12 @@
     --warning-light:#fbbf24;
 
 
-    --danger:#ef4444;
+    --danger:#f43f5e;
 
-    --danger-light:#f87171;
+    --danger-light:#fb7185;
 
 
-    --info:#38bdf8;
+    --info:#2dd4bf;
 
 
 
@@ -151,19 +125,20 @@
         linear-gradient(135deg, var(--accent-dark), var(--accent-light));
 
     --avatar-ahmed:
-        linear-gradient(135deg, #7c3aed, #a78bfa);
+        linear-gradient(135deg, #ec4899, #f472b6);
 
     --avatar-omar:
-        linear-gradient(135deg, #059669, #34d399);
+        linear-gradient(135deg, #10b981, #34d399);
 
     --avatar-fatima:
-        linear-gradient(135deg, #db2777, #f472b6);
+        linear-gradient(135deg, #f97316, #fb923c);
 
     --avatar-layla:
-        linear-gradient(135deg, #dc2626, #f87171);
+        linear-gradient(135deg, #ef4444, #f87171);
 
     --avatar-youssef:
-        linear-gradient(135deg, #d97706, #fbbf24);
+        linear-gradient(135deg, #eab308, #facc15);
+
 
 
     /* =====================================================
@@ -171,73 +146,71 @@
     ===================================================== */
 
     --overlay:
-        rgba(2, 6, 23, 0.7);
+        rgba(9,9,11,0.75);
+
 
     --white-alpha-08:
-        rgba(255, 255, 255, 0.08);
+        rgba(255,255,255,0.08);
 
     --white-alpha-12:
-        rgba(255, 255, 255, 0.12);
+        rgba(255,255,255,0.12);
 
     --white-alpha-40:
-        rgba(255, 255, 255, 0.4);
+        rgba(255,255,255,0.4);
 
     --white-alpha-60:
-        rgba(255, 255, 255, 0.6);
+        rgba(255,255,255,0.6);
+
+
 
     --primary-alpha-10:
-        rgba(79, 70, 229, 0.1);
+        rgba(16,185,129,0.1);
 
     --primary-alpha-12:
-        rgba(79, 70, 229, 0.12);
+        rgba(16,185,129,0.12);
 
     --primary-alpha-15:
-        rgba(79, 70, 229, 0.15);
+        rgba(16,185,129,0.15);
 
     --primary-alpha-20:
-        rgba(79, 70, 229, 0.2);
+        rgba(16,185,129,0.2);
 
     --primary-alpha-25:
-        rgba(79, 70, 229, 0.25);
+        rgba(16,185,129,0.25);
 
     --primary-alpha-30:
-        rgba(79, 70, 229, 0.3);
+        rgba(16,185,129,0.3);
 
     --primary-alpha-35:
-        rgba(79, 70, 229, 0.35);
+        rgba(16,185,129,0.35);
+
+
 
     --danger-alpha-15:
-        rgba(239, 68, 68, 0.15);
+        rgba(239,68,68,0.15);
+
 
     --success-alpha-60:
-        rgba(34, 197, 94, 0.6);
+        rgba(34,197,94,0.6);
+
+
 
     --nav-bg:
-        rgba(15, 23, 42, 0.85);
+        rgba(24,24,27,0.88);
+
 
     --nav-section-bg:
-        rgba(15, 23, 42, 0.5);
+        rgba(24,24,27,0.55);
+
+
 
     --border-muted:
-        rgba(148, 163, 184, 0.08);
+        rgba(161,161,170,0.1);
+
+
 
     --shadow-black-20:
-        0 4px 15px rgba(0, 0, 0, 0.2);
-
-    --avatar-ahmed:
-        linear-gradient(135deg, #7c3aed, #a78bfa);
-
-    --avatar-omar:
-        linear-gradient(135deg, #059669, #34d399);
-
-    --avatar-fatima:
-        linear-gradient(135deg, #db2777, #f472b6);
-
-    --avatar-layla:
-        linear-gradient(135deg, #dc2626, #f87171);
-
-    --avatar-youssef:
-        linear-gradient(135deg, #d97706, #fbbf24);
+        0 4px 15px rgba(0,0,0,0.2);
 
 
 
@@ -281,12 +254,12 @@
 
     --glow-primary:
 
-        0 0 25px rgba(79,70,229,.35);
+        0 0 25px rgba(16,185,129,.35);
 
 
     --glow-accent:
 
-        0 0 25px rgba(6,182,212,.35);
+        0 0 25px rgba(245,158,11,.35);
 
 
 
@@ -325,6 +298,5 @@
     --z-modal:100;
 
     --z-navbar:1000;
-
 
 }

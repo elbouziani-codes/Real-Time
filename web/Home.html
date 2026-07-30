@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>RealTime Forum - Home</title>
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
@@ -12,289 +11,244 @@
 
 <section class="home">
 
-
     <!-- Navbar -->
-
     <nav class="navbar">
-
-        <div class="logo">
-            RealTime Forum
+        <div class="navbar-inner">
+            <div class="logo">
+                <span class="logo-icon">💬</span>
+                <span class="logo-text">RealTime Forum</span>
+            </div>
+            <div class="nav-links">
+                <button class="active">🏠 Home</button>
+                <button>💬 Chat</button>
+                <button>➕ Create Post</button>
+            </div>
+            <div class="user">
+                <div class="user-avatar">M</div>
+                <span class="user-name">Mohammed</span>
+            </div>
         </div>
-
-
-        <div class="nav-links">
-
-            <button>
-                Chat
-            </button>
-
-
-            <button class="active">
-                Home
-            </button>
-
-
-            <button>
-                Create Post
-            </button>
-
-        </div>
-
-
-        <div class="user">
-
-            Mohammed
-
-        </div>
-
-
     </nav>
-
-
-
 
     <div class="home-layout">
 
-
-        <!-- Sidebar -->
-
+        <!-- Sidebar Filters -->
         <aside class="sidebar">
 
+            <h3 class="sidebar-title">🔍 Filter</h3>
 
-            <h3>
-                Filter
-            </h3>
-
-
-            <input
-                type="search"
-                placeholder="Search posts..."
-            >
-
-
+            <input type="search" class="sidebar-search" placeholder="Search posts...">
 
             <div class="filter-group">
-
-                <h4>
-                    Categories
-                </h4>
-
-
-                <label>
-
+                <h4>📂 Categories</h4>
+                <label class="filter-label">
                     <input type="checkbox">
-
                     Technology
-
                 </label>
-
-
-                <label>
-
+                <label class="filter-label">
                     <input type="checkbox">
-
                     Programming
-
                 </label>
-
-
-                <label>
-
+                <label class="filter-label">
                     <input type="checkbox">
-
                     Gaming
-
                 </label>
-
-
-                <label>
-
+                <label class="filter-label">
                     <input type="checkbox">
-
                     News
-
                 </label>
-
-
             </div>
-
-
-
 
             <div class="filter-group">
-
-
-                <h4>
-                    Sort
-                </h4>
-
-
-                <select>
-
-                    <option>
-                        Latest
-                    </option>
-
-
-                    <option>
-                        Most liked
-                    </option>
-
-
-                    <option>
-                        Most commented
-                    </option>
-
-
+                <h4>📅 Sort</h4>
+                <select class="filter-select">
+                    <option>Latest</option>
+                    <option>Most liked</option>
+                    <option>Most commented</option>
                 </select>
-
-
             </div>
 
+            <!-- Online Users -->
+            <div class="users-section">
+                <h4>🟢 Online</h4>
+                <div class="users-list">
+                    <div class="user-item">
+                        <div class="user-avatar-sm avatar--sarah">S</div>
+                        <div class="user-item-info">
+                            <span class="user-item-name">Sarah Ahmed</span>
+                            <span class="user-item-status">@sarah</span>
+                        </div>
+                        <span class="status-dot online"></span>
+                    </div>
+                    <div class="user-item">
+                        <div class="user-avatar-sm avatar--ahmed">A</div>
+                        <div class="user-item-info">
+                            <span class="user-item-name">Ahmed Benali</span>
+                            <span class="user-item-status">@ahmed</span>
+                        </div>
+                        <span class="status-dot online"></span>
+                    </div>
+                    <div class="user-item">
+                        <div class="user-avatar-sm avatar--omar">O</div>
+                        <div class="user-item-info">
+                            <span class="user-item-name">Omar El Idrissi</span>
+                            <span class="user-item-status">@omar</span>
+                        </div>
+                        <span class="status-dot online"></span>
+                    </div>
+                </div>
 
+                <h4>🔴 Offline</h4>
+                <div class="users-list">
+                    <div class="user-item">
+                        <div class="user-avatar-sm avatar--fatima">F</div>
+                        <div class="user-item-info">
+                            <span class="user-item-name">Fatima Zahra</span>
+                            <span class="user-item-status">@fatima</span>
+                        </div>
+                        <span class="status-dot offline"></span>
+                    </div>
+                    <div class="user-item">
+                        <div class="user-avatar-sm avatar--layla">L</div>
+                        <div class="user-item-info">
+                            <span class="user-item-name">Layla Hassan</span>
+                            <span class="user-item-status">@layla</span>
+                        </div>
+                        <span class="status-dot offline"></span>
+                    </div>
+                </div>
+
+                <!-- Recent Messages -->
+                <h4 class="users-section-title">💬 Recent Messages</h4>
+                <div class="last-messages-list">
+                    <div class="last-message-item">
+                        <div class="user-avatar-sm avatar--sarah">S</div>
+                        <div class="last-msg-info">
+                            <span class="last-msg-name">Sarah</span>
+                            <span class="last-msg-text">See you tomorrow!</span>
+                        </div>
+                        <span class="last-msg-time">10m ago</span>
+                    </div>
+                    <div class="last-message-item">
+                        <div class="user-avatar-sm avatar--ahmed">A</div>
+                        <div class="last-msg-info">
+                            <span class="last-msg-name">Ahmed</span>
+                            <span class="last-msg-text">Thanks for the help!</span>
+                        </div>
+                        <span class="last-msg-time">30m ago</span>
+                    </div>
+                    <div class="last-message-item">
+                        <div class="user-avatar-sm avatar--fatima">F</div>
+                        <div class="last-msg-info">
+                            <span class="last-msg-name">Fatima</span>
+                            <span class="last-msg-text">The design looks great!</span>
+                        </div>
+                        <span class="last-msg-time">1h ago</span>
+                    </div>
+                    <div class="last-message-item">
+                        <div class="user-avatar-sm avatar--omar">O</div>
+                        <div class="last-msg-info">
+                            <span class="last-msg-name">Omar</span>
+                            <span class="last-msg-text">Let's work on that project</span>
+                        </div>
+                        <span class="last-msg-time">2h ago</span>
+                    </div>
+                </div>
+            </div>
 
         </aside>
 
-
-
-
-
-        <!-- Posts -->
-
+        <!-- Posts Feed -->
         <main class="feed">
-
-
-            <h2>
-                Latest Posts
-            </h2>
-
-
+            <h2>📰 Latest Posts</h2>
 
             <article class="post-card">
-
-
                 <div class="post-header">
-
-
                     <div>
-
-                        <h3>
-                            Building WebSocket Chat
-                        </h3>
-
-
-                        <span>
-                            by Mohammed
-                        </span>
-
+                        <h3>Building WebSocket Chat with Go</h3>
+                        <span>by Mohammed</span>
                     </div>
-
-
-                    <span>
-                        2h ago
-                    </span>
-
-
+                    <span class="post-time">2h ago</span>
                 </div>
-
-
-
-
-                <p>
-
-                    Today I implemented real time
-                    communication using Go and WebSocket.
-
-                </p>
-
-
-
-                <div class="post-category">
-
-                    Programming
-
-                </div>
-
-
-
-
+                <p>Today I implemented real time communication using Go and WebSocket...</p>
+                <span class="post-category">Programming</span>
                 <div class="post-actions">
-
-
-                    <button>
-                        ❤️ Like
-                    </button>
-
-
-                    <button>
-                        💬 Comments
-                    </button>
-
-
+                    <button class="like-btn">❤️ 24</button>
+                    <button class="comment-btn">💬 8</button>
                 </div>
-
-
             </article>
-
-
-
-
 
             <article class="post-card">
-
-
                 <div class="post-header">
-
-
-                    <h3>
-                        My first Go project
-                    </h3>
-
-
+                    <div>
+                        <h3>My first Go project</h3>
+                        <span>by Mohammed</span>
+                    </div>
+                    <span class="post-time">5h ago</span>
                 </div>
-
-
-
-                <p>
-
-                    Learning backend architecture
-                    with clean architecture.
-
-                </p>
-
-
+                <p>Learning backend architecture with clean architecture principles...</p>
+                <span class="post-category">Programming</span>
                 <div class="post-actions">
-
-
-                    <button>
-                        ❤️ Like
-                    </button>
-
-
-                    <button>
-                        💬 Comments
-                    </button>
-
-
+                    <button class="like-btn">❤️ 15</button>
+                    <button class="comment-btn">💬 3</button>
                 </div>
-
-
             </article>
 
+            <article class="post-card">
+                <div class="post-header">
+                    <div>
+                        <h3>CSS Grid vs Flexbox — When to Use What</h3>
+                        <span>by Sarah</span>
+                    </div>
+                    <span class="post-time">8h ago</span>
+                </div>
+                <p>A deep dive into CSS Grid and Flexbox...</p>
+                <span class="post-category">Technology</span>
+                <div class="post-actions">
+                    <button class="like-btn">❤️ 42</button>
+                    <button class="comment-btn">💬 12</button>
+                </div>
+            </article>
 
+            <article class="post-card">
+                <div class="post-header">
+                    <div>
+                        <h3>Rust Ownership Explained Simply</h3>
+                        <span>by Ahmed</span>
+                    </div>
+                    <span class="post-time">1d ago</span>
+                </div>
+                <p>Ownership, borrowing, lifetimes — Rust concepts made simple...</p>
+                <span class="post-category">Programming</span>
+                <div class="post-actions">
+                    <button class="like-btn">❤️ 31</button>
+                    <button class="comment-btn">💬 7</button>
+                </div>
+            </article>
+
+            <article class="post-card">
+                <div class="post-header">
+                    <div>
+                        <h3>UI/UX Tips for Developers</h3>
+                        <span>by Fatima</span>
+                    </div>
+                    <span class="post-time">1d ago</span>
+                </div>
+                <p>Practical UX principles every developer should know...</p>
+                <span class="post-category">Technology</span>
+                <div class="post-actions">
+                    <button class="like-btn">❤️ 56</button>
+                    <button class="comment-btn">💬 15</button>
+                </div>
+            </article>
 
         </main>
 
-
-
     </div>
-
-
 
 </section>
 
-
 </div>
-    
+
 </body>
 </html>

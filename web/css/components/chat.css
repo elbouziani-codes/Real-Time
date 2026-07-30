@@ -1,0 +1,154 @@
+/* =================================
+   CHAT BUBBLE COMPONENT
+================================= */
+
+.message {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    margin-bottom: 8px;
+    animation: messageIn 0.3s ease;
+}
+
+@keyframes messageIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.message-mine {
+    flex-direction: row-reverse;
+}
+
+.message-other {
+    flex-direction: row;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 10px 16px;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.message-bubble:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-black-20);
+}
+
+.message-mine .message-bubble {
+    border-radius: 18px 18px 4px 18px;
+    background: var(--avatar-mine);
+}
+
+.message-other .message-bubble {
+    border-radius: 18px 18px 18px 4px;
+    background: var(--surface-light);
+}
+
+/* Typing indicator */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 16px;
+    background: var(--surface-light);
+    border-radius: 18px 18px 18px 4px;
+    width: fit-content;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    animation: typingBounce 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+    0%, 60%, 100% {
+        transform: translateY(0);
+    }
+    30% {
+        transform: translateY(-8px);
+    }
+}
+
+/* Unread badge */
+.unread-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    padding: 0 6px;
+    background: var(--danger);
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: badgePop 0.3s cubic-bezier(.2, 1, .3, 1);
+}
+
+@keyframes badgePop {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+/* Date separator */
+.date-separator {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 16px 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.date-separator::before,
+.date-separator::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* Message status */
+.message-status {
+    font-size: 10px;
+    color: var(--white-alpha-40);
+    text-align: right;
+    margin-top: 2px;
+}
+
+.message-status.sent {
+    color: var(--white-alpha-40);
+}
+
+.message-status.delivered {
+    color: var(--white-alpha-60);
+}
+
+.message-status.read {
+    color: var(--success-light);
+}

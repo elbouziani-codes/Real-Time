@@ -1,14 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Real Time Forum</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealTime Forum - Login</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/pages/auth.css">
 </head>
@@ -20,13 +15,8 @@
     <section class="auth">
 
         <div class="auth-left">
-
-            <h1>Real-Time Forum</h1>
-
-            <p>
-                Join discussions with developers around the world.
-            </p>
-
+            <h1>💬 Real-Time Forum</h1>
+            <p>Join discussions with developers around the world. Connect, share, and learn in real-time.</p>
         </div>
 
         <div class="auth-right">
@@ -34,107 +24,34 @@
             <div class="card">
 
                 <div class="tabs">
-
-                    <button
-                        id="loginTab"
-                        class="active"
-                    >
-                        Login
-                    </button>
-
-                    <button
-                        id="registerTab"
-                    >
-                        Register
-                    </button>
-
+                    <button id="loginTab" class="tab-btn active">Login</button>
+                    <button id="registerTab" class="tab-btn">Register</button>
                 </div>
 
-                <!-- LOGIN -->
-
-                <form id="loginForm">
-
+                <!-- LOGIN FORM -->
+                <form id="loginForm" class="auth-form">
                     <h2>Welcome Back</h2>
-
-                    <input
-                        type="text"
-                        placeholder="Nickname or Email"
-                        id="loginIdentifier"
-                    >
-
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        id="loginPassword"
-                    >
-
-                    <button type="submit">
-                        Login
-                    </button>
-
+                    <p class="auth-hint">Demo: use "mohammed" / any password</p>
+                    <input type="text" class="auth-input" placeholder="Nickname or Email" id="loginIdentifier" required>
+                    <input type="password" class="auth-input" placeholder="Password" id="loginPassword" required>
+                    <button type="submit" class="auth-submit">Login</button>
                 </form>
 
-                <!-- REGISTER -->
-
-                <form
-                    id="registerForm"
-                    class="hidden"
-                >
-
+                <!-- REGISTER FORM -->
+                <form id="registerForm" class="auth-form hidden">
                     <h2>Create Account</h2>
-
-                    <input
-                        type="text"
-                        placeholder="Nickname"
-                        id="nickname"
-                    >
-
-                    <input
-                        type="text"
-                        placeholder="First Name"
-                        id="firstName"
-                    >
-
-                    <input
-                        type="text"
-                        placeholder="Last Name"
-                        id="lastName"
-                    >
-
-                    <input
-                        type="number"
-                        placeholder="Age"
-                        id="age"
-                    >
-
-                    <select id="gender">
-
-                        <option value="">
-                            Gender
-                        </option>
-
+                    <input type="text" class="auth-input" placeholder="Nickname" id="nickname" required>
+                    <input type="text" class="auth-input" placeholder="First Name" id="firstName" required>
+                    <input type="text" class="auth-input" placeholder="Last Name" id="lastName" required>
+                    <input type="number" class="auth-input" placeholder="Age" id="age">
+                    <select class="auth-input" id="gender">
+                        <option value="">Gender</option>
                         <option>Male</option>
-
                         <option>Female</option>
-
                     </select>
-
-                    <input
-                        type="email"
-                        placeholder="Email"
-                        id="email"
-                    >
-
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        id="password"
-                    >
-
-                    <button type="submit">
-                        Register
-                    </button>
-
+                    <input type="email" class="auth-input" placeholder="Email" id="email" required>
+                    <input type="password" class="auth-input" placeholder="Password (min 6 chars)" id="password" required>
+                    <button type="submit" class="auth-submit">Register</button>
                 </form>
 
             </div>
