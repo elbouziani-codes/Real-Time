@@ -1,0 +1,213 @@
+/* =================================
+   USER AVATAR SYSTEM
+   Reusable avatar/icons for users
+================================= */
+
+/* =================================
+   Base Avatar
+================================= */
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    user-select: none;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.user-avatar:hover {
+    transform: scale(1.12);
+    box-shadow: 0 0 20px var(--primary-alpha-25);
+}
+
+/* =================================
+   Size Variants
+================================= */
+
+.user-avatar--xs {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+}
+
+.user-avatar--sm {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+}
+
+.user-avatar--md {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+}
+
+.user-avatar--lg {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+}
+
+.user-avatar--xl {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+}
+
+/* =================================
+   Avatar Image
+================================= */
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+
+/* =================================
+   Status Indicator
+================================= */
+
+.user-avatar__status {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--surface);
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+
+.user-avatar__status.online {
+    background: var(--success);
+    box-shadow: 0 0 6px var(--success-alpha-60);
+}
+
+.user-avatar__status.offline {
+    background: var(--text-muted);
+}
+
+.user-avatar__status.away {
+    background: var(--warning);
+}
+
+/* Smaller sizes get smaller dots */
+.user-avatar--xs .user-avatar__status {
+    width: 8px;
+    height: 8px;
+    border-width: 1.5px;
+}
+
+.user-avatar--sm .user-avatar__status {
+    width: 10px;
+    height: 10px;
+}
+
+.user-avatar--lg .user-avatar__status,
+.user-avatar--xl .user-avatar__status {
+    width: 14px;
+    height: 14px;
+}
+
+/* =================================
+   User Info Utility
+================================= */
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.user-info__name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-info__handle {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-info__meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* =================================
+   Avatar with status wrapper
+================================= */
+
+.user-avatar-wrapper {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+/* =================================
+   AVATAR COLOR MODIFIERS
+================================= */
+
+.avatar--mine {
+    background: var(--avatar-mine);
+}
+
+.avatar--sarah {
+    background: var(--avatar-sarah);
+}
+
+.avatar--ahmed {
+    background: var(--avatar-ahmed);
+}
+
+.avatar--omar {
+    background: var(--avatar-omar);
+}
+
+.avatar--fatima {
+    background: var(--avatar-fatima);
+}
+
+.avatar--layla {
+    background: var(--avatar-layla);
+}
+
+.avatar--youssef {
+    background: var(--avatar-youssef);
+}
+
+/* =================================
+   Hover Interaction
+================================= */
+
+.user-avatar-wrapper:hover .user-avatar {
+    transform: scale(1.12);
+    box-shadow: 0 0 20px var(--primary-alpha-25);
+}
+
+.user-item:hover .user-avatar,
+.conversation-item:hover .user-avatar,
+.last-message-item:hover .user-avatar {
+    transform: scale(1.12);
+}

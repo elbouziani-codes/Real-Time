@@ -145,25 +145,38 @@
 }
 
 
-.filter-group{
+/* =================================
+   FILTER GROUP — Modern Card Style
+================================= */
 
-    margin-bottom:24px;
-
+.filter-group {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--surface-light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    transition: var(--transition);
 }
 
+.filter-group:hover {
+    border-color: var(--border-muted);
+}
 
-.filter-group label{
+.filter-group h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 14px;
+    letter-spacing: 0.3px;
+}
 
-    display:flex;
+/* =================================
+   CUSTOM CHECKBOX SYSTEM
+================================= */
 
-    align-items:center;
-
-    gap:10px;
-
-    margin-bottom:12px;
-
-    cursor:pointer;
-
+/* Native checkbox label (legacy) */
+.filter-group label.filter-label {
+    display: none;
 }
 
 
@@ -416,6 +429,28 @@
 }
 
 
+/* =================================
+   REDUCED MOTION
+================================= */
+
+
+@media(prefers-reduced-motion:reduce){
+
+
+    *,
+    *::before,
+    *::after {
+
+
+        animation:none !important;
+
+        transition:none !important;
+
+    }
+
+}
+
+
 /* Blue light */
 
 .home::before {
@@ -622,134 +657,11 @@
 
 
 
-/* =================================
-   Filter Checkbox Animation
-================================= */
 
 
-.filter-group label {
 
 
-    animation:
 
-        itemShow .5s ease backwards;
 
-}
 
 
-
-.filter-group label:nth-child(1){
-
-    animation-delay:.1s;
-
-}
-
-
-.filter-group label:nth-child(2){
-
-    animation-delay:.2s;
-
-}
-
-
-.filter-group label:nth-child(3){
-
-    animation-delay:.3s;
-
-}
-
-
-.filter-group label:nth-child(4){
-
-    animation-delay:.4s;
-
-}
-
-
-
-@keyframes itemShow {
-
-
-    from {
-
-        opacity:0;
-
-        transform:
-
-            translateX(-30px);
-
-    }
-
-
-    to {
-
-        opacity:1;
-
-        transform:none;
-
-    }
-
-}
-
-
-
-/* =================================
-   Smooth Page Transition
-================================= */
-
-
-.home {
-
-
-    animation:
-
-        pageEnter .8s ease;
-
-}
-
-
-
-@keyframes pageEnter {
-
-
-    from {
-
-        opacity:0;
-
-        filter:blur(10px);
-
-    }
-
-
-    to {
-
-        opacity:1;
-
-        filter:blur(0);
-
-    }
-
-}
-
-
-
-/* =================================
-   Reduced Motion
-================================= */
-
-
-@media(prefers-reduced-motion:reduce){
-
-
-    *,
-    *::before,
-    *::after {
-
-
-        animation:none !important;
-
-        transition:none !important;
-
-    }
-
-}

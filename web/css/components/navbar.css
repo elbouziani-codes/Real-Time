@@ -128,17 +128,7 @@
 }
 
 .user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
     background: var(--avatar-mine);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 14px;
-    flex-shrink: 0;
 }
 
 .user-name {
@@ -169,39 +159,7 @@
 }
 
 /* =================================
-   AVATAR COLOR MODIFIERS
-================================= */
-
-.avatar--mine {
-    background: var(--avatar-mine);
-}
-
-.avatar--sarah {
-    background: var(--avatar-sarah);
-}
-
-.avatar--ahmed {
-    background: var(--avatar-ahmed);
-}
-
-.avatar--omar {
-    background: var(--avatar-omar);
-}
-
-.avatar--fatima {
-    background: var(--avatar-fatima);
-}
-
-.avatar--layla {
-    background: var(--avatar-layla);
-}
-
-.avatar--youssef {
-    background: var(--avatar-youssef);
-}
-
-/* =================================
-   RESPONSIVE
+   RESPONSIVE - moved avatar modifiers to components/user.css
 ================================= */
 
 @media (max-width: 768px) {

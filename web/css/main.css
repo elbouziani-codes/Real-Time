@@ -1,10 +1,12 @@
-@import "./base/variablesc.css";
+@import "./base/variables.css";
 @import "./base/reset.css";
 @import "./base/typography.css";
 @import "./base/scrollbar.css";
 
 
 @import "./components/button.css";
+@import "./components/user.css";
+@import "./components/category.css";
 @import "./components/chat.css";
 @import "./components/modal.css";
 @import "./components/navbar.css";

@@ -1,0 +1,236 @@
+/* =================================
+   CATEGORY ITEM SYSTEM
+   Reusable category icons & labels
+================================= */
+
+/* =================================
+   Category Item
+================================= */
+
+.category-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    user-select: none;
+}
+
+.category-item:hover {
+    background: var(--white-alpha-08);
+    border-color: var(--border);
+    transform: translateX(4px);
+}
+
+.category-item:active {
+    transform: translateX(2px) scale(0.98);
+}
+
+/* =================================
+   Checked State
+================================= */
+
+.category-item:has(input:checked) {
+    background: var(--primary-alpha-12);
+    border-color: var(--primary-alpha-25);
+}
+
+.category-item:has(input:checked) .category-item__text {
+    color: var(--primary-light);
+    font-weight: 600;
+}
+
+.category-item:has(input:checked) .category-item__icon svg {
+    color: var(--primary-light);
+    opacity: 1;
+    filter: drop-shadow(0 0 6px var(--primary-alpha-25));
+}
+
+/* =================================
+   Hidden Native Checkbox
+================================= */
+
+.category-item__checkbox {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* =================================
+   Custom Checkbox Indicator
+================================= */
+
+.category-item__check {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    background: transparent;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    position: relative;
+}
+
+.category-item:hover .category-item__check {
+    border-color: var(--text-muted);
+    background: var(--white-alpha-08);
+}
+
+.category-item:has(input:checked) .category-item__check {
+    background: var(--avatar-mine);
+    border-color: var(--primary-light);
+    box-shadow: 0 0 12px var(--primary-alpha-25);
+}
+
+/* Checkmark SVG */
+.category-item__check svg {
+    width: 12px;
+    height: 12px;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
+    color: white;
+}
+
+.category-item:has(input:checked) .category-item__check svg {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* =================================
+   Category Icon
+================================= */
+
+.category-item__icon {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.25s ease;
+}
+
+.category-item__icon svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+    transition: all 0.25s ease;
+}
+
+.category-item:hover .category-item__icon svg {
+    color: var(--text);
+}
+
+/* =================================
+   Category Text
+================================= */
+
+.category-item__text {
+    flex: 1;
+    font-size: 0.88rem;
+    color: var(--text-light);
+    font-weight: 500;
+    transition: color 0.25s ease;
+    min-width: 0;
+}
+
+.category-item:hover .category-item__text {
+    color: var(--text);
+}
+
+/* =================================
+   Category Specific Icon Backgrounds
+================================= */
+
+.category-item--tech .category-item__icon {
+    background: rgba(6, 182, 212, 0.12);
+}
+
+.category-item--code .category-item__icon {
+    background: var(--primary-alpha-12);
+}
+
+.category-item--gaming .category-item__icon {
+    background: rgba(168, 85, 247, 0.12);
+}
+
+.category-item--news .category-item__icon {
+    background: rgba(251, 191, 36, 0.12);
+}
+
+.category-item:has(input:checked).category-item--tech .category-item__icon {
+    background: rgba(6, 182, 212, 0.2);
+}
+
+.category-item:has(input:checked).category-item--code .category-item__icon {
+    background: var(--primary-alpha-20);
+}
+
+.category-item:has(input:checked).category-item--gaming .category-item__icon {
+    background: rgba(168, 85, 247, 0.2);
+}
+
+.category-item:has(input:checked).category-item--news .category-item__icon {
+    background: rgba(251, 191, 36, 0.2);
+}
+
+/* =================================
+   Category Group Header
+================================= */
+
+.category-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.category-header__icon {
+    width: 24px;
+    height: 24px;
+}
+
+.category-header__icon svg {
+    width: 20px;
+    height: 20px;
+    color: var(--primary-light);
+}
+
+/* =================================
+   Responsive
+================================= */
+
+@media (max-width: 768px) {
+    .category-item {
+        padding: 8px 12px;
+    }
+
+    .category-item__icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .category-item__icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .category-item__text {
+        font-size: 0.82rem;
+    }
+}

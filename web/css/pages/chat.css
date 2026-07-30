@@ -179,15 +179,7 @@
 }
 
 .conv-avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
     font-size: 16px;
-    flex-shrink: 0;
     transition: var(--transition);
 }
 
@@ -320,16 +312,8 @@
 }
 
 .chat-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
     font-size: 18px;
     color: var(--text);
-    flex-shrink: 0;
 }
 
 .chat-user-info h4 {
