@@ -54,12 +54,6 @@
     color:var(--primary-light);
 }
 
-.user{
-    font-weight:600;
-    font-size:0.9rem;
-    color:var(--text-light);
-}
-
 @media (max-width:768px){
     .nav-links{
         flex-wrap:wrap;
@@ -125,8 +119,7 @@
 }
 
 
-.sidebar input,
-.sidebar select{
+.sidebar input{
 
     width:100%;
 
@@ -179,6 +172,118 @@
     display: none;
 }
 
+/* =================================
+   FILTER GROUP HEADER
+   Matches category-header style
+================================= */
+
+.filter-group__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.filter-group__icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.filter-group__icon svg {
+    width: 20px;
+    height: 20px;
+    color: var(--primary-light);
+}
+
+/* =================================
+   CUSTOM SELECT DROPDOWN
+================================= */
+
+.filter-select-wrapper {
+    position: relative;
+}
+
+/* Custom arrow via pseudo-element */
+.filter-select-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    background: currentColor;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.filter-select-wrapper:hover::after {
+    color: var(--text);
+}
+
+.filter-select {
+    width: 100%;
+    padding: 12px 40px 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.88rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    outline: none;
+    transition: all 0.25s ease;
+}
+
+/* Remove IE arrow */
+.filter-select::-ms-expand {
+    display: none;
+}
+
+/* Hover state */
+.filter-select:hover {
+    border-color: var(--text-muted);
+    background: var(--surface-light);
+}
+
+/* Focus state */
+.filter-select:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px var(--primary-alpha-20);
+    background: var(--surface-light);
+}
+
+/* Active state */
+.filter-select:active {
+    transform: scale(0.99);
+}
+
+/* Selected option styling */
+.filter-select option {
+    padding: 10px;
+    background: var(--surface);
+    color: var(--text);
+}
+
+.filter-select option:hover,
+.filter-select option:checked {
+    background: var(--primary-alpha-12);
+    color: var(--primary-light);
+}
+
+/* Remove the general select styling that conflicts */
 
 /* =================================
    FEED

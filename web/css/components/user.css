@@ -211,3 +211,181 @@
 .last-message-item:hover .user-avatar {
     transform: scale(1.12);
 }
+
+/* =================================
+   NAVBAR USER PROFILE COMPONENT
+   Modern profile pill (Discord/Linear style)
+================================= */
+
+.user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    min-width: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.user:hover {
+    background: var(--white-alpha-08);
+}
+
+.user:active {
+    transform: scale(0.96);
+}
+
+/* Avatar inside user profile gets subtle border + shadow */
+.user .user-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
+    border: 2px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.user:hover .user-avatar {
+    border-color: var(--primary-alpha-25);
+    box-shadow: 0 0 15px var(--primary-alpha-15), var(--shadow-sm);
+    transform: scale(1.08);
+}
+
+.user:active .user-avatar {
+    transform: scale(1);
+}
+
+/* Username */
+.user-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
+    line-height: 1.4;
+    transition: color 0.25s ease;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.user:hover .user-name {
+    color: var(--text);
+}
+
+/* Status dot placement inside user profile */
+.user .user-avatar-wrapper .user-avatar__status {
+    width: 12px;
+    height: 12px;
+    border-width: 2.5px;
+    bottom: -1px;
+    right: -1px;
+    z-index: 1;
+}
+
+/* =================================
+   LOGOUT BUTTON
+================================= */
+
+.logout-btn {
+    height: 36px;
+    min-width: 36px;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    border: none;
+    padding: 0 10px;
+    flex-shrink: 0;
+    transition: all 0.25s ease;
+    position: relative;
+    outline: none;
+    white-space: nowrap;
+}
+
+.logout-btn svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.35s cubic-bezier(.34,1.56,.64,1), color 0.25s ease;
+    flex-shrink: 0;
+}
+
+/* Logout label text */
+.logout-label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: inherit;
+    transition: color 0.25s ease;
+}
+
+/* Hover */
+.logout-btn:hover {
+    background: var(--danger-alpha-15);
+    color: var(--danger);
+}
+
+.logout-btn:hover svg {
+    transform: translateX(3px) scale(1.1);
+}
+
+/* Active press */
+.logout-btn:active {
+    transform: scale(0.9);
+}
+
+.logout-btn:active svg {
+    transform: translateX(5px) scale(0.95);
+}
+
+/* Focus visible for keyboard nav */
+.logout-btn:focus-visible {
+    box-shadow: 0 0 0 2px var(--danger), 0 0 0 4px var(--danger-alpha-15);
+}
+
+/* =================================
+   RESPONSIVE — User profile on mobile
+================================= */
+
+@media (max-width: 768px) {
+    .user {
+        padding: 4px 8px;
+    }
+
+    .user .user-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+
+    .user-name {
+        display: none;
+    }
+
+    .user .user-avatar-wrapper .user-avatar__status {
+        width: 10px;
+        height: 10px;
+    }
+
+    .logout-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .logout-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .logout-label {
+        display: none;
+    }
+}

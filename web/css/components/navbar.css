@@ -120,43 +120,13 @@
     display: inline;
 }
 
-/* User Section */
-.navbar-user {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
+/* User Section - .user + .user-name moved to components/user.css */
 
 .user-avatar {
     background: var(--avatar-mine);
 }
 
-.user-name {
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: var(--text-light);
-}
-
-.logout-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-    cursor: pointer;
-    border: none;
-    font-size: 16px;
-}
-
-.logout-btn:hover {
-    background: var(--danger-alpha-15);
-    color: var(--danger);
-    transform: scale(1.1);
-}
+/* .logout-btn styles moved to components/user.css */
 
 /* =================================
    RESPONSIVE - moved avatar modifiers to components/user.css
@@ -184,7 +154,5 @@
         font-size: 20px;
     }
 
-    .user-name {
-        display: none;
-    }
+    /* .user-name { display: none } — handled in components/user.css */
 }
