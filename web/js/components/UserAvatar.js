@@ -1,18 +1,21 @@
 /**
  * UserAvatar
- * Reusable avatar block: letter/image + optional online status dot + optional badge.
- * Renders inside a `.user-avatar-wrapper` so status/badge are positioned correctly.
+ * Letter-only avatar (the project has no user images) + optional
+ * online/offline/away status dot + optional unread badge.
+ *
+ * Data comes from a User model; the optional second argument only
+ * carries presentation classes (size / custom class), never data.
  */
-export default function UserAvatar({ٍcolorClass = '', sizeClass = '', className = '', status = '', badge = ''} = {}) {
-    const avatarClass = ['user-avatar', sizeClass, colorClass, className].filter(Boolean).join(' ');
-    const content = image ? `<img src="${image}" alt="${letter || 'avatar'}">` : letter;
+export default function UserAvatar(user = {}, { sizeClass = '', className = '' } = {}) {
+    const { letter = '', avatarClass: avatarColorClass = '', onlineStatus = '', unreadCount = 0 } = user;
 
-    const statusHtml = status ? `<span class="user-avatar__status ${status}"></span>` : '';
-    const badgeHtml = badge ? `<span class="unread-badge">${badge}</span>` : '';
+    const avatarClass = ['user-avatar', sizeClass, avatarColorClass, className].filter(Boolean).join(' ');
+    const statusHtml = onlineStatus ? `<span class="user-avatar__status ${onlineStatus}"></span>` : '';
+    const badgeHtml = unreadCount ? `<span class="unread-badge">${unreadCount}</span>` : '';
 
     return `
         <div class="user-avatar-wrapper">
-            <div class="${avatarClass}">${content}</div>
+            <div class="${avatarClass}">${letter}</div>
             ${statusHtml}
             ${badgeHtml}
         </div>

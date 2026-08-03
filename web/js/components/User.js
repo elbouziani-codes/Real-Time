@@ -3,14 +3,16 @@ import UserAvatar from './UserAvatar.js';
 /**
  * User
  * One reusable component for every user row on the page.
+ * All data comes from a User model; the optional second argument
+ * only carries presentation options (variant / active state).
  *
  * Variants:
  *  - 'item'         -> .user-item        (online / offline / search result users)
  *  - 'message'      -> .last-message-item (recent messages)
  *  - 'conversation' -> .conversation-item (chat conversations)
  *
- * Supported options: avatar (letter/image), status (online/offline/away),
- * badge, subtitle (@handle), last message text and timestamp.
+ * Model fields used: name, handle, letter, avatarClass, onlineStatus,
+ * lastMessage, unreadCount, createdAt.
  */
 const VARIANTS = {
     item: {
@@ -42,44 +44,29 @@ const VARIANTS = {
     },
 };
 
-export default function User({
-    variant = 'item',
-    active = false,
-    name = '',
-    subtitle = '',
-    message = '',
-    time = '',
-    letter = '',
-    image = '',
-    colorClass = '',
-    sizeClass = '',
-    status = '',
-    badge = '',
-    className = '',
-} = {}) {
+export default function User(user = {}, { variant = 'item', active = false } = {}) {
+    const {
+        name = '',
+        handle = '',
+        lastMessage = '',
+        createdAt = '',
+    } = user;
+
     const config = VARIANTS[variant] || VARIANTS.item;
     const containerClass = [config.container, active ? 'active' : ''].filter(Boolean).join(' ');
 
-    const avatarHtml = UserAvatar({
-        letter,
-        image,
-        colorClass,
-        sizeClass: sizeClass || config.sizeClass,
-        className,
-        status,
-        badge,
-    });
+    const avatarHtml = UserAvatar(user, { sizeClass: config.sizeClass });
 
     let infoHtml = '';
     if (name) {
         infoHtml = `<div class="${config.infoClass}">`;
         infoHtml += `<span class="${config.nameClass}">${name}</span>`;
-        if (subtitle) infoHtml += `<span class="${config.subtitleClass}">${subtitle}</span>`;
-        if (message) infoHtml += `<span class="${config.messageClass}">${message}</span>`;
-        infoHtml += `</div>`;
+        if (config.subtitleClass && handle) infoHtml += `<span class="${config.subtitleClass}">${handle}</span>`;
+        if (config.messageClass && lastMessage) infoHtml += `<span class="${config.messageClass}">${lastMessage}</span>`;
+        infoHtml += '</div>';
     }
 
-    const timeHtml = time && config.timeClass ? `<span class="${config.timeClass}">${time}</span>` : '';
+    const timeHtml = config.timeClass && createdAt ? `<span class="${config.timeClass}">${createdAt}</span>` : '';
 
     return `<div class="${containerClass}">${avatarHtml}${infoHtml}${timeHtml}</div>`;
 }

@@ -9,7 +9,7 @@ const DEFAULT_ITEMS = [
  * Navigation buttons block of the navbar.
  * Data-driven: each item is { label, active }.
  */
-export default function NavItems({ items = DEFAULT_ITEMS } = {}) {
-    const itemsHtml = items.map(({ label = '', active = false }) => `<button${active ? ' class="active"' : ''}>${label}</button>`).join('');
+export default function NavItems() {
+    const itemsHtml = DEFAULT_ITEMS.map(({ label = '', active = false }) => `<button${active ? ' class="active"' : ''}>${label}</button>`).join('');
     return `<div class="nav-links">${itemsHtml}</div>`;
 }

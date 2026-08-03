@@ -4,19 +4,20 @@
 
 /**
  * PostCard
- * Single post card in the feed.
- * Replaces the old global CreateCartPost with a clean ES module
- * that returns HTML (one component, no side effects).
+ * Single post card in the feed. All data comes from a Post model:
+ * { title, author, content, category, likes, comments, createdAt }.
  */
-export default function PostCard({
-    title = '',
-    author = '',
-    time = '',
-    content = '',
-    category = '',
-    likes = 0,
-    comments = 0,
-} = {}) {
+export default function PostCard(post = {}) {
+    const {
+        title = '',
+        author = '',
+        content = '',
+        category = '',
+        likes = 0,
+        comments = 0,
+        createdAt = '',
+    } = post;
+
     return `
         <article class="post-card">
             <div class="post-header">
@@ -24,7 +25,7 @@ export default function PostCard({
                     <h3>${title}</h3>
                     <span>by <span class="user-info__name">${author}</span></span>
                 </div>
-                <span class="post-time">${time}</span>
+                <span class="post-time">${createdAt}</span>
             </div>
             <p>${content}</p>
             <span class="post-category">${category}</span>
