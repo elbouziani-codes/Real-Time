@@ -14,6 +14,8 @@ import UserAvatar from './UserAvatar.js';
  * Model fields used: name, handle, letter, avatarClass, onlineStatus,
  * lastMessage, unreadCount, createdAt.
  */
+
+// Class names per variant. An empty class means the variant omits that field.
 const VARIANTS = {
     item: {
         container: 'user-item',
@@ -44,29 +46,39 @@ const VARIANTS = {
     },
 };
 
+/**
+ * Renders a `<span>` only when both the variant provides a class and the
+ * model provides a value — variants opt out of a field by leaving its class empty.
+ */
+function renderSpan(className, value) {
+    if (!className || !value) return '';
+    return `<span class="${className}">${value}</span>`;
+}
+
+/**
+ * Info column: name plus the optional subtitle / message lines.
+ * Rendered only for users that have a name.
+ */
+function renderInfo(classes, { name, handle, lastMessage }) {
+    if (!name) return '';
+
+    const lines = [
+        `<span class="${classes.nameClass}">${name}</span>`,
+        renderSpan(classes.subtitleClass, handle),
+        renderSpan(classes.messageClass, lastMessage),
+    ].join('');
+
+    return `<div class="${classes.infoClass}">${lines}</div>`;
+}
+
 export default function User(user = {}, { variant = 'item', active = false } = {}) {
-    const {
-        name = '',
-        handle = '',
-        lastMessage = '',
-        createdAt = '',
-    } = user;
+    const { name = '', handle = '', lastMessage = '', createdAt = '' } = user;
+    const classes = VARIANTS[variant] || VARIANTS.item;
 
-    const config = VARIANTS[variant] || VARIANTS.item;
-    const containerClass = [config.container, active ? 'active' : ''].filter(Boolean).join(' ');
-
-    const avatarHtml = UserAvatar(user, { sizeClass: config.sizeClass });
-
-    let infoHtml = '';
-    if (name) {
-        infoHtml = `<div class="${config.infoClass}">`;
-        infoHtml += `<span class="${config.nameClass}">${name}</span>`;
-        if (config.subtitleClass && handle) infoHtml += `<span class="${config.subtitleClass}">${handle}</span>`;
-        if (config.messageClass && lastMessage) infoHtml += `<span class="${config.messageClass}">${lastMessage}</span>`;
-        infoHtml += '</div>';
-    }
-
-    const timeHtml = config.timeClass && createdAt ? `<span class="${config.timeClass}">${createdAt}</span>` : '';
+    const containerClass = [classes.container, active ? 'active' : ''].filter(Boolean).join(' ');
+    const avatarHtml = UserAvatar(user, { sizeClass: classes.sizeClass });
+    const infoHtml = renderInfo(classes, { name, handle, lastMessage });
+    const timeHtml = renderSpan(classes.timeClass, createdAt);
 
     return `<div class="${containerClass}">${avatarHtml}${infoHtml}${timeHtml}</div>`;
 }

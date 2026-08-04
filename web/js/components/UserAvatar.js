@@ -7,15 +7,15 @@
  * carries presentation classes (size / custom class), never data.
  */
 export default function UserAvatar(user = {}, { sizeClass = '', className = '' } = {}) {
-    const { letter = '', avatarClass: avatarColorClass = '', onlineStatus = '', unreadCount = 0 } = user;
+    const { letter = '', avatarClass = '', onlineStatus = '', unreadCount = 0 } = user;
 
-    const avatarClass = ['user-avatar', sizeClass, avatarColorClass, className].filter(Boolean).join(' ');
+    const avatarClasses = ['user-avatar', sizeClass, avatarClass, className].filter(Boolean).join(' ');
     const statusHtml = onlineStatus ? `<span class="user-avatar__status ${onlineStatus}"></span>` : '';
     const badgeHtml = unreadCount ? `<span class="unread-badge">${unreadCount}</span>` : '';
 
     return `
         <div class="user-avatar-wrapper">
-            <div class="${avatarClass}">${letter}</div>
+            <div class="${avatarClasses}">${letter}</div>
             ${statusHtml}
             ${badgeHtml}
         </div>

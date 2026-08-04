@@ -1,0 +1,104 @@
+<div class="users-section">
+<h4>🟢 Online</h4>
+<div class="users-list">
+         <div class="user-item">
+            <div class="user-avatar-wrapper">
+                <div class="user-avatar user-avatar--sm avatar--sarah">S</div>
+                <span class="user-avatar__status online"></span>
+            </div>
+            <div class="user-item-info">
+                <span class="user-item-name">Sarah Ahmed</span>
+                <span class="user-item-status">@sarah</span>
+            </div>
+        </div>
+        <div class="user-item">
+            <div class="user-avatar-wrapper">
+                <div class="user-avatar user-avatar--sm avatar--ahmed">A</div>
+                <span class="user-avatar__status online"></span>
+            </div>
+            <div class="user-item-info">
+                <span class="user-item-name">Ahmed Benali</span>
+                <span class="user-item-status">@ahmed</span>
+            </div>
+        </div>
+        <div class="user-item">
+            <div class="user-avatar-wrapper">
+                <div class="user-avatar user-avatar--sm avatar--omar">O</div>
+                <span class="user-avatar__status online"></span>
+            </div>
+            <div class="user-item-info">
+                <span class="user-item-name">Omar El Idrissi</span>
+                <span class="user-item-status">@omar</span>
+            </div>
+        </div>
+    </div>
+
+                <h4>🔴 Offline</h4>
+
+<div class="users-list">
+    <div class="user-item">
+        <div class="user-avatar-wrapper">
+            <div class="user-avatar user-avatar--sm avatar--fatima">F</div>
+            <span class="user-avatar__status offline"></span>
+        </div>
+        <div class="user-item-info">
+            <span class="user-item-name">Fatima Zahra</span>
+            <span class="user-item-status">@fatima</span>
+        </div>
+    </div>
+    <div class="user-item">
+        <div class="user-avatar-wrapper">
+            <div class="user-avatar user-avatar--sm avatar--layla">L</div>
+            <span class="user-avatar__status offline"></span>
+        </div>
+        <div class="user-item-info">
+            <span class="user-item-name">Layla Hassan</span>
+            <span class="user-item-status">@layla</span>
+        </div>
+    </div>
+</div>
+                <!-- Recent Messages -->
+                <h4 class="users-section-title">💬 Recent Messages</h4>
+                <div class="last-messages-list">
+                    <div class="last-message-item">
+                        <div class="user-avatar-wrapper">
+                            <div class="user-avatar user-avatar--sm avatar--sarah">S</div>
+                        </div>
+                        <div class="last-msg-info">
+                            <span class="last-msg-name">Sarah</span>
+                            <span class="last-msg-text">See you tomorrow!</span>
+                        </div>
+                        <span class="last-msg-time">10m ago</span>
+                    </div>
+                    <div class="last-message-item">
+                        <div class="user-avatar-wrapper">
+                            <div class="user-avatar user-avatar--sm avatar--ahmed">A</div>
+                        </div>
+                        <div class="last-msg-info">
+                            <span class="last-msg-name">Ahmed</span>
+                            <span class="last-msg-text">Thanks for the help!</span>
+                        </div>
+                        <span class="last-msg-time">30m ago</span>
+                    </div>
+                    <div class="last-message-item">
+                        <div class="user-avatar-wrapper">
+                            <div class="user-avatar user-avatar--sm avatar--fatima">F</div>
+                        </div>
+                        <div class="last-msg-info">
+                            <span class="last-msg-name">Fatima</span>
+                            <span class="last-msg-text">The design looks great!</span>
+                        </div>
+                        <span class="last-msg-time">1h ago</span>
+                    </div>
+                    <div class="last-message-item">
+                        <div class="user-avatar-wrapper">
+                            <div class="user-avatar user-avatar--sm avatar--omar">O</div>
+                        </div>
+                        <div class="last-msg-info">
+                            <span class="last-msg-name">Omar</span>
+                            <span class="last-msg-text">Let's work on that project</span>
+                        </div>
+                        <span class="last-msg-time">2h ago</span>
+                    </div>
+                </div>
+</div>

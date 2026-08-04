@@ -11,6 +11,28 @@
  * are hardcoded here.
  */
 
+const CHECK_SVG = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+`;
+
+const CATEGORIES_ICON = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="3" y1="9" x2="21" y2="9"></line>
+        <line x1="9" y1="21" x2="9" y2="9"></line>
+    </svg>
+`;
+
+const SORT_ICON = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="4" y1="6" x2="20" y2="6"></line>
+        <line x1="6" y1="12" x2="18" y2="12"></line>
+        <line x1="8" y1="18" x2="16" y2="18"></line>
+    </svg>
+`;
+
 /**
  * Filter
  * Generic filter group wrapper (.filter-group).
@@ -40,12 +62,6 @@ export function FilterHeader({
     `;
 }
 
-const CHECK_SVG = `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-`;
-
 /**
  * CategoryItem
  * Single category checkbox row.
@@ -64,14 +80,6 @@ export function CategoryItem(category = {}) {
     `;
 }
 
-const CATEGORIES_ICON = `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-        <line x1="3" y1="9" x2="21" y2="9"></line>
-        <line x1="9" y1="21" x2="9" y2="9"></line>
-    </svg>
-`;
-
 /**
  * Categories
  * Filter group with a "Categories" header and one checkbox row per
@@ -82,8 +90,6 @@ export function Categories({
     title = 'Categories',
     icon = CATEGORIES_ICON,
 } = {}) {
-    const itemsHtml = categories.map((category) => CategoryItem(category)).join('');
-
     return Filter({
         header: FilterHeader({
             title,
@@ -91,17 +97,9 @@ export function Categories({
             headerClass: 'category-header',
             iconClass: 'category-header__icon',
         }),
-        children: itemsHtml,
+        children: categories.map(CategoryItem).join(''),
     });
 }
-
-const SORT_ICON = `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="4" y1="6" x2="20" y2="6"></line>
-        <line x1="6" y1="12" x2="18" y2="12"></line>
-        <line x1="8" y1="18" x2="16" y2="18"></line>
-    </svg>
-`;
 
 /**
  * Sort

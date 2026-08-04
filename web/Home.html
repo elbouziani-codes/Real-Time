@@ -47,10 +47,7 @@
         <!-- Sidebar Filters -->
         <aside class="sidebar">
 
-            <h3 class="sidebar-title">🔍 Filter</h3>
-
-            <input type="search" class="sidebar-search" placeholder="Search posts...">
-
+            <h3 class="sidebar-title">Filter</h3>
             <div class="filter-group">
                 <div class="category-header">
                     <span class="category-header__icon">
@@ -139,89 +136,10 @@
                 </label>
             </div>
 
-            <div class="filter-group">
-                <div class="filter-group__header">
-                    <span class="filter-group__icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="4" y1="6" x2="20" y2="6"></line>
-                            <line x1="6" y1="12" x2="18" y2="12"></line>
-                            <line x1="8" y1="18" x2="16" y2="18"></line>
-                        </svg>
-                    </span>
-                    <span>Sort</span>
-                </div>
-                <div class="filter-select-wrapper">
-                    <select class="filter-select">
-                        <option>Latest</option>
-                        <option>Most liked</option>
-                        <option>Most commented</option>
-                    </select>
-                </div>
-            </div>
-
             <!-- Online Users -->
             <div class="users-section">
-                <h4>🟢 Online</h4>
+                <h4 class="users-section-title">💬 List Users</h4>
                 <div class="users-list">
-                    <div class="user-item">
-                        <div class="user-avatar-wrapper">
-                            <div class="user-avatar user-avatar--sm avatar--sarah">S</div>
-                            <span class="user-avatar__status online"></span>
-                        </div>
-                        <div class="user-item-info">
-                            <span class="user-item-name">Sarah Ahmed</span>
-                            <span class="user-item-status">@sarah</span>
-                        </div>
-                    </div>
-                    <div class="user-item">
-                        <div class="user-avatar-wrapper">
-                            <div class="user-avatar user-avatar--sm avatar--ahmed">A</div>
-                            <span class="user-avatar__status online"></span>
-                        </div>
-                        <div class="user-item-info">
-                            <span class="user-item-name">Ahmed Benali</span>
-                            <span class="user-item-status">@ahmed</span>
-                        </div>
-                    </div>
-                    <div class="user-item">
-                        <div class="user-avatar-wrapper">
-                            <div class="user-avatar user-avatar--sm avatar--omar">O</div>
-                            <span class="user-avatar__status online"></span>
-                        </div>
-                        <div class="user-item-info">
-                            <span class="user-item-name">Omar El Idrissi</span>
-                            <span class="user-item-status">@omar</span>
-                        </div>
-                    </div>
-                </div>
-
-                <h4>🔴 Offline</h4>
-                <div class="users-list">
-                    <div class="user-item">
-                        <div class="user-avatar-wrapper">
-                            <div class="user-avatar user-avatar--sm avatar--fatima">F</div>
-                            <span class="user-avatar__status offline"></span>
-                        </div>
-                        <div class="user-item-info">
-                            <span class="user-item-name">Fatima Zahra</span>
-                            <span class="user-item-status">@fatima</span>
-                        </div>
-                    </div>
-                    <div class="user-item">
-                        <div class="user-avatar-wrapper">
-                            <div class="user-avatar user-avatar--sm avatar--layla">L</div>
-                            <span class="user-avatar__status offline"></span>
-                        </div>
-                        <div class="user-item-info">
-                            <span class="user-item-name">Layla Hassan</span>
-                            <span class="user-item-status">@layla</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Messages -->
-                <h4 class="users-section-title">💬 Recent Messages</h4>
-                <div class="last-messages-list">
                     <div class="last-message-item">
                         <div class="user-avatar-wrapper">
                             <div class="user-avatar user-avatar--sm avatar--sarah">S</div>
@@ -262,7 +180,54 @@
                         </div>
                         <span class="last-msg-time">2h ago</span>
                     </div>
+                    </div>
+                     <div class="users-section">
+                    <div class="user-item">
+                        <div class="user-avatar-wrapper">
+                            <div class="user-avatar user-avatar--sm avatar--layla">L</div>
+                            <span class="user-avatar__status offline"></span>
+                        </div>
+                        <div class="user-item-info">
+                            <span class="user-item-name">Layla Hassan</span>
+                            <span class="user-item-status">@layla</span>
+                        </div>
+                    </div>
+                    <div class="user-item">
+                        <div class="user-avatar-wrapper">
+                            <div class="user-avatar user-avatar--sm avatar--sarah">S</div>
+                            <span class="user-avatar__status online"></span>
+                        </div>
+                        <div class="user-item-info">
+                            <span class="user-item-name">Sarah Ahmed</span>
+                            <span class="user-item-status">@sarah</span>
+                        </div>
+                    </div>
+                    <div class="user-item">
+                        <div class="user-avatar-wrapper">
+                            <div class="user-avatar user-avatar--sm avatar--fatima">F</div>
+                            <span class="user-avatar__status offline"></span>
+                        </div>
+                        <div class="user-item-info">
+                            <span class="user-item-name">Fatima Zahra</span>
+                            <span class="user-item-status">@fatima</span>
+                        </div>
+                    </div>
+                    <div class="user-item">
+                        <div class="user-avatar-wrapper">
+                            <div class="user-avatar user-avatar--sm avatar--omar">O</div>
+                            <span class="user-avatar__status online"></span>
+                        </div>
+                        <div class="user-item-info">
+                            <span class="user-item-name">Omar El Idrissi</span>
+                            <span class="user-item-status">@omar</span>
+                        </div>
+                    </div>
                 </div>
+
+
+               
+                <!--<div class="last-messages-list">
+                </div>-->
             </div>
 
         </aside>

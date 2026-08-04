@@ -7,7 +7,7 @@ import { DEFAULT_POSTS } from '../services/seed.js';
  * All data comes from Post models (defaults to the model seed).
  */
 export default function Feed({ title = '📰 Latest Posts', posts = DEFAULT_POSTS } = {}) {
-    const postsHtml = posts.map((post) => PostCard(post)).join('');
+    const postsHtml = posts.map(PostCard).join('');
 
     return `
         <main class="feed">
