@@ -22,5 +22,11 @@ func NewRouter(authHandler *AuthHandler, postHandler *PostHandler, testHandler *
 	router.Handle("PATCH /api/posts/{id}", middleware.Auth(http.HandlerFunc(postHandler.PatchPost)))
 	
 	router.Handle("/api/test", middleware.Auth(http.HandlerFunc(testHandler.Test)))
+	fs := http.FileServer(
+		http.Dir("./web"),
+	)
+
+	http.Handle("/", fs)
+	
 	return router
 }

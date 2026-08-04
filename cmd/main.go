@@ -45,6 +45,31 @@ func main() {
 
 	middleware := middleware.NewMiddleware(authSvc)
 	router := handler.NewRouter(authHandler, postHandler, &testHandler, wsHandler, chatHandler, middleware)
-	http.ListenAndServe(":8081", router)
+	spa := spaHandler()
+	http.ListenAndServe(":8081", spa(router))
 	log.Println("Database Initialised")
+}
+
+
+
+func spaHandler() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fileServer := http.FileServer(
+			http.Dir("./web"),
+		)
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			path := "./web" + r.URL.Path
+			_, err := os.Stat(path)
+			if os.IsNotExist(err) {
+				http.ServeFile(
+					w,
+					r,
+					"./web/index.html",
+				)
+				return
+			}
+			// Serve frontend files
+			fileServer.ServeHTTP(w,r)
+		})
+	}
 }
