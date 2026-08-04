@@ -2,6 +2,7 @@ import auth from "../pages/auth.js";
 import chat from "../pages/chat.js";
 import HomePage from "../pages/home.js";
 import pagePost from "../pages/postDaitaile.js";
+import getProfile from "./../api/auth.js"
 
 
 const routes = {
@@ -25,8 +26,8 @@ function router(){
     const page = routes[path];
 
     const app = document.getElementById("app");
-
-
+    console.log("a")
+    getProfile()    
     if(page){
 
         app.innerHTML = page();
@@ -40,6 +41,7 @@ function router(){
         `;
 
     }
+    
 
 }
 
