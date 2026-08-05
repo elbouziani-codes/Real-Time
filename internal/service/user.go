@@ -12,6 +12,7 @@ type UserService struct {
 }
 
 type UserRepo interface {
+	GetByID(context.Context, crypto.UUID) (domain.User, error)
 	CreateUser(context.Context, domain.User) error
 	GetUserProfile(context.Context, crypto.UUID, crypto.UUID) (*domain.UserProfile, error)
 }
