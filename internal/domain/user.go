@@ -19,6 +19,15 @@ type User struct {
 	UpdatedAt int
 }
 
+type UserProfile struct {
+	ID        crypto.UUID
+	NickName  string
+	LastName  string
+	FirstName string
+	Gender    string
+	Age       int
+	CreatedAt int
+}
 type RegisterRequest struct {
 	NickName  string `json:"nick_name"`
 	LastName  string `json:"last_name"`

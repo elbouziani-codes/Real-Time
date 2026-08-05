@@ -29,25 +29,36 @@ func main() {
 	userRepo := repository.NewUserRepo(db)
 	postRepo := repository.NewPostRepo(db)
 	chatRepo := repository.NewChatRepo(db)
+	commentRepo := repository.NewCommentRepo(db)
+	reactionRepo := repository.NewReactionRepo(db)
+
+
+
 
 	// new service
 	authSvc := service.NewAuthService(authRepo, userRepo)
 	userSvc := service.NewUserService(userRepo)
 	postSvc := service.NewPostService(postRepo)
 	charSvc := service.NewChatService(chatRepo, userRepo)
+	commentSvc := service.NewCommentService(commentRepo)
+	reactionSvc := service.NewReactionService(reactionRepo)
+
+
 
 	// new handler
 	authHandler := handler.NewAuthHandler(authSvc, userSvc)
 	postHandler := handler.NewPostHandler(postSvc)
-	testHandler := handler.NewTestHandler(authSvc, userSvc)
 	wsHandler := ws.NewHandleWs(charSvc, userSvc)
 	chatHandler := handler.NewHandleChat(charSvc, userSvc)
-
+	commentHandler := handler.NewCommentHandler(commentSvc, postSvc)
+	reactionHandler := handler.NewReactionHandler(reactionSvc, postSvc)
 
 	middleware := middleware.NewMiddleware(authSvc)
-	router := handler.NewRouter(authHandler, postHandler, &testHandler, wsHandler, chatHandler, middleware)
+	router := handler.NewRouter(authHandler, postHandler, commentHandler, reactionHandler, wsHandler, chatHandler, middleware)
+
 	spa := spaHandler()
 	http.ListenAndServe(":8081", spa(router))
+
 	log.Println("Database Initialised")
 }
 

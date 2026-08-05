@@ -5,21 +5,47 @@ import (
 	"strings"
 )
 
+
+
 type Post struct {
 	ID       crypto.UUID
 	AuthorID crypto.UUID
+	Category crypto.UUID
 	Title    string
 	Content  string
 	CreatedAt int
 	UpdatedAt int
 }
 
+
+type PostInfo struct {
+	ID        crypto.UUID
+	Author    UserProfile
+	Title     string
+	Content   string
+	Category string
+	Likes 	  int
+	DisLikes   int
+	LikeInfo  LikeInfo
+	CreatedAt int
+	UpdatedAt int
+}
+
+type LikeInfo struct {
+	ID crypto.UUID		
+	IsLike bool
+} 
+
+
+
+
 type CreatePostRequest struct {
 	Title   string `json:"title"`
+	Category string `json:"category_id"`
 	Content string `json:"content"`
 }
 
-func ValueidatePostRequest(request CreatePostRequest) (Post, error) {
+func ValidatePostRequest(request CreatePostRequest) (Post, error) {
 	post := Post{}
 	request.Title = strings.TrimSpace(request.Title)
 	request.Content = strings.TrimSpace(request.Content)
@@ -37,7 +63,12 @@ func ValueidatePostRequest(request CreatePostRequest) (Post, error) {
 	if len(request.Content) < 10 || len(request.Content) > 4096 {
 		return post, Error{Message: "post content length must be between 10 and 4096 chars", Code: BadFormatCode}
 	}
+	var err error
+	post.Category, err = crypto.ParseUUID(request.Category) 
+	if err != nil {
+		return post, Error{Message: "missing post category", Code: BadFormatCode}
 
+	}
 	post.Title = request.Title
 	post.Content = request.Content
 	return post, nil
@@ -88,7 +119,7 @@ type GetPostsRequest struct {
 	Limit   int  `json:"limit"`
 }
 
-func ValueidateGetPostsRequest(request GetPostsRequest) (error) {
+func ValidateGetPostsRequest(request GetPostsRequest) (error) {
 	if request.Offset <= 0 || request.Limit <= 0 {
 			return Error{Message: "invalid filters", Code: BadFormatCode}		
 	}	

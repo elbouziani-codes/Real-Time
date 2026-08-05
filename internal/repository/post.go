@@ -1,5 +1,4 @@
 package repository
-
 import (
 	"fmt"
 	"context"
@@ -16,20 +15,42 @@ func NewPostRepo(db DBTX) *postRepo {
 	return &postRepo{db: db}
 }
 
-func scanPost(row scanner) (*domain.Post, error) {
-	post := domain.Post{}
+
+const getPostsQuery = `
+SELECT P.id, P.title, P.content, likes_count, dislikes_count, P.created_at, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at, COALESCE(R.id, '00000000-0000-0000-0000-000000000000'), COALESCE(R.is_like, FALSE)
+FROM posts P  
+JOIN users U 
+ON P.author_id = U.id
+LEFT JOIN reactions R
+ON P.id = R.parent_id AND R.author_id = ? 
+ORDER BY P.created_at DESC 
+LIMIT ? OFFSET ?
+`
+
+func scanPost(row scanner) (*domain.PostInfo, error) {
+	post := domain.PostInfo{}
 	err := row.Scan(
 		&post.ID.Value,
-		&post.AuthorID.Value,
 		&post.Title,
 		&post.Content,
+		&post.Likes,
+		&post.DisLikes,
 		&post.CreatedAt,
-		&post.UpdatedAt)
+		&post.Author.ID.Value,
+		&post.Author.NickName,
+		&post.Author.LastName,
+		&post.Author.FirstName,
+		&post.Author.Gender,
+		&post.Author.Age,
+		&post.Author.CreatedAt,
+		&post.LikeInfo.ID.Value,
+		&post.LikeInfo.IsLike)
 	if err != nil {
 		return nil, sqlite.TranslateError(err)
 	}
 	return &post, nil
 }
+
 const savePostQuery = `INSERT INTO posts (id, author_id, title, content) VALUES(?, ?, ?, ?)`
 
 func (p *postRepo) SavePost(ctx context.Context, post domain.Post) error {
@@ -40,26 +61,36 @@ func (p *postRepo) SavePost(ctx context.Context, post domain.Post) error {
 	return nil
 }
 
-const getPostQuery = `SELECT id, author_id, title, content, created_at, updated_at FROM posts WHERE id = ?`
+const getPostQuery = `
+SELECT P.id, P.title, P.content, likes_count, dislikes_count, P.created_at, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at, COALESCE(R.id, '00000000-0000-0000-0000-000000000000'), COALESCE(R.is_like, FALSE) 
+FROM posts P  
+JOIN users U 
+ON P.author_id = U.id
+LEFT JOIN reactions R
+ON P.id = R.parent_id AND R.author_id = ?  
+WHERE P.id = ?
+`
 
-func (p *postRepo) GetPost(ctx context.Context, postID crypto.UUID) (*domain.Post, error) {
-	row := p.db.QueryRowContext(ctx, getPostQuery, postID.Value)	
+
+func (p *postRepo) GetPost(ctx context.Context, userID, postID crypto.UUID) (*domain.PostInfo, error) {
+	fmt.Println(userID, postID)
+	row := p.db.QueryRowContext(ctx, getPostQuery, userID.Value, postID.Value)	
 	return scanPost(row) 
 }
 
 
-const getPostsQuery = `SELECT id, author_id, title, content, created_at, updated_at FROM posts 
-						ORDER BY created_at DESC 
-						LIMIT ? OFFSET ?; `
+//const getPostsQuery = `SELECT id, author_id, title, content, created_at, updated_at FROM posts 
+//						ORDER BY created_at DESC 
+//						LIMIT ? OFFSET ?; `
 
-func (p *postRepo) GetPosts(ctx context.Context, limit, offset int) ([]*domain.Post, error) {
-	rows, err := p.db.QueryContext(ctx, getPostsQuery, limit, offset)	
+func (p *postRepo) GetPosts(ctx context.Context, userID crypto.UUID, limit, offset int) ([]*domain.PostInfo, error) {
+	rows, err := p.db.QueryContext(ctx, getPostsQuery, userID.Value, limit, offset)	
 	
 	if err != nil {
 		return nil, sqlite.TranslateError(err)	
 	}
 	defer rows.Close()
-	var posts []*domain.Post
+	var posts []*domain.PostInfo
 	for rows.Next() {
 		post, err := scanPost(rows)
 		if err != nil {

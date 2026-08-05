@@ -19,6 +19,9 @@ func TranslateError(constraintError error) error {
 	if sql.ErrNoRows == constraintError {
 		return domain.Error{Message: "not found", Code: domain.NotFoundCode}
 	}
+	if strings.Contains(constraintError.Error(), "parent") {
+		return domain.Error{Message: "not found", Code: domain.NotFoundCode}
+	}
 	if errors.As(constraintError, &err) {
 		message := err.Error()
 		switch {
@@ -27,9 +30,12 @@ func TranslateError(constraintError error) error {
 		case strings.Contains(message, "nick_name"):
 			return domain.Error{Message: "nickname already used", Code: domain.ConflictCode}
 		default:
+			fmt.Println(err)
 			return domain.Error{Message: "unexpected error", Code: domain.UnexpectedCode}
 		}
 	}
+	fmt.Println(constraintError)
+
 	return domain.Error{Message: "unexpected error", Code: domain.UnexpectedCode}
 
 }
