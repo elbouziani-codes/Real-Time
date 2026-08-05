@@ -1,4 +1,4 @@
-import auth from "../pages/auth.js";
+import { authListener, auth } from "./../pages/auth.js";
 import chat from "../pages/chat.js";
 import HomePage from "../pages/home.js";
 import pagePost from "../pages/postDaitaile.js";
@@ -13,24 +13,25 @@ const routes = {
 
     "/chat": chat,
 
-    "/auth": auth
+    "/login": auth,
+
+    "/register": auth
 
 };
 
 
 
-function router(){
-
+async function router(){
     const path = window.location.pathname;
-
     const page = routes[path];
-
     const app = document.getElementById("app");
-    console.log("a")
-    getProfile()    
-    if(page){
+    await getProfile(path)  
 
+    if(page){
         app.innerHTML = page();
+        if(path === "/login" || path === "/register"){
+            authListener();
+        }
 
     }else{
 
@@ -49,15 +50,15 @@ function router(){
 
 function navigate(path){
 
+    if(window.location.pathname === path)
+        return;
+
     history.pushState(
         {},
         "",
         path
     );
-
-
     router();
-
 }
 
 

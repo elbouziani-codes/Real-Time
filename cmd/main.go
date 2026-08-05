@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"realTime/internal/repository"
 	"realTime/internal/service"
@@ -54,10 +55,14 @@ func main() {
 
 func spaHandler() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		fileServer := http.FileServer(
-			http.Dir("./web"),
-		)
+		fileServer := http.FileServer(http.Dir("./web"))
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			
+			if strings.HasPrefix(r.URL.Path ,"/api/"){
+				next.ServeHTTP(w, r)
+				return 
+			}
+
 			path := "./web" + r.URL.Path
 			_, err := os.Stat(path)
 			if os.IsNotExist(err) {

@@ -47,12 +47,6 @@ func NewAuthHandler(authSvc AuthService, userSvc UserService) *AuthHandler {
 	return &AuthHandler{authSvc: authSvc, userSvc: userSvc}
 }
 
-type userInfo struct {
-	NickName string
-	Email    string
-	Age      int
-}
-
 func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	registerRequest := domain.RegisterRequest{}
 	defer r.Body.Close()
@@ -82,9 +76,8 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	outputUser := userInfo{NickName: user.NickName, Email: user.Email, Age: user.Age}
 	a.setCookie(w, sessionID)
-	if err := json.NewEncoder(w).Encode(outputUser); err != nil {
+	if err := json.NewEncoder(w).Encode("done"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

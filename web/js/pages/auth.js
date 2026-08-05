@@ -1,25 +1,93 @@
-import Navbar from './../components/navbar.js';
-import Sidebar from './../components/Sidebar.js';
-import Feed from './../components/Feed.js';
+import { login, register } from "./../components/login.js";
+import {postLogin, postRegister }from  "./../api/auth.js"
+import { navigate } from "./../router/router.js";
 
-/**
- * HomePage
- * Top-level composition: Navbar + Sidebar + Feed inside .home.
- * A single call renders the whole page as an HTML string.
- *
- * Model-driven props (each component falls back to its model seed):
- *  - nav      { navItems, user: User model }
- *  - sidebar  { users, categories, filters, recentMessages }
- *  - feed     { title, posts: Post model[] }
- */
-export default function auth({ nav = {}, sidebar = {}, feed = {} } = {}) {
+function loginAndRegister() {
+    if (window.location.pathname == "/register") {
+        return register();
+    } else if (window.location.pathname == "/login") {
+        return login();
+    } else {
+        navigate("/");
+    }
+}
+
+export function auth() {
     return `
-        <section class="home">
-            ${Navbar(nav)}
-            <div class="home-layout">
-                ${Sidebar(sidebar)}
-                ${Feed(feed)}
+        <section class="auth">
+
+        <div class="auth-left">
+            <h1>💬 Real-Time Forum</h1>
+            <p>Join discussions with developers around the world. Connect, share, and learn in real-time.</p>
+        </div>
+
+        <div class="auth-right">
+
+            <div class="card">
+                ${loginAndRegister()}
             </div>
-        </section>
+
+        </div>
+    </section>
     `;
+}
+
+export function authListener() {
+    const loginTab = document.getElementById("loginTab");
+
+    const registerTab = document.getElementById("registerTab");
+
+    loginTab?.addEventListener("click", () => {
+    navigate("/login");
+    });
+
+    registerTab?.addEventListener("click", () => {
+    navigate("/register");
+    });
+
+    const loginForm = document.getElementById("loginForm");
+
+    loginForm?.addEventListener("submit", loginSubmit);
+
+    const registerForm = document.getElementById("registerForm");
+
+    registerForm?.addEventListener("submit", registerSubmit);
+}
+
+function loginSubmit(e) {
+    e.preventDefault();
+
+    const data = {
+    identifier: document.getElementById("loginIdentifier").value,
+
+    password: document.getElementById("loginPassword").value,
+    };
+
+    let ok = postLogin(data);
+    console.log(ok)
+    console.log("LOGIN", data);
+}
+
+function registerSubmit(e) {
+    e.preventDefault();
+
+    const data = {
+    nick_name: document.getElementById("nickname").value,
+
+    last_name: document.getElementById("lastName").value,
+
+    first_name: document.getElementById("firstName").value,
+
+    email: document.getElementById("email").value,
+
+    password: document.getElementById("password").value,
+
+    gender: document.getElementById("gender").value,
+
+    age: Number(document.getElementById("age").value, 10),
+
+};
+    let ok = postRegister(data)
+    console.log(ok)
+    console.log("REGISTER", data);
 }
