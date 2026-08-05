@@ -20,6 +20,7 @@ type AuthService interface {
 
 type UserService interface {
 	CreateUser(context.Context, *domain.User) error
+	GetUser(context.Context, crypto.UUID, crypto.UUID) (*domain.UserProfile, error)
 }
 
 type AuthHandler struct {
@@ -45,6 +46,26 @@ func (t *TestHandler) Test(w http.ResponseWriter, r *http.Request) {
 
 func NewAuthHandler(authSvc AuthService, userSvc UserService) *AuthHandler {
 	return &AuthHandler{authSvc: authSvc, userSvc: userSvc}
+}
+
+
+func (a *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
+	userIDAny := r.Context().Value("user_id")
+	userID := userIDAny.(crypto.UUID)
+	
+	user, err := a.userSvc.GetUser(r.Context(), userID, userID)
+	if err != nil {
+		Error(err, w)
+		return
+	}
+	
+	
+	
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		http.Error(w, "uknown error", http.StatusInternalServerError)
+		return
+	}
+
 }
 
 func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {

@@ -26,6 +26,8 @@ func NewRouter(authHandler *AuthHandler, postHandler *PostHandler, commentHandle
 
 	router.Handle("PATCH /api/comments/{id}", middleware.Auth(http.HandlerFunc(commentHandler.PatchComment)))
 	router.Handle("GET /api/posts/{id}", middleware.Auth(http.HandlerFunc(postHandler.GetPost)))
+	router.Handle("GET /api/me", middleware.Auth(http.HandlerFunc(authHandler.Me)))
+
 	router.Handle("GET /api/comments/{id}", middleware.Auth(http.HandlerFunc(commentHandler.GetComments)))
 	router.Handle("GET /api/reactions/{parent_id}", middleware.Auth(http.HandlerFunc(reactionHandler.GetReactions)))
 	router.Handle("POST /api/reactions", middleware.Auth(http.HandlerFunc(reactionHandler.React)))

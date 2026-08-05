@@ -38,6 +38,22 @@ func scanUser(row scanner) (domain.User, error) {
 	return user, nil
 }
 
+func scanUserProfile(row scanner) (*domain.UserProfile, error) {
+	user := domain.UserProfile{}
+	err := row.Scan(
+		&user.ID.Value,
+		&user.Email,
+		&user.NickName,
+		&user.LastName,
+		&user.FirstName,
+		&user.Age,
+		&user.Gender)
+	if err != nil {
+		return nil, sqlite.TranslateError(err)
+	}
+	return &user, nil
+}
+
 const CreateUserQuery = `INSERT INTO users 
 (id, email, password_hash, nick_name, last_name, first_name, age, gender) VALUES 
 (?, ?, ?, ?, ?, ?, ?, ?) `
@@ -64,6 +80,14 @@ FROM users WHERE id = ?`
 func (u *UserRepo) GetByID(ctx context.Context, userID crypto.UUID) (domain.User, error) {
 	row := u.db.QueryRowContext(ctx, GetByIdQuery, userID.Value)
 	return scanUser(row)
+}
+
+const GetProfileQuery = `SELECT id, email, nick_name, last_name, first_name, age, gender 
+FROM users WHERE id = ?`
+
+func (u *UserRepo) GetUserProfile(ctx context.Context, requesterID, userID crypto.UUID) (*domain.UserProfile, error) {
+	row := u.db.QueryRowContext(ctx, GetProfileQuery, userID.Value)
+	return scanUserProfile(row)
 }
 
 const GetByEmailQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at, updated_at

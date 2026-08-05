@@ -21,6 +21,7 @@ type User struct {
 
 type UserProfile struct {
 	ID        crypto.UUID
+	Email  	string
 	NickName  string
 	LastName  string
 	FirstName string

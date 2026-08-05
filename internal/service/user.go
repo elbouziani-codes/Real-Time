@@ -13,11 +13,15 @@ type UserService struct {
 
 type UserRepo interface {
 	CreateUser(context.Context, domain.User) error
-	GetByID(context.Context, crypto.UUID) (domain.User, error)
+	GetUserProfile(context.Context, crypto.UUID, crypto.UUID) (*domain.UserProfile, error)
 }
 
 func NewUserService(repo UserRepo) *UserService {
 	return &UserService{repo: repo}
+}
+
+func (svc *UserService) GetUser(ctx context.Context, userID, requesterID crypto.UUID) (*domain.UserProfile, error) {
+	return svc.repo.GetUserProfile(ctx, userID, requesterID) 	
 }
 
 func (svc *UserService) CreateUser(ctx context.Context, user *domain.User) error {
