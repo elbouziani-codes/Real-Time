@@ -8,13 +8,20 @@
  * { title, author, content, category, likes, comments, createdAt }.
  */
 export default function PostCard(post = {}) {
+    if (typeof(post) == "string"){
+        return `
+        <article class="post-card">
+        <h3>not fond post</h3>
+        </article>
+        `
+    }
     const {
         title = '',
         author = '',
         content = '',
         category = '',
         likes = 0,
-        comments = 0,
+        dislike = 0,
         createdAt = '',
     } = post;
 
@@ -30,8 +37,8 @@ export default function PostCard(post = {}) {
             <p>${content}</p>
             <span class="post-category">${category}</span>
             <div class="post-actions">
-                <button class="like-btn">❤️ ${likes}</button>
-                <button class="comment-btn">💬 ${comments}</button>
+                <button class="like-btn">/\\ ${likes}</button>
+                <button class="comment-btn">\\/ ${dislike}</button>
             </div>
         </article>
     `;

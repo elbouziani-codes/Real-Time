@@ -8,6 +8,7 @@ import createUser from '../models/User.js';
 import createPost from '../models/Post.js';
 import createCategory from '../models/Category.js';
 import createFilter from '../models/Filter.js';
+import fetchPost from "./../api/posts.js"
 
 /** Current logged-in user shown in the navbar. */
 export const CURRENT_USER = createUser({
@@ -36,58 +37,6 @@ export const DEFAULT_RECENT_MESSAGES = [
 ];
 
 /** Feed posts shown by default on the Home page. */
-export const DEFAULT_POSTS = [
-    createPost({
-        id: 1,
-        title: 'Building WebSocket Chat with Go',
-        content: 'Today I implemented real time communication using Go and WebSocket...',
-        category: 'Programming',
-        author: 'Mohammed',
-        likes: 24,
-        comments: 8,
-        createdAt: '2h ago',
-    }),
-    createPost({
-        id: 2,
-        title: 'My first Go project',
-        content: 'Learning backend architecture with clean architecture principles...',
-        category: 'Programming',
-        author: 'Mohammed',
-        likes: 15,
-        comments: 3,
-        createdAt: '5h ago',
-    }),
-    createPost({
-        id: 3,
-        title: 'CSS Grid vs Flexbox — When to Use What',
-        content: 'A deep dive into CSS Grid and Flexbox...',
-        category: 'Technology',
-        author: 'Sarah',
-        likes: 42,
-        comments: 12,
-        createdAt: '8h ago',
-    }),
-    createPost({
-        id: 4,
-        title: 'Rust Ownership Explained Simply',
-        content: 'Ownership, borrowing, lifetimes — Rust concepts made simple...',
-        category: 'Programming',
-        author: 'Ahmed',
-        likes: 31,
-        comments: 7,
-        createdAt: '1d ago',
-    }),
-    createPost({
-        id: 5,
-        title: 'UI/UX Tips for Developers',
-        content: 'Practical UX principles every developer should know...',
-        category: 'Technology',
-        author: 'Fatima',
-        likes: 56,
-        comments: 15,
-        createdAt: '1d ago',
-    }),
-];
 
 /** Category filter options shown in the sidebar. */
 export const DEFAULT_CATEGORIES = [
@@ -147,6 +96,7 @@ export const DEFAULT_CATEGORIES = [
             </svg>`,
     }),
 ];
+
 
 /** Sort options shown in the sidebar select. */
 export const DEFAULT_SORT_OPTIONS = ['Latest', 'Most liked', 'Most commented'];

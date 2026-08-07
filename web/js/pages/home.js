@@ -1,7 +1,7 @@
 import Navbar from './../components/navbar.js';
 import Sidebar from './../components/Sidebar.js';
 import Feed from './../components/Feed.js';
-
+import fetchPost from "./../api/posts.js"
 /**
  * HomePage
  * Top-level composition: Navbar + Sidebar + Feed inside .home.
@@ -12,13 +12,24 @@ import Feed from './../components/Feed.js';
  *  - sidebar  { users, categories, filters, recentMessages }
  *  - feed     { title, posts: Post model[] }
  */
-export default function HomePage({ nav = {}, sidebar = {}, feed = {} } = {}) {
+
+async function sendAllPost() {
+    let result = await fetchPost();
+
+    if (!Array.isArray(result)) {
+        return [];
+    }
+
+    return result;
+}
+export default async function HomePage({ nav = {}, sidebar = {}, feed = {} } = {}) {
+    let Posts = await sendAllPost()
     return `
         <section class="home">
             ${Navbar(nav)}
             <div class="home-layout">
                 ${Sidebar(sidebar)}
-                ${Feed(feed)}
+                ${FeefetchPost()d(Posts)}
             </div>
         </section>
     `;

@@ -5,7 +5,6 @@ export default async function getProfile(path) {
     try {
         const response = await fetch("/api/me", {
             method: "GET",
-            credentials: "include",
         });
 
         console.log(response.status)

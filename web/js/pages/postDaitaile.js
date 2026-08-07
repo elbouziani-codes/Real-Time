@@ -12,13 +12,15 @@ import Feed from './../components/Feed.js';
  *  - sidebar  { users, categories, filters, recentMessages }
  *  - feed     { title, posts: Post model[] }
  */
-export default function pagePost({ nav = {}, sidebar = {}, feed = {} } = {}) {
+
+
+export default function pagePost({ nav = {}, sidebar = {}} = {}) {
     return `
         <section class="home">
             ${Navbar(nav)}
             <div class="home-layout">
                 ${Sidebar(sidebar)}
-                ${Feed(feed)}
+                ${Feed()}
             </div>
         </section>
     `;
