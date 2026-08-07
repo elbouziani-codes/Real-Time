@@ -22,6 +22,11 @@ func Open(path string) (*sql.DB, error) {
 		return nil, err
 	}
 
+	if err := seedCategories(db); err != nil {
+		db.Close()
+		return nil, err
+	}
+
 	db.Exec("PRAGMA trusted_schema = ON")
 	db.Exec("SELECT load_extension('./uuid')")
 	return db, nil

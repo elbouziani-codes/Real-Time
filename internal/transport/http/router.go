@@ -10,12 +10,13 @@ type middleWare interface {
 	Auth(http.Handler) http.Handler
 }
 
-func NewRouter(authHandler *AuthHandler, postHandler *PostHandler, commentHandler *CommentHandler, reactionHandler *ReactionHandler, wsHander *ws.HandlerWs, chatHandler *HandlerChat, middleware middleWare) *http.ServeMux {
+func NewRouter(authHandler *AuthHandler, postHandler *PostHandler, commentHandler *CommentHandler, reactionHandler *ReactionHandler, wsHander *ws.HandlerWs, chatHandler *HandlerChat, categoryHandler *CategoryHandler, middleware middleWare) *http.ServeMux {
 
 	router := http.NewServeMux()
 
 	router.HandleFunc("POST /api/register", authHandler.Register)
 	router.HandleFunc("POST /api/login", authHandler.Login)
+	router.Handle("GET /api/categories", middleware.Auth(http.HandlerFunc(categoryHandler.GetCategories)))
 	router.Handle("POST /api/getMessage", middleware.Auth(http.HandlerFunc(chatHandler.Chat)))
 	router.Handle("GET /api/posts", middleware.Auth(http.HandlerFunc(postHandler.GetPosts)))
 	router.Handle("GET /api/ws", middleware.Auth(http.HandlerFunc(wsHander.ChatWs)))
