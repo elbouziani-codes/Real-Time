@@ -1,14 +1,8 @@
-const DEFAULT_ITEMS = [
-    { label: '🏠 Home', active: true },
-    { label: '💬 Chat' },
-    { label: '➕ Create Post' },
-];
+
+
+
 
 /** Single navigation button; only the active item carries the `active` class. */
-function renderNavButton({ label = '', active = false }) {
-    const activeAttribute = active ? ' class="active"' : '';
-    return `<button${activeAttribute}>${label}</button>`;
-}
 
 /**
  * NavItems
@@ -16,7 +10,18 @@ function renderNavButton({ label = '', active = false }) {
  * Data-driven: each item is { label, active }.
  */
 export default function NavItems() {
-    const buttonsHtml = DEFAULT_ITEMS.map(renderNavButton).join('');
+    let buttonsHtml = `
+    <button class ="active homePage">🏠 Home</button>
+    <button class ="chatPage">💬 Chat</button>
+    <button class ="createPost">➕ Create Post</button>
+    `
+    if (window.location.pathname == "/chat"){
+        buttonsHtml = `
+            <button class ="homePage">🏠 Home</button>
+            <button class ="active chatPage">💬 Chat</button>
+    `
+    console.log(buttonsHtml)
+    }
 
-    return `<div class="nav-links">${buttonsHtml}</div>`;
+    return `<div class = "nav-links">${buttonsHtml}</div>`;
 }

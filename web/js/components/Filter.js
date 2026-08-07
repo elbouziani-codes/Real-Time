@@ -5,9 +5,8 @@
  *  - FilterHeader  icon + title header for a filter group
  *  - CategoryItem  single category checkbox row (Category model)
  *  - Categories    "Categories" filter group (array of Category models)
- *  - Sort          "Sort" filter group with a custom select (options array)
- *
- * All data comes from models — no category names, icons or sort labels
+
+ * All data comes from models — no category names, icons 
  * are hardcoded here.
  */
 
@@ -25,13 +24,6 @@ const CATEGORIES_ICON = `
     </svg>
 `;
 
-const SORT_ICON = `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="4" y1="6" x2="20" y2="6"></line>
-        <line x1="6" y1="12" x2="18" y2="12"></line>
-        <line x1="8" y1="18" x2="16" y2="18"></line>
-    </svg>
-`;
 
 /**
  * Filter
@@ -46,7 +38,6 @@ export default function Filter({ header = '', children = '' } = {}) {
  * Icon + title header used by filter groups.
  * Supports both existing header styles via class params:
  *  - Categories -> .category-header / .category-header__icon
- *  - Sort       -> .filter-group__header / .filter-group__icon
  */
 export function FilterHeader({
     title = '',
@@ -68,11 +59,11 @@ export function FilterHeader({
  * Receives a Category model: { name, colorClass, icon, count }.
  */
 export function CategoryItem(category = {}) {
-    const { name = '', colorClass = '', icon = '' } = category;
+    const { name = '', colorClass = '', icon = '', id ='' } = category;
 
     return `
-        <label class="category-item ${colorClass}">
-            <input type="checkbox" class="category-item__checkbox">
+        <label class="category-item ${colorClass}" >
+            <input type="checkbox" class="category-item__checkbox" id = "${id}">
             <span class="category-item__check">${CHECK_SVG}</span>
             <span class="category-item__icon">${icon}</span>
             <span class="category-item__text">${name}</span>
@@ -91,30 +82,9 @@ export function Categories({
     icon = CATEGORIES_ICON,
 } = {}) {
     return Filter({
-        header: FilterHeader({
-            title,
-            icon,
-            headerClass: 'category-header',
-            iconClass: 'category-header__icon',
-        }),
-        children: categories.map(CategoryItem).join(''),
+        header: FilterHeader({title, icon, headerClass: 'category-header', iconClass: 'category-header__icon', }
+        ), children: `<div class="category-body">${categories.map(CategoryItem).join('')}</div>`,
     });
 }
 
-/**
- * Sort
- * Filter group with a "Sort" header and a custom select dropdown.
- * Receives the options array from a Filter model / caller.
- */
-export function Sort({ options = [], title = 'Sort', icon = SORT_ICON } = {}) {
-    const optionsHtml = options.map((option) => `<option>${option}</option>`).join('');
 
-    return Filter({
-        header: FilterHeader({ title, icon }),
-        children: `
-            <div class="filter-select-wrapper">
-                <select class="filter-select">${optionsHtml}</select>
-            </div>
-        `,
-    });
-}

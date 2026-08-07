@@ -1,7 +1,7 @@
 import { navigate } from "../router/router.js";
 
 
-export default async function getProfile(path) {
+export async function getProfile(path) {
     try {
         const response = await fetch("/api/me", {
             method: "GET",
@@ -36,7 +36,6 @@ export async function postLogin(credentials) {
             headers: {
                 "Content-Type": "application/json",
             },
-            credentials: "include",
             body: JSON.stringify(credentials),
         });
 

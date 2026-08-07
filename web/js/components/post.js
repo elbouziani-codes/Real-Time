@@ -11,7 +11,7 @@ export default function PostCard(post = {}) {
     if (typeof(post) == "string"){
         return `
         <article class="post-card">
-        <h3>not fond post</h3>
+            <h3>not fond post</h3>
         </article>
         `
     }

@@ -1,6 +1,7 @@
 import NavItems from './NavItems.js';
 import UserAvatar from './UserAvatar.js';
 import { CURRENT_USER } from '../services/seed.js';
+import { navigate }  from "./../router/router.js"
 
 const LOGOUT_SVG = `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -13,9 +14,9 @@ const LOGOUT_SVG = `
 /** Logo block on the left of the navbar. */
 function renderLogo() {
     return `
-        <div class="logo">
+        <div class = "logo homePage-logo">
             <span class="logo-icon">💬</span>
-            <span class="logo-text">RealTime Forum</span>
+            <span class="logo-text" >RealTime Forum</span>
         </div>
     `;
 }
@@ -41,7 +42,7 @@ function renderUserBlock(user) {
  * Logo + NavItems + current user profile (avatar, name, logout).
  * The user block is rendered from a User model (defaults to CURRENT_USER).
  */
-export default function Navbar({ user = CURRENT_USER } = {}) {
+export function Navbar({ user = CURRENT_USER } = {}) {
     return `
         <nav class="navbar">
             <div class="navbar-inner">
@@ -51,4 +52,20 @@ export default function Navbar({ user = CURRENT_USER } = {}) {
             </div>
         </nav>
     `;
+}
+
+export function navBarListener(){
+    const homePageLogo = document.querySelector(".homePage-logo");
+    const homePage = document.querySelector(".homePage");
+    const chatPage = document.querySelector(".chatPage");
+    homePage?.addEventListener("click", () => {
+    navigate("/");
+    });
+    homePageLogo?.addEventListener("click", ()=>{
+        navigate("/");
+    })
+
+    chatPage?.addEventListener("click", () => {
+    navigate("/chat");
+    });
 }

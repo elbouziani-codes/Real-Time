@@ -7,7 +7,6 @@
 import createUser from '../models/User.js';
 import createPost from '../models/Post.js';
 import createCategory from '../models/Category.js';
-import createFilter from '../models/Filter.js';
 import fetchPost from "./../api/posts.js"
 
 /** Current logged-in user shown in the navbar. */
@@ -37,13 +36,13 @@ export const DEFAULT_RECENT_MESSAGES = [
 ];
 
 /** Feed posts shown by default on the Home page. */
+export let DEFAULT_POST = []
 
 /** Category filter options shown in the sidebar. */
 export const DEFAULT_CATEGORIES = [
     createCategory({
         id: 1,
         name: 'Technology',
-        count: 12,
         colorClass: 'category-item--tech',
         icon: `
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -55,7 +54,6 @@ export const DEFAULT_CATEGORIES = [
     createCategory({
         id: 2,
         name: 'Programming',
-        count: 8,
         colorClass: 'category-item--code',
         icon: `
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -66,7 +64,6 @@ export const DEFAULT_CATEGORIES = [
     createCategory({
         id: 3,
         name: 'Gaming',
-        count: 5,
         colorClass: 'category-item--gaming',
         icon: `
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -98,12 +95,6 @@ export const DEFAULT_CATEGORIES = [
 ];
 
 
-/** Sort options shown in the sidebar select. */
-export const DEFAULT_SORT_OPTIONS = ['Latest', 'Most liked', 'Most commented'];
 
 /** Default filter configuration used by the sidebar. */
-export const DEFAULT_FILTER = createFilter({
-    categories: DEFAULT_CATEGORIES,
-    sorting: DEFAULT_SORT_OPTIONS,
-    search: 'Search posts...',
-});
+export const DEFAULT_FILTER =  {categories: DEFAULT_CATEGORIES};

@@ -1,7 +1,7 @@
 import { Categories } from './Filter.js';
 import SidebarSection from './SidebarSection.js';
 import UserList from './UserList.js';
-import { DEFAULT_USERS, DEFAULT_RECENT_MESSAGES, DEFAULT_CATEGORIES, DEFAULT_FILTER } from '../services/seed.js';
+import { DEFAULT_USERS, DEFAULT_RECENT_MESSAGES ,DEFAULT_FILTER} from '../services/seed.js';
 
 /**
  * Titled block holding the last-message rows.
@@ -33,19 +33,11 @@ function renderUsers(users = []) {
  *
  * Keeps the single `.users-section` wrapper exactly like the page.
  */
-export default function Sidebar({
-    users = DEFAULT_USERS,
-    categories,
-    filters = DEFAULT_FILTER,
-    recentMessages = DEFAULT_RECENT_MESSAGES,
-} = {}) {
-    // categories fall back to the Filter model's own categories
-    const resolvedCategories = categories ?? filters.categories ?? DEFAULT_CATEGORIES;
-
+export default function Sidebar({users = DEFAULT_USERS, categories = DEFAULT_FILTER, recentMessages = DEFAULT_RECENT_MESSAGES} = {}) {
     return `
         <aside class="sidebar">
             <h3 class="sidebar-title">Filter</h3>
-            ${Categories({ categories: resolvedCategories })}
+            ${Categories(categories)}
             <div class="users-section">
                 ${renderRecentMessages(recentMessages)}
                 ${renderUsers(users)}

@@ -1,4 +1,4 @@
-import Navbar from './../components/navbar.js';
+import {Navbar} from './../components/navbar.js';
 import Sidebar from './../components/Sidebar.js';
 import Feed from './../components/Feed.js';
 
@@ -18,10 +18,7 @@ export default function pagePost({ nav = {}, sidebar = {}} = {}) {
     return `
         <section class="home">
             ${Navbar(nav)}
-            <div class="home-layout">
-                ${Sidebar(sidebar)}
-                ${Feed()}
-            </div>
+            
         </section>
     `;
 }

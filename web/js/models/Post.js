@@ -12,7 +12,7 @@
  *  - comments   comment count
  *  - createdAt  timestamp / relative time label
  */
-export default function createPost({
+export default function createPostModel({
     id = 0,
     title = '',
     content = '',

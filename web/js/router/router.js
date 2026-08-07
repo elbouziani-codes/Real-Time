@@ -1,8 +1,9 @@
 import { authListener, auth } from "./../pages/auth.js";
 import chat from "../pages/chat.js";
-import HomePage from "../pages/home.js";
+import { navBarListener } from "./../components/navbar.js"
+import {HomePage, HomeListener} from "../pages/home.js";
 import pagePost from "../pages/postDaitaile.js";
-import getProfile from "./../api/auth.js"
+import {getProfile} from "./../api/auth.js"
 
 
 const routes = {
@@ -28,9 +29,15 @@ async function router(){
     await getProfile(path)  
 
     if(page){
-        app.innerHTML = page();
+        app.innerHTML = await page();
         if(path === "/login" || path === "/register"){
             authListener();
+        }else if(path === "/"){
+            navBarListener()
+
+            HomeListener()
+        }else if(path === "/chat"){
+            navBarListener()
         }
 
     }else{

@@ -1,4 +1,4 @@
-import Navbar from './../components/navbar.js';
+import {Navbar} from './../components/navbar.js';
 import Sidebar from './../components/Sidebar.js';
 import Feed from './../components/Feed.js';
 
@@ -12,14 +12,11 @@ import Feed from './../components/Feed.js';
  *  - sidebar  { users, categories, filters, recentMessages }
  *  - feed     { title, posts: Post model[] }
  */
-export default function chat({ nav = {}, sidebar = {}, feed = {} } = {}) {
+export default function chat({ nav = {}} = {}) {
     return `
         <section class="home">
             ${Navbar(nav)}
-            <div class="home-layout">
-                ${Sidebar(sidebar)}
-                ${Feed(feed)}
-            </div>
+            
         </section>
     `;
 }
