@@ -31,6 +31,7 @@ func main() {
 	chatRepo := repository.NewChatRepo(db)
 	commentRepo := repository.NewCommentRepo(db)
 	reactionRepo := repository.NewReactionRepo(db)
+	categoryRepo := repository.NewCategoryRepo(db)
 
 
 
@@ -42,6 +43,7 @@ func main() {
 	charSvc := service.NewChatService(chatRepo, userRepo)
 	commentSvc := service.NewCommentService(commentRepo)
 	reactionSvc := service.NewReactionService(reactionRepo)
+	categorySvc := service.NewCategoryService(categoryRepo)
 
 
 
@@ -52,9 +54,10 @@ func main() {
 	chatHandler := handler.NewHandleChat(charSvc, userSvc)
 	commentHandler := handler.NewCommentHandler(commentSvc, postSvc)
 	reactionHandler := handler.NewReactionHandler(reactionSvc, postSvc)
+	categoryHandler := handler.NewCategoryHandler(categorySvc)
 
 	middleware := middleware.NewMiddleware(authSvc)
-	router := handler.NewRouter(authHandler, postHandler, commentHandler, reactionHandler, wsHandler, chatHandler, middleware)
+	router := handler.NewRouter(authHandler, postHandler, commentHandler, reactionHandler, wsHandler, chatHandler, categoryHandler, middleware)
 
 	spa := spaHandler()
 	http.ListenAndServe(":8081", spa(router))
