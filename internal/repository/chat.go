@@ -18,6 +18,12 @@ type DBTX interface {
 	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
 }
 
+// scanner covers both *sql.Row and *sql.Rows so the scan helpers serve the
+// single-row and multi-row queries alike.
+type scanner interface {
+	Scan(...any) error
+}
+
 type ChatRepo struct {
 	db DBTX
 }

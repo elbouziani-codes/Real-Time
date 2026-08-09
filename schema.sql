@@ -25,8 +25,7 @@ CREATE TABLE
 	IF NOT EXISTS posts (
 		id CHAR(36) PRIMARY KEY,
 		author_id CHAR(36) REFERENCES users (id) ON DELETE CASCADE,
-		category CHAR(36) REFERENCES categories (id) ON DELETE CASCADE,
-		title TEXT NOT NULL, 
+		title TEXT NOT NULL,
 		content TEXT NOT NULL,
 		likes_count INTEGER DEFAULT 0,
 		dislikes_count INTEGER DEFAULT 0,
@@ -36,9 +35,20 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS categories (
 		id CHAR(36) PRIMARY KEY,
-		title TEXT NOT NULL, 
+		title TEXT NOT NULL,
 		icon TEXT NOT NULL,
 		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
+	);
+
+-- A post can carry several categories. The composite primary key rejects
+-- duplicate pairs, and both foreign keys make an unknown category id a
+-- constraint failure rather than an orphan row.
+CREATE TABLE
+	IF NOT EXISTS post_categories (
+		post_id CHAR(36) NOT NULL REFERENCES posts (id) ON DELETE CASCADE,
+		category_id CHAR(36) NOT NULL REFERENCES categories (id) ON DELETE CASCADE,
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
+		PRIMARY KEY (post_id, category_id)
 	);
 
 CREATE TABLE
@@ -110,6 +120,8 @@ CREATE INDEX IF NOT EXISTS conversation_idx ON messages (conversation_id);
 
 CREATE INDEX IF NOT EXISTS post_idx ON comments (parent_id);
 
+CREATE INDEX IF NOT EXISTS post_categories_category_idx ON post_categories (category_id);
+
 
 CREATE TRIGGER IF NOT EXISTS comment_satisfy
 BEFORE INSERT ON comments 
@@ -180,11 +192,11 @@ BEGIN
 	WHERE id = OLD.parent_id AND OLD.is_like = FALSE;   	
 END;
 
-CREATE TRIGGER IF NOT EXISTS cascade_delete_poosts 
-AFTER DELETE ON posts 
+CREATE TRIGGER IF NOT EXISTS cascade_delete_poosts
+AFTER DELETE ON posts
 BEGIN
-	DELETE FROM comments WHERE old.id = parent_id;	
-	DELETE FROM reaction WHERE old.id = parent_id;	
+	DELETE FROM comments WHERE old.id = parent_id;
+	DELETE FROM reactions WHERE old.id = parent_id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS cascade_delete_comments 

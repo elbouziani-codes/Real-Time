@@ -11,9 +11,7 @@ type UserRepo struct {
 	db DBTX
 }
 
-type scanner interface {
-	Scan(...any) error
-}
+
 
 func NewUserRepo(db DBTX) *UserRepo {
 	return &UserRepo{db: db}
