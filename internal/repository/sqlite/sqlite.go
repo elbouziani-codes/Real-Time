@@ -22,6 +22,11 @@ func Open(path string) (*sql.DB, error) {
 		return nil, err
 	}
 
+	if err := migrate(db); err != nil {
+		db.Close()
+		return nil, err
+	}
+
 	if err := seedCategories(db); err != nil {
 		db.Close()
 		return nil, err

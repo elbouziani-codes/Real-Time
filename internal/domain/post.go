@@ -1,20 +1,23 @@
 package domain
 
 import (
+	"fmt"
 	"realTime/crypto"
 	"strings"
 )
 
 
 
+const MaxPostCategories = 5
+
 type Post struct {
-	ID       crypto.UUID
-	AuthorID crypto.UUID
-	Category crypto.UUID
-	Title    string
-	Content  string
-	CreatedAt int
-	UpdatedAt int
+	ID         crypto.UUID
+	AuthorID   crypto.UUID
+	Categories []crypto.UUID
+	Title      string
+	Content    string
+	CreatedAt  int
+	UpdatedAt  int
 }
 
 
@@ -23,7 +26,7 @@ type PostInfo struct {
 	Author    UserProfile
 	Title     string
 	Content   string
-	Category string
+	Categories []Category
 	Likes 	  int
 	DisLikes   int
 	LikeInfo  LikeInfo
@@ -40,9 +43,9 @@ type LikeInfo struct {
 
 
 type CreatePostRequest struct {
-	Title   string `json:"title"`
-	Category string `json:"category_id"`
-	Content string `json:"content"`
+	Title      string   `json:"title"`
+	Categories []string `json:"category_ids"`
+	Content    string   `json:"content"`
 }
 
 func ValidatePostRequest(request CreatePostRequest) (Post, error) {
@@ -63,12 +66,28 @@ func ValidatePostRequest(request CreatePostRequest) (Post, error) {
 	if len(request.Content) < 10 || len(request.Content) > 4096 {
 		return post, Error{Message: "post content length must be between 10 and 4096 chars", Code: BadFormatCode}
 	}
-	var err error
-	post.Category, err = crypto.ParseUUID(request.Category) 
-	if err != nil {
+	if len(request.Categories) == 0 {
 		return post, Error{Message: "missing post category", Code: BadFormatCode}
-
 	}
+	if len(request.Categories) > MaxPostCategories {
+		return post, Error{Message: fmt.Sprintf("a post accepts at most %d categories", MaxPostCategories), Code: BadFormatCode}
+	}
+
+	// Reject duplicates here so a repeated id is a 400 rather than a primary
+	// key violation surfacing from post_categories.
+	seen := make(map[crypto.UUID]struct{}, len(request.Categories))
+	for _, rawID := range request.Categories {
+		categoryID, err := crypto.ParseUUID(rawID)
+		if err != nil {
+			return post, Error{Message: "invalid post category", Code: BadFormatCode}
+		}
+		if _, duplicated := seen[categoryID]; duplicated {
+			return post, Error{Message: "duplicated post category", Code: BadFormatCode}
+		}
+		seen[categoryID] = struct{}{}
+		post.Categories = append(post.Categories, categoryID)
+	}
+
 	post.Title = request.Title
 	post.Content = request.Content
 	return post, nil

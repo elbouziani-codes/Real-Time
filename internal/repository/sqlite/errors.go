@@ -29,6 +29,8 @@ func TranslateError(constraintError error) error {
 			return domain.Error{Message: "email lready taken", Code: domain.ConflictCode}
 		case strings.Contains(message, "nick_name"):
 			return domain.Error{Message: "nickname already used", Code: domain.ConflictCode}
+		case strings.Contains(message, "FOREIGN KEY constraint failed"):
+			return domain.Error{Message: "not found", Code: domain.NotFoundCode}
 		default:
 			fmt.Println(err)
 			return domain.Error{Message: "unexpected error", Code: domain.UnexpectedCode}
