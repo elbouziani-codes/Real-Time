@@ -1,15 +1,4 @@
-/**
- * Filter
- * All filter-related UI in one module:
- *  - Filter        (default) generic `.filter-group` wrapper
- *  - FilterHeader  icon + title header for a filter group
- *  - CategoryItem  single category checkbox row (Category model)
- *  - Categories    "Categories" filter group (array of Category models)
-
- * All data comes from models — no category names, icons 
- * are hardcoded here.
- */
-
+import {DEFAULT_CATEGORIES} from "./../services/categories.js"
 const CHECK_SVG = `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="20 6 9 17 4 12"></polyline>
@@ -29,7 +18,7 @@ const CATEGORIES_ICON = `
  * Filter
  * Generic filter group wrapper (.filter-group).
  */
-export default function Filter({ header = '', children = '' } = {}) {
+export function Filter({ header = '', children = '' } = {}) {
     return `<div class="filter-group">${header}${children}</div>`;
 }
 
@@ -59,14 +48,13 @@ export function FilterHeader({
  * Receives a Category model: { name, colorClass, icon, count }.
  */
 export function CategoryItem(category = {}) {
-    const { name = '', colorClass = '', icon = '', id ='' } = category;
-
+    const { title = '', currentColor = '', icon = '', id ='' } = category;
     return `
-        <label class="category-item ${colorClass}" >
+        <label class="category-item ${currentColor}" >
             <input type="checkbox" class="category-item__checkbox" id = "${id}">
             <span class="category-item__check">${CHECK_SVG}</span>
             <span class="category-item__icon">${icon}</span>
-            <span class="category-item__text">${name}</span>
+            <span class="category-item__text">${title}</span>
         </label>
     `;
 }

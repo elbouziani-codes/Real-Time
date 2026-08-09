@@ -9,28 +9,19 @@ import createPostModel from "./../models/Post.js"
 
 
 
-async function sendAllPost() {
-    let result = await fetchPost();
 
-    if (!Array.isArray(result)) {
-        return ["not fond post"];
-    }
-
-    return result;
-}
 export async function HomePage({ nav = {}, sidebar = {}, feed = {} } = {}) {
-    let Posts = await sendAllPost()
-    DEFAULT_POST = [...DEFAULT_POST, ...Posts]
     return `
         <section class="home">
             ${Navbar(nav)}
             <div class="home-layout">
                 ${Sidebar(sidebar)}
-                ${Feed(Posts)}
+                ${Feed()}
             </div>
             ${creatPost()}
         </section>
     `;
+    
 }
 
 

@@ -1,5 +1,3 @@
-
-
 export async function fetchPost() {
 
     try{
@@ -7,9 +5,10 @@ export async function fetchPost() {
         method:"GET",
     })
         let allResult = await response.json()
-        return allResult
+        return {code:response.ok , body:allResult}
     }catch(error){
         console.log(error)
+        return {code:500 , body:"Error in request"}
     }
 }
 
@@ -25,6 +24,7 @@ export async function fetchCreatePost(data) {
         return {code:response.ok, body:allResult}
     }catch(error){
         console.log(error)
+        return {code:500 , body:"Error in request"}
     }
 }
 

@@ -4,7 +4,8 @@ import { navBarListener } from "./../components/navbar.js"
 import {HomePage, HomeListener} from "../pages/home.js";
 import pagePost from "../pages/postDaitaile.js";
 import {getProfile} from "./../api/auth.js"
-
+import {seedCategories} from "./../services/categories.js"
+import {sendAllPost} from "./../services/posts.js"
 
 const routes = {
 
@@ -29,16 +30,9 @@ async function router(){
     await getProfile(path)  
 
     if(page){
+        await Fetching(path)
         app.innerHTML = await page();
-        if(path === "/login" || path === "/register"){
-            authListener();
-        }else if(path === "/"){
-            navBarListener()
-
-            HomeListener()
-        }else if(path === "/chat"){
-            navBarListener()
-        }
+        await Listening(path)
 
     }else{
 
@@ -69,7 +63,33 @@ function navigate(path){
 }
 
 
+async function Fetching(path) {
+    switch (path) {
+        case "/":
+            await sendAllPost();
+            await seedCategories();
+        default:
+            console.log("fetch")
+            return null;
+    }
+}
 
+async function Listening(path) {
+    switch (path) {
+        case "/login":
+        case "/register":
+            authListener();
+        break;
+        case "/":
+            console.log("deee")
+            navBarListener()
+            HomeListener()
+        break;
+        case "/chat":
+            navBarListener()
+        break;
+    }
+}
 window.addEventListener(
     "popstate",
     router
