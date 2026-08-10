@@ -53,7 +53,7 @@ func (m *middleWare) Auth(next http.Handler) http.Handler {
 			http.Error(w, "failed to validate session id ", http.StatusUnauthorized)
 			return
 		}
-		ctx := context.WithValue(context.Background(), "user_id", session.UserID)
+		ctx := context.WithValue(r.Context(), "user_id", session.UserID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -56,9 +56,9 @@ func (p *reactionService) PatchReaction(ctx context.Context, react *domain.React
 }
 
 func (p *reactionService) GetReaction(ctx context.Context, reactionID crypto.UUID) (*domain.ReactionInfo, error) {
-	return p.reactionRepo.GetReaction(context.Background(), reactionID)
+	return p.reactionRepo.GetReaction(ctx, reactionID)
 }
 
 func (p *reactionService) GetReactions(ctx context.Context, parentID crypto.UUID) ([]*domain.ReactionInfo, error) {
-	return p.reactionRepo.GetReactions(context.Background(), parentID)
+	return p.reactionRepo.GetReactions(ctx, parentID)
 }

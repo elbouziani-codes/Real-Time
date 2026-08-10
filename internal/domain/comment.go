@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"realTime/crypto"
 	"strings"
 )
@@ -51,7 +50,6 @@ func NewCommentRequest(request CreateCommentRequest) (Comment, error) {
 	}
 	var err error
 	comment.ParentID, err = crypto.ParseUUID(request.ParentID)
-	fmt.Println(request.ParentID)
 	if err != nil {
 		return comment, Error{Message: "invalid parent_id", Code: BadFormatCode}
 	}

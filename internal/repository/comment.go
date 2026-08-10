@@ -24,7 +24,7 @@ FROM comments C
 JOIN users U 
 ON C.author_id = U.id
 LEFT JOIN  reactions R  
-ON R.author_id = ? AND C.id = R.parent.id  
+ON R.author_id = ? AND C.id = R.parent_id  
 WHERE C.parent_id = ?
 `
 
@@ -37,8 +37,8 @@ func scanComment(row scanner) (*domain.CommentInfo, error) {
 		&comment.ParentID.Value,
 		&comment.Author.ID.Value,
 		&comment.Author.NickName,
-		&comment.Author.LastName,
 		&comment.Author.FirstName,
+		&comment.Author.LastName,
 		&comment.Author.Gender,
 		&comment.Author.Age,
 		&comment.Author.CreatedAt,
@@ -66,7 +66,7 @@ FROM comments C
 JOIN users U 
 ON C.author_id = U.id
 LEFT JOIN  reactions R  
-ON R.author_id = ? AND C.id = R.parent.id  
+ON R.author_id = ? AND C.id = R.parent_id  
 WHERE C.id = ?
 `
 
@@ -94,7 +94,6 @@ func (p *commentRepo) GetComments(ctx context.Context, userID, parentID crypto.U
 		if err != nil {
 			return nil, sqlite.TranslateError(err)	
 		}
-		fmt.Println(comments)
 		comments = append(comments, comment)
 	}
 	return comments, nil 
