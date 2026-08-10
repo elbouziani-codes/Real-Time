@@ -12,7 +12,7 @@ type Config struct {
 func Load() Config {
 	return Config{
 		PortMux1:        ":8082",
-		PortMux2:        ":8081",
+		PortMux2:        ":8181",
 		DBPath:          "./realTime.db",
 		SessionDuration: 24 * time.Hour,
 	}

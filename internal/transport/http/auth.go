@@ -16,6 +16,7 @@ type AuthRepo interface {
 type AuthService interface {
 	Login(context.Context, domain.Credentials, int) (crypto.UUID, error)
 	CreateSession(context.Context, crypto.UUID) (crypto.UUID, error)
+	Logout(context.Context, crypto.UUID) error
 }
 
 type UserService interface {
@@ -104,6 +105,23 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (a *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	userIDAny := r.Context().Value("user_id")
+	userID := userIDAny.(crypto.UUID)
+
+	if err := a.authSvc.Logout(r.Context(), userID); err != nil {
+		Error(err, w)
+		return
+	}
+
+	a.clearCookie(w)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode("done"); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var creds domain.Credentials
 	defer r.Body.Close()
@@ -137,6 +155,22 @@ func (a *AuthHandler) setCookie(w http.ResponseWriter, sessionID crypto.UUID) {
 		Value:    sessionID.Value.String(),
 		Path:     "/",
 		MaxAge:   3600 * 24,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
+	http.SetCookie(w, cookie)
+}
+
+// clearCookie expires the session cookie. The attributes must mirror setCookie
+// so the browser matches the cookie it already stored and drops it.
+func (a *AuthHandler) clearCookie(w http.ResponseWriter) {
+	cookie := &http.Cookie{
+		Name:     "session-id",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	}
