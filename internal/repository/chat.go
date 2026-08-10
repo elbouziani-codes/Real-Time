@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"realTime/crypto"
 	"realTime/internal/domain"
@@ -11,11 +10,25 @@ import (
 )
 
 // / this would migrated to sqlite package
+// DBTX is the query surface shared by *sql.DB and *sql.Tx, so a repo method
+// written against it runs standalone or inside a caller's transaction.
 type DBTX interface {
-	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
-	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
-	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
+	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}
+
+// Beginner is kept separate because *sql.Tx cannot start a transaction; only
+// repos that own a transaction boundary need it.
+type Beginner interface {
 	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
+}
+
+// DB is the full handle a repo receives at construction: queries plus the
+// ability to open a transaction.
+type DB interface {
+	DBTX
+	Beginner
 }
 
 // scanner covers both *sql.Row and *sql.Rows so the scan helpers serve the
@@ -25,17 +38,19 @@ type scanner interface {
 }
 
 type ChatRepo struct {
-	db DBTX
+	db DB
 }
 
-func NewChatRepo(db DBTX) *ChatRepo { // repository(for all cases)
+func NewChatRepo(db DB) *ChatRepo { // repository(for all cases)
 	return &ChatRepo{db: db}
 }
 
 const createChatQuery = `INSERT into conversations (id) VALUES (?)`
 
-func (q *ChatRepo) CreateConversation(ctx context.Context, chatID crypto.UUID, tx *sql.Tx) error {
-	_, err := tx.ExecContext(ctx, createChatQuery, chatID.Value)
+// CreateConversation takes a DBTX so it works both on its own and as one step
+// of CreateConversationWithParticipants' transaction.
+func (q *ChatRepo) CreateConversation(ctx context.Context, chatID crypto.UUID, db DBTX) error {
+	_, err := db.ExecContext(ctx, createChatQuery, chatID.Value)
 	return sqlite.TranslateError(err)
 }
 
@@ -100,7 +115,6 @@ const getMessagesQuery = `
 `
 
 func (q *ChatRepo) GetMessages(ctx context.Context, chatID crypto.UUID, offset, limit int) ([]domain.MessageOutput, error) {
-	fmt.Println(chatID, limit, offset)
 	rows, err := q.db.QueryContext(ctx, getMessagesQuery, chatID.Value, limit, offset) // must be updated later
 	if err != nil {
 		return nil, sqlite.TranslateError(err)

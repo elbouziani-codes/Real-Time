@@ -10,10 +10,10 @@ import (
 )
 
 type postRepo struct {
-	db DBTX
+	db DB
 }
 
-func NewPostRepo(db DBTX) *postRepo {
+func NewPostRepo(db DB) *postRepo {
 	return &postRepo{db: db}
 }
 
@@ -82,8 +82,8 @@ func scanPost(row scanner) (*domain.PostInfo, error) {
 		&post.CreatedAt,
 		&post.Author.ID.Value,
 		&post.Author.NickName,
-		&post.Author.LastName,
 		&post.Author.FirstName,
+		&post.Author.LastName,
 		&post.Author.Gender,
 		&post.Author.Age,
 		&post.Author.CreatedAt,

@@ -52,7 +52,7 @@ func (p *commentService) PatchComment(ctx context.Context, editObject domain.Pat
 
 
 func (p *commentService) GetComments(ctx context.Context, userID, parentID crypto.UUID) ([]*domain.CommentInfo, error) {
-	return p.commentRepo.GetComments(context.Background(), userID, parentID)
+	return p.commentRepo.GetComments(ctx, userID, parentID)
 }
 
 

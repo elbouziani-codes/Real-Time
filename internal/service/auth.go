@@ -61,7 +61,7 @@ func (a *AuthService) Logout(ctx context.Context, userID crypto.UUID) error {
 	err := a.authRepo.DeleteSession(ctx, userID)
 	if err != nil {
 		var buckErr domain.Error
-		if errors.As(err, buckErr) {
+		if errors.As(err, &buckErr) {
 			if buckErr.Code == domain.NotFoundCode {
 				return nil
 			}

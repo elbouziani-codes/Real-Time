@@ -47,7 +47,7 @@ func (p *postService) PatchPost(ctx context.Context, editObject domain.PatchPost
 
 
 func (p *postService) GetPosts(ctx context.Context, userID crypto.UUID, limit, offset int) ([]*domain.PostInfo, error) {
-	return p.postRepo.GetPosts(context.Background(), userID, limit, offset)
+	return p.postRepo.GetPosts(ctx, userID, limit, offset)
 }
 
 

@@ -60,9 +60,11 @@ func main() {
 	router := handler.NewRouter(authHandler, postHandler, commentHandler, reactionHandler, wsHandler, chatHandler, categoryHandler, middleware)
 
 	spa := spaHandler()
-	http.ListenAndServe(":8081", spa(router))
-
 	log.Println("Database Initialised")
+	if err := http.ListenAndServe(conf.PortMux2, spa(router)); err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
 }
 
 

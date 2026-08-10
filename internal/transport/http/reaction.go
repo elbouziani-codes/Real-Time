@@ -89,8 +89,8 @@ func (c *ReactionHandler) DeleteReaction(w http.ResponseWriter, r *http.Request)
 }
 
 func (c *ReactionHandler) GetReactions(w http.ResponseWriter, r *http.Request) {
-	
-	id, err := crypto.ParseUUID(r.PathValue("id")) 
+
+	id, err := crypto.ParseUUID(r.PathValue("parent_id"))
 	if err != nil {
 			Error(domain.Error{Message: "invalid id", Code: domain.BadFormatCode}, w)
 			return

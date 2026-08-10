@@ -27,8 +27,8 @@ func scanReaction(row scanner) (*domain.ReactionInfo, error) {
 		&reaction.ParentID.Value,
 		&reaction.Author.ID.Value,
 		&reaction.Author.NickName,
-		&reaction.Author.LastName,
 		&reaction.Author.FirstName,
+		&reaction.Author.LastName,
 		&reaction.Author.Gender,
 		&reaction.Author.Age,
 		&reaction.Author.CreatedAt)
@@ -76,29 +76,31 @@ func (p *reactionRepo) GetReactionByUserAndParent(ctx context.Context, parentID,
 
 
 const getReactionsQuery = `SELECT R.id,  R.is_like, R.created_at, R.parent_id, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at
-						FROM reactions R  
-						JOIN users U 
-						ON R.author_id = U.id 
-						ORDER BY R.created_at DESC 
-						LIMIT ? OFFSET ?; `
+						FROM reactions R
+						JOIN users U
+						ON R.author_id = U.id
+						WHERE R.parent_id = ?
+						ORDER BY R.created_at DESC`
 
 func (p *reactionRepo) GetReactions(ctx context.Context, parentID crypto.UUID) ([]*domain.ReactionInfo, error) {
-	rows, err := p.db.QueryContext(ctx, getReactionsQuery, parentID.Value)	
-	
+	rows, err := p.db.QueryContext(ctx, getReactionsQuery, parentID.Value)
+
 	if err != nil {
-		return nil, sqlite.TranslateError(err)	
+		return nil, sqlite.TranslateError(err)
 	}
 	defer rows.Close()
 	var reactions []*domain.ReactionInfo
 	for rows.Next() {
 		reaction, err := scanReaction(rows)
 		if err != nil {
-			return nil, sqlite.TranslateError(err)	
+			return nil, sqlite.TranslateError(err)
 		}
-		fmt.Println(reactions)
 		reactions = append(reactions, reaction)
 	}
-	return reactions, nil 
+	if err := rows.Err(); err != nil {
+		return nil, sqlite.TranslateError(err)
+	}
+	return reactions, nil
 }
 
 const deleteReactionQuery = `DELETE FROM reactions WHERE id = ?`

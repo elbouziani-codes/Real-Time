@@ -3,7 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	"errors"
-	"fmt"
+	"log"
 	"realTime/internal/domain"
 	"strings"
 
@@ -11,7 +11,6 @@ import (
 )
 
 func TranslateError(constraintError error) error {
-	fmt.Println(constraintError)
 	if constraintError == nil {
 		return constraintError
 	}
@@ -32,12 +31,11 @@ func TranslateError(constraintError error) error {
 		case strings.Contains(message, "FOREIGN KEY constraint failed"):
 			return domain.Error{Message: "not found", Code: domain.NotFoundCode}
 		default:
-			fmt.Println(err)
+			log.Printf("sqlite: untranslated error: %v", err)
 			return domain.Error{Message: "unexpected error", Code: domain.UnexpectedCode}
 		}
 	}
-	fmt.Println(constraintError)
+	log.Printf("sqlite: untranslated error: %v", constraintError)
 
 	return domain.Error{Message: "unexpected error", Code: domain.UnexpectedCode}
-
 }

@@ -61,10 +61,19 @@ const DeleteSessionQuery = `
 	DELETE FROM sessions WHERE user_id = ?  
 `
 
+// DeleteSession reports NotFound when the user had no session, so callers can
+// tell "nothing to clear" apart from a genuine failure.
 func (a *AuthRepo) DeleteSession(ctx context.Context, userID crypto.UUID) error {
-	_, err := a.db.ExecContext(ctx, DeleteSessionQuery, userID.Value)
+	result, err := a.db.ExecContext(ctx, DeleteSessionQuery, userID.Value)
 	if err != nil {
 		return sqlite.TranslateError(err)
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return sqlite.TranslateError(err)
+	}
+	if rows == 0 {
+		return domain.Error{Message: "not found", Code: domain.NotFoundCode}
 	}
 	return nil
 }
