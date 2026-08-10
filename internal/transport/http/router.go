@@ -16,6 +16,7 @@ func NewRouter(authHandler *AuthHandler, postHandler *PostHandler, commentHandle
 
 	router.HandleFunc("POST /api/register", authHandler.Register)
 	router.HandleFunc("POST /api/login", authHandler.Login)
+	router.Handle("POST /api/logout", middleware.Auth(http.HandlerFunc(authHandler.Logout)))
 	router.Handle("GET /api/categories", middleware.Auth(http.HandlerFunc(categoryHandler.GetCategories)))
 	router.Handle("POST /api/getMessage", middleware.Auth(http.HandlerFunc(chatHandler.Chat)))
 	router.Handle("GET /api/posts", middleware.Auth(http.HandlerFunc(postHandler.GetPosts)))
