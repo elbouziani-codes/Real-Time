@@ -61,7 +61,7 @@ func main() {
 
 	spa := spaHandler()
 	log.Println("Database Initialised")
-	if err := http.ListenAndServe(conf.PortMux2, spa(router)); err != nil {
+	if err := http.ListenAndServe(conf.Port, spa(router)); err != nil {
 		log.Println(err)
 		os.Exit(1)
 	}

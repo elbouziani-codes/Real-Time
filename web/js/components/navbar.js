@@ -2,6 +2,8 @@ import NavItems from './NavItems.js';
 import UserAvatar from './UserAvatar.js';
 import { CURRENT_USER } from '../services/seed.js';
 import { navigate }  from "./../router/router.js"
+import { logoutMe } from "./../services/me.js"
+
 
 const LOGOUT_SVG = `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -11,7 +13,6 @@ const LOGOUT_SVG = `
     </svg>
 `;
 
-/** Logo block on the left of the navbar. */
 function renderLogo() {
     return `
         <div class = "logo homePage-logo">
@@ -21,14 +22,12 @@ function renderLogo() {
     `;
 }
 
-/** Current user block on the right: avatar, name and logout button. */
 function renderUserBlock(user) {
-    const { name = '' } = user;
-
+    const { NickName = '' } = user;
     return `
         <div class="user">
             ${UserAvatar(user)}
-            <span class="user-name">${name}</span>
+            <span class="user-name">${NickName}</span>
             <button class="logout-btn" aria-label="Logout" title="Logout">
                 ${LOGOUT_SVG}<span class="logout-label">Logout</span>
             </button>
@@ -36,13 +35,8 @@ function renderUserBlock(user) {
     `;
 }
 
-/**
- * Navbar
- * Top navigation bar composed from smaller components:
- * Logo + NavItems + current user profile (avatar, name, logout).
- * The user block is rendered from a User model (defaults to CURRENT_USER).
- */
-export function Navbar({ user = CURRENT_USER } = {}) {
+
+export function Navbar(user) {
     return `
         <nav class="navbar">
             <div class="navbar-inner">
@@ -58,6 +52,7 @@ export function navBarListener(){
     const homePageLogo = document.querySelector(".homePage-logo");
     const homePage = document.querySelector(".homePage");
     const chatPage = document.querySelector(".chatPage");
+    const logoutBtn = document.querySelector(".logout-btn");
     homePage?.addEventListener("click", () => {
     navigate("/");
     });
@@ -67,5 +62,15 @@ export function navBarListener(){
 
     chatPage?.addEventListener("click", () => {
     navigate("/chat");
+    });
+
+    logoutBtn?.addEventListener("click", async () => {
+        logoutBtn.disabled = true;
+        const done = await logoutMe();
+        if (!done) {
+            logoutBtn.disabled = false;
+            return;
+        }
+        navigate("/login");
     });
 }

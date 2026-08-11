@@ -555,3 +555,76 @@
         transition: none !important;
     }
 }
+
+/* =================================
+   SPA PAGE (/postDetails)
+   Only what the rendered page adds on top of the styles above.
+================================= */
+
+/* The page has no related-posts column, so the content spans the full width. */
+.post-details__layout--single {
+    grid-template-columns: 1fr;
+}
+
+/* Back to Home, styled as one of the post actions. */
+.post-details__back {
+    margin-bottom: 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
+    background: var(--surface-light);
+    color: var(--text);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.post-details__back:hover {
+    background: var(--surface-hover);
+    transform: translateX(-4px);
+}
+
+/* A post can hold several categories. */
+.post-details__categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Reaction the signed-in user currently holds, same rule as the feed card. */
+.post-details__action-btn.active {
+    background: var(--primary);
+    border-color: var(--primary-light);
+}
+
+/* Loading / empty / error states, same look as the chat page's. */
+.post-details__main .loading,
+.post-details__main .empty-state,
+.post-details__main .error-state {
+    padding: 30px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.post-details__main .error-state {
+    color: var(--danger-light);
+}
+
+.post-details__comment-status {
+    color: var(--danger-light);
+    font-size: 0.82rem;
+}
+
+.post-details__comment-status:empty {
+    display: none;
+}
+
+.post-details__comment-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}

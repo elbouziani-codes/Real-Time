@@ -1,5 +1,5 @@
 import PostCard from './post.js';
-import {DEFAULT_POST} from "./../services/posts.js"
+import {DEFAULT_POST} from "../../services/posts.js"
 /**
  * Feed
  * Main posts feed: heading + a list of PostCard components.

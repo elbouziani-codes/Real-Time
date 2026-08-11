@@ -1,33 +1,23 @@
-import { navigate } from "../router/router.js";
 
 
-export async function getProfile(path) {
+export async function fetchMe() {
     try {
         const response = await fetch("/api/me", {
             method: "GET",
         });
-
-        console.log(response.status)
-        if (response.ok) {
-            if (path == "/login" || path == "/register" ){
-                navigate("/");
-            }
-            return await response.json();
+        if(response.status == 200){
+            return {code:response.status, body: await response.json()}
+        }else{
+            return {code:response.status, body: "errors"}
         }
-        if (path != "/login" && path != "/register" ){
-            navigate("/login");
-        } 
-        return null;
-
     } catch (error) {
-        console.error("Failed to get profile:", error);
-        return null;
+        console.log("Failed to get profile:", error);
     }
 }
 
 
 
-export async function postLogin(credentials) {
+export async function fetchLogin(credentials) {
 
     try {
 
@@ -51,11 +41,7 @@ export async function postLogin(credentials) {
             data = text;
         }
 
-
-        return {
-            ok: response.ok,
-            data
-        };
+        return {ok: response.ok, body: data};
 
 
     } catch(error){
@@ -70,7 +56,7 @@ export async function postLogin(credentials) {
 }
 
 
-export async function postRegister(credentials) {
+export async function fetchRegister(credentials) {
     try {
 
         const response = await fetch("/api/register", {
@@ -85,7 +71,6 @@ export async function postRegister(credentials) {
 
         const text = await response.text();
 
-        console.log("SERVER RESPONSE:", text);
 
 
         return response.ok;
@@ -94,9 +79,15 @@ export async function postRegister(credentials) {
         return false;
     }
 }
-async function logout() {
-    await fetch("/api/logout", {
-        method: "POST",
-        credentials: "include",
-    });
+export async function fetchLogout() {
+    try {
+        const response = await fetch("/api/logout", {
+            method: "POST",
+            credentials: "include",
+        });
+        return {code: response.status, body: await response.text()};
+    } catch (error) {
+        console.log("Logout request failed:", error);
+        return {code: 500, body: "Error in request"};
+    }
 }

@@ -1,18 +1,8 @@
-import {Navbar} from './../components/navbar.js';
-import Sidebar from './../components/Sidebar.js';
-import Feed from './../components/Feed.js';
+import { Navbar } from "./../components/navbar.js";
+import Sidebar from "../components/home/Sidebar.js";
+import Feed from "../components/home/Feed.js";
 
-/**
- * HomePage
- * Top-level composition: Navbar + Sidebar + Feed inside .home.
- * A single call renders the whole page as an HTML string.
- *
- * Model-driven props (each component falls back to its model seed):
- *  - nav      { navItems, user: User model }
- *  - sidebar  { users, categories, filters, recentMessages }
- *  - feed     { title, posts: Post model[] }
- */
-export default function chat({ nav = {}} = {}) {
+export default function chat({ nav = {} } = {}) {
     return `
         <section class="home">
             ${Navbar(nav)}

@@ -20,7 +20,6 @@ export default function NavItems() {
             <button class ="homePage">🏠 Home</button>
             <button class ="active chatPage">💬 Chat</button>
     `
-    console.log(buttonsHtml)
     }
 
     return `<div class = "nav-links">${buttonsHtml}</div>`;
