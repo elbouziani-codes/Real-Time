@@ -133,6 +133,70 @@ func ValueidateEditPostRequest(request EditPostRequest) (PatchPostRequest, error
 
 
 
+// MaxFilterCategories bounds the IN clause the category filter expands into, so
+// a caller cannot force an arbitrarily large query by repeating the parameter.
+const MaxFilterCategories = 20
+
+// PostFilter narrows a post listing. A zero value means "no filtering", so the
+// unfiltered listing keeps working unchanged.
+type PostFilter struct {
+	Categories []crypto.UUID
+	LikedOnly  bool
+}
+
+// ValidatePostFilter turns the raw query parameters into a PostFilter. Unknown
+// category ids are not an error: they simply match no post, which keeps a
+// stale bookmark from turning into a 404.
+func ValidatePostFilter(rawCategories []string, rawLiked string) (PostFilter, error) {
+	filter := PostFilter{}
+
+	switch strings.TrimSpace(rawLiked) {
+	case "", "false":
+	case "true":
+		filter.LikedOnly = true
+	default:
+		return filter, Error{Message: "liked must be true or false", Code: BadFormatCode}
+	}
+
+	if len(rawCategories) > MaxFilterCategories {
+		return filter, Error{Message: fmt.Sprintf("a listing accepts at most %d category filters", MaxFilterCategories), Code: BadFormatCode}
+	}
+
+	// Duplicates would only repeat a placeholder without changing the result,
+	// so drop them rather than reject the request.
+	seen := make(map[crypto.UUID]struct{}, len(rawCategories))
+	for _, rawID := range rawCategories {
+		categoryID, err := crypto.ParseUUID(rawID)
+		if err != nil {
+			return PostFilter{}, Error{Message: "invalid category filter", Code: BadFormatCode}
+		}
+		if _, duplicated := seen[categoryID]; duplicated {
+			continue
+		}
+		seen[categoryID] = struct{}{}
+		filter.Categories = append(filter.Categories, categoryID)
+	}
+
+	return filter, nil
+}
+
+// ValidatePostCursor parses the id of the last post the client already holds.
+// Paging on that post's sort position rather than a row count keeps a page from
+// skipping or repeating posts when others are published mid-scroll. An empty
+// value asks for the first page, so an opening request carries no cursor.
+func ValidatePostCursor(rawCursor string) (crypto.UUID, error) {
+	rawCursor = strings.TrimSpace(rawCursor)
+	if rawCursor == "" {
+		return crypto.Nil, nil
+	}
+
+	cursor, err := crypto.ParseUUID(rawCursor)
+	if err != nil {
+		return crypto.Nil, Error{Message: "invalid cursor", Code: BadFormatCode}
+	}
+	return cursor, nil
+}
+
 type GetPostsRequest struct {
 	Offset  int `json:"offset"`
 	Limit   int  `json:"limit"`

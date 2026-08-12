@@ -122,6 +122,10 @@ CREATE INDEX IF NOT EXISTS post_idx ON comments (parent_id);
 
 CREATE INDEX IF NOT EXISTS post_categories_category_idx ON post_categories (category_id);
 
+-- Matches the listing's ORDER BY exactly, so cursor paging seeks straight to the
+-- page instead of sorting the whole table on every request.
+CREATE INDEX IF NOT EXISTS posts_feed_idx ON posts (created_at DESC, id DESC);
+
 
 CREATE TRIGGER IF NOT EXISTS comment_satisfy
 BEFORE INSERT ON comments 

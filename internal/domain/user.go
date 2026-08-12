@@ -3,6 +3,7 @@ package domain
 import (
 	"realTime/crypto"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -28,6 +29,42 @@ type UserProfile struct {
 	Gender    string
 	Age       int
 	CreatedAt int
+}
+
+// UserContact is a user as they appear in the people list. LastMessageAt holds
+// the newest message in a conversation shared with the requester and is 0 for
+// someone they have never messaged; it is the key the list is ordered on, so it
+// travels with the profile rather than staying hidden in the query.
+type UserContact struct {
+	UserProfile
+	LastMessageAt int
+}
+
+// DefaultUserListLimit and MaxUserListLimit bound the people list. A caller may
+// ask for a smaller page but cannot ask for an unbounded one.
+const (
+	DefaultUserListLimit = 50
+	MaxUserListLimit     = 100
+)
+
+// ValidateUserListPaging clamps the paging parameters. An unparsable or negative
+// value falls back to the default instead of erroring, so a hand-edited link
+// still renders a list rather than a 400.
+func ValidateUserListPaging(rawLimit, rawOffset string) (int, int) {
+	limit := DefaultUserListLimit
+	if parsed, err := strconv.Atoi(strings.TrimSpace(rawLimit)); err == nil && parsed > 0 {
+		limit = parsed
+	}
+	if limit > MaxUserListLimit {
+		limit = MaxUserListLimit
+	}
+
+	offset := 0
+	if parsed, err := strconv.Atoi(strings.TrimSpace(rawOffset)); err == nil && parsed > 0 {
+		offset = parsed
+	}
+
+	return limit, offset
 }
 type RegisterRequest struct {
 	NickName  string `json:"nick_name"`

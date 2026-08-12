@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"strconv"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -12,7 +11,7 @@ import (
 type postService interface {
 	CreatePost(context.Context, *domain.Post) error
 	GetPost(context.Context, crypto.UUID, crypto.UUID) (*domain.PostInfo, error)
-	GetPosts(context.Context, crypto.UUID, int, int) ([]*domain.PostInfo, error)
+	GetPosts(context.Context, crypto.UUID, domain.PostFilter, int, crypto.UUID) ([]*domain.PostInfo, error)
 	PatchPost(context.Context, domain.PatchPostRequest, crypto.UUID) (error)
 }
 
@@ -56,21 +55,31 @@ func (p *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
 	userID := userIDAny.(crypto.UUID)
-	query := r.URL.Query() 
-	n := query.Get("offset") 
-	offset, _ := strconv.Atoi(n) // I dont need to check error because if it failed then it will be 0   			
-	if offset < 0 {
-		offset = 0 //fallbacking to 0
-	}
+	query := r.URL.Query()
 
-	
-	posts, err := p.postSvc.GetPosts(r.Context(), userID, 20, offset)
+	// Paging is keyed on the last post the client already received:
+	// ?cursor=<post id>, omitted for the first page.
+	cursor, err := domain.ValidatePostCursor(query.Get("cursor"))
 	if err != nil {
 		Error(err, w)
 		return
 	}
-	
-	
+
+	// Repeated ?category= is what the multi-select filter sends; ?liked=true
+	// narrows to posts this user has liked.
+	filter, err := domain.ValidatePostFilter(query["category"], query.Get("liked"))
+	if err != nil {
+		Error(err, w)
+		return
+	}
+
+	posts, err := p.postSvc.GetPosts(r.Context(), userID, filter, 20, cursor)
+	if err != nil {
+		Error(err, w)
+		return
+	}
+
+
 	if err := json.NewEncoder(w).Encode(posts); err != nil {
 		http.Error(w, "uknown error", http.StatusInternalServerError)
 		return
