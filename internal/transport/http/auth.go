@@ -22,6 +22,7 @@ type AuthService interface {
 type UserService interface {
 	CreateUser(context.Context, *domain.User) error
 	GetUser(context.Context, crypto.UUID, crypto.UUID) (*domain.UserProfile, error)
+	GetUsers(context.Context, crypto.UUID, int, int) ([]domain.UserContact, error)
 }
 
 type AuthHandler struct {
@@ -67,6 +68,27 @@ func (a *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+}
+
+// GetUsers lists the other users, ordered so the person this user talked with
+// most recently comes first and people they have never messaged come last.
+func (a *AuthHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
+	userIDAny := r.Context().Value("user_id")
+	userID := userIDAny.(crypto.UUID)
+
+	query := r.URL.Query()
+	limit, offset := domain.ValidateUserListPaging(query.Get("limit"), query.Get("offset"))
+
+	users, err := a.userSvc.GetUsers(r.Context(), userID, limit, offset)
+	if err != nil {
+		Error(err, w)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(users); err != nil {
+		http.Error(w, "uknown error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {

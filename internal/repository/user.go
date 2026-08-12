@@ -105,25 +105,64 @@ func (u *UserRepo) GetByNickName(ctx context.Context, NickName string) (domain.U
 	return scanUser(row)
 }
 
-/// MUST BE FIXED LATER
-const GetAllUserQuery = `SELECT id, email, nick_name, last_name, first_name FROM users LIMIT  ? OFFSET ?`
+// GetAllUserQuery lists everyone except the requester, most recently talked with
+// first. last_message_at is a correlated subquery rather than a join so a
+// conversation holding many messages cannot multiply a user's row, and it reads
+// only conversations the requester is a participant of — joining messages on the
+// other user's conversation alone would expose activity from chats the requester
+// is not in. Users never messaged sort last on 0, then alphabetically so the
+// tail of the list is stable rather than arbitrary.
+const GetAllUserQuery = `
+SELECT U.id, U.email, U.nick_name, U.last_name, U.first_name, U.age, U.gender,
+COALESCE((
+	SELECT MAX(M.created_at)
+	FROM messages M
+	JOIN conversation_participants MINE
+	ON MINE.conversation_id = M.conversation_id AND MINE.user_id = ?
+	JOIN conversation_participants THEIRS
+	ON THEIRS.conversation_id = M.conversation_id AND THEIRS.user_id = U.id
+), 0) AS last_message_at
+FROM users U
+WHERE U.id != ?
+ORDER BY last_message_at DESC, U.nick_name ASC
+LIMIT ? OFFSET ?
+`
 
-func (u *UserRepo) GetUsers(ctx context.Context, limit, offset int) ([]domain.User, error) {
-	users := []domain.User{}
-	row, err := u.db.QueryContext(ctx, GetAllUserQuery)
+func scanUserContact(row scanner) (domain.UserContact, error) {
+	contact := domain.UserContact{}
+	err := row.Scan(
+		&contact.ID.Value,
+		&contact.Email,
+		&contact.NickName,
+		&contact.LastName,
+		&contact.FirstName,
+		&contact.Age,
+		&contact.Gender,
+		&contact.LastMessageAt)
 	if err != nil {
-		return nil, err
+		return domain.UserContact{}, sqlite.TranslateError(err)
 	}
-	defer row.Close()
-	for row.Next() {
-		user, err := scanUser(row)
+	return contact, nil
+}
+
+// GetUsers returns the people list for userID, ordered by the most recent
+// conversation. The requester's own id is bound twice: once to find the shared
+// conversations and once to leave themselves out of their own list.
+func (u *UserRepo) GetUsers(ctx context.Context, userID crypto.UUID, limit, offset int) ([]domain.UserContact, error) {
+	users := []domain.UserContact{}
+	rows, err := u.db.QueryContext(ctx, GetAllUserQuery, userID.Value, userID.Value, limit, offset)
+	if err != nil {
+		return nil, sqlite.TranslateError(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		user, err := scanUserContact(rows)
 		if err != nil {
 			return nil, sqlite.TranslateError(err)
 		}
 		users = append(users, user)
 	}
-	err = row.Err()
-	if err != nil {
+	if err := rows.Err(); err != nil {
 		return nil, sqlite.TranslateError(err)
 	}
 	return users, nil
