@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"sync"
 
 	"realTime/crypto"
@@ -12,6 +13,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+/**
+ * 1 Close WebSocket Connection and Disable Chat Page
+ * 2 typing
+ * 3 add client
+ * 4 closed webSocket client
+ */
 type HandlerWs struct {
 	svcChat ChatService
 	svcUser UserService
@@ -180,8 +187,8 @@ func (wss *HandlerWs) DeleteClient(client *Client) {
 	delete(wss.hub.clients, client.userId)
 
 	wss.hub.mu.Unlock()
-
 	client.conn.Close()
+	wss.seedAllClient(client, false)
 }
 
 func (wss *HandlerWs) AddClient(w http.ResponseWriter, r *http.Request) (*Client, error) {
@@ -202,7 +209,6 @@ func (wss *HandlerWs) AddClient(w http.ResponseWriter, r *http.Request) (*Client
 	}
 
 	wss.hub.mu.Lock()
-	defer wss.hub.mu.Unlock()
 
 	sender := &Client{
 		userId: userID,
@@ -210,5 +216,41 @@ func (wss *HandlerWs) AddClient(w http.ResponseWriter, r *http.Request) (*Client
 	}
 
 	wss.hub.clients[userID] = sender
+	wss.hub.mu.Unlock()
+	wss.seedAllClient(sender, true)
 	return sender, nil
+}
+
+
+func (wss *HandlerWs) seedAllClient(Me *Client, addNewClient bool) {
+    wss.hub.mu.RLock()
+	allListClient := make(map[crypto.UUID]*Client, len(wss.hub.clients))
+
+	for uuid, client := range wss.hub.clients {
+    	allListClient[uuid] = client
+	}
+
+
+	wss.hub.mu.RUnlock()
+	
+    allClient := []string{}
+
+    for uuid, client := range allListClient {
+        if Me.userId == uuid {
+            continue
+        }
+
+        if addNewClient {
+            allClient = append(allClient, uuid.Value.String())
+            wss.responseWrite( crypto.Nil, 3, "add client "+Me.userId.Value.String(), Me.userId, client, crypto.Nil, 0, )
+        } else {
+            wss.responseWrite(crypto.Nil, 4, "closed webSocket client "+Me.userId.Value.String(), Me.userId, client, crypto.Nil, 0,
+            )
+        }
+    }
+
+    if addNewClient {
+        wss.responseWrite(crypto.Nil, 3, "add client "+strings.Join(allClient, " || "), Me.userId, Me, crypto.Nil, 0,
+        )
+    }
 }
