@@ -544,19 +544,6 @@
 }
 
 /* =================================
-   REDUCED MOTION
-================================= */
-
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation: none !important;
-        transition: none !important;
-    }
-}
-
-/* =================================
    SPA PAGE (/postDetails)
    Only what the rendered page adds on top of the styles above.
 ================================= */
@@ -627,4 +614,124 @@
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
+}
+
+/* =================================
+   SKELETON LOADERS
+================================= */
+
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+    background: var(--surface-light);
+}
+
+.skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, var(--white-alpha-12), transparent);
+    animation: skeletonShimmer 1.4s ease infinite;
+}
+
+@keyframes skeletonShimmer {
+    to {
+        transform: translateX(100%);
+    }
+}
+
+.skeleton-post {
+    padding: 8px 0;
+}
+
+.skeleton--title {
+    width: 65%;
+    height: 34px;
+    margin-bottom: 16px;
+}
+
+.skeleton--meta {
+    width: 40%;
+    height: 18px;
+    margin-bottom: 28px;
+}
+
+.skeleton--line {
+    width: 100%;
+    height: 14px;
+    margin-bottom: 12px;
+}
+
+.skeleton--short {
+    width: 60%;
+}
+
+.skeleton-comments {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.skeleton-comments .skeleton {
+    height: 64px;
+    border-radius: var(--radius-lg);
+}
+
+/* =================================
+   EMPTY / ERROR STATE ICONS
+================================= */
+
+.empty-state {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.empty-state__icon {
+    display: block;
+    font-size: 40px;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+.empty-state__title {
+    margin-bottom: 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.empty-state__text {
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+.post-details__main .error-state::before {
+    content: '⚠️ ';
+}
+
+/* =================================
+   REACTION BUTTON PRESS FEEDBACK
+================================= */
+
+.post-details__action-btn:active {
+    transform: scale(0.95);
+}
+
+.post-details__action-btn.active {
+    animation: reactionPop 0.3s ease;
+}
+
+@keyframes reactionPop {
+    0% {
+        transform: scale(1);
+    }
+    40% {
+        transform: scale(0.88);
+    }
+    100% {
+        transform: scale(1);
+    }
 }

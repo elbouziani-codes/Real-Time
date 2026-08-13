@@ -1,12 +1,10 @@
 import { Navbar } from "./../components/navbar.js";
-import Sidebar from "../components/home/Sidebar.js";
-import Feed from "../components/home/Feed.js";
+import ChatPage from "../components/chat/ChatPage.js";
+import { me } from "../services/me.js";
 
-export default function chat({ nav = {} } = {}) {
+export default function chat() {
     return `
-        <section class="home">
-            ${Navbar(nav)}
-            
-        </section>
+        ${Navbar(me)}
+        ${ChatPage()}
     `;
 }

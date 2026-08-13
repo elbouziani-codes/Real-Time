@@ -1,21 +1,6 @@
 import UserAvatar from './UserAvatar.js';
 
-/**
- * User
- * One reusable component for every user row on the page.
- * All data comes from a User model; the optional second argument
- * only carries presentation options (variant / active state).
- *
- * Variants:
- *  - 'item'         -> .user-item        (online / offline / search result users)
- *  - 'message'      -> .last-message-item (recent messages)
- *  - 'conversation' -> .conversation-item (chat conversations)
- *
- * Model fields used: name, handle, letter, avatarClass, onlineStatus,
- * lastMessage, unreadCount, createdAt.
- */
 
-// Class names per variant. An empty class means the variant omits that field.
 const VARIANTS = {
     item: {
         container: 'user-item',
@@ -35,30 +20,14 @@ const VARIANTS = {
         timeClass: 'last-msg-time',
         sizeClass: 'user-avatar--sm',
     },
-    conversation: {
-        container: 'conversation-item',
-        infoClass: 'conv-info',
-        nameClass: 'conv-name',
-        subtitleClass: '',
-        messageClass: 'conv-preview',
-        timeClass: 'conv-meta',
-        sizeClass: 'user-avatar--md',
-    },
 };
 
-/**
- * Renders a `<span>` only when both the variant provides a class and the
- * model provides a value — variants opt out of a field by leaving its class empty.
- */
+
 function renderSpan(className, value) {
     if (!className || !value) return '';
     return `<span class="${className}">${value}</span>`;
 }
 
-/**
- * Info column: name plus the optional subtitle / message lines.
- * Rendered only for users that have a name.
- */
 function renderInfo(classes, { name, handle, lastMessage }) {
     if (!name) return '';
 

@@ -1,7 +1,7 @@
 
 import createPostModel from "./../models/Post.js"
 import {fetchPost, fetchCreatePost} from "./../api/posts.js"
-import {sendAllPost, reactToPost} from "./../services/posts.js"
+import {sendAllPost, reactToPost, applyPostFilters} from "./../services/posts.js"
 import {reactionState} from "./../components/home/post.js"
 import throttle from "./../utils/helpers.js"
 import {config} from "./../config/config.js"
@@ -20,9 +20,28 @@ export function HomeListener() {
         modalOverlay.className = "modal-overlay hidden"
     })
     submitCreatePost?.addEventListener("click",  submitPost)
-
-    // Delegated on the feed so posts appended by the infinite scroll react too.
     document.querySelector(".feed")?.addEventListener("click", reactListener)
+    document.querySelector(".sidebar")?.addEventListener("change", filterListener)
+}
+
+async function filterListener(e) {
+    if (!e.target.matches(".category-item input[type=checkbox]")) return;
+
+    const boxes = Array.from(document.querySelectorAll(".sidebar .category-item input[type=checkbox]"));
+    const categories = boxes
+        .filter((input) => input.checked && input.id != "likedFilter")
+        .map((input) => input.id);
+    const liked = document.getElementById("likedFilter")?.checked || false;
+
+    applyPostFilters({categories, liked});
+
+    const dispatchedKey = currentStateKey();
+
+    const feed = document.querySelector(".feed");
+    if (feed) feed.innerHTML = `<h2>📰 Latest Posts</h2>`;
+    await sendAllPost(true);
+
+    lastScrollKey = dispatchedKey;
 }
 
 async function reactListener(e) {
@@ -31,7 +50,6 @@ async function reactListener(e) {
     if (!postID) return;
 
     const button = e.target.closest(".like-btn, .comment-btn");
-    // Anywhere else on the card opens the post details page.
     if (!button) {
         navigate("/postDetails?id=" + postID);
         return;
@@ -44,25 +62,32 @@ async function reactListener(e) {
     const likeBtn = card.querySelector(".like-btn");
     const disLikeBtn = card.querySelector(".comment-btn");
     const {liked, disliked} = reactionState(post);
-    likeBtn.textContent = `/\\ ${post.Likes}`;
-    disLikeBtn.textContent = `\\/ ${post.DisLikes}`;
+    likeBtn.textContent = `👍 ${post.Likes}`;
+    disLikeBtn.textContent = `👎 ${post.DisLikes}`;
     likeBtn.classList.toggle("active", liked);
     disLikeBtn.classList.toggle("active", disliked);
 }
 
+
+let lastScrollKey = null;
+
+function currentStateKey() {
+    return config.postsCursor + "|" + JSON.stringify(config.postsFilters);
+}
+
 export async function HomeScrollListener() {
     const throttledLoadPosts = throttle(() => {
+        lastScrollKey = currentStateKey();
         sendAllPost(true);
     }, 1500);
-    let lastOffset = 0 
+
     window.addEventListener("scroll", async () => {
         const scrollTop = window.scrollY;
         const windowHeight = window.innerHeight;
         const documentHeight = document.documentElement.scrollHeight;
 
-        if (scrollTop + windowHeight >= documentHeight - 100 && lastOffset != config.offsetPost) {
+        if (scrollTop + windowHeight >= documentHeight - 100 && lastScrollKey != currentStateKey()) {
             throttledLoadPosts()
-            lastOffset = config.offsetPost
         }
     });
 }

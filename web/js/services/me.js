@@ -20,9 +20,6 @@ export default async function CreateMe(path){
     }
 }
 
-// logoutMe leaves the session cookie to the backend and only drops the state
-// this session cached. A 401 means the session is already gone, so it counts as
-// a logout too. Returns true when the frontend state was cleared.
 export async function logoutMe(){
     let response = await fetchLogout()
     if (response.code != 200 && response.code != 401) {

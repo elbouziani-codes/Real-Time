@@ -479,16 +479,3 @@
         padding: 12px 14px;
     }
 }
-
-/* =================================
-   REDUCED MOTION
-================================= */
-
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation: none !important;
-        transition: none !important;
-    }
-}

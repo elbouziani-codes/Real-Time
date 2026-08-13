@@ -1,4 +1,4 @@
-import {fetchPost, fetchPostDetails, resetFetchPost} from "./../api/posts.js"
+import {fetchPost, fetchPostDetails, resetFetchPost, stopFetchPost} from "./../api/posts.js"
 import {fetchReact, fetchUpdateReact} from "./../api/like.js"
 import {config, ZERO_UUID} from "./../config/config.js"
 import PostCard  from "./../components/home/post.js"
@@ -7,14 +7,15 @@ import { navigate } from "./../router/router.js"
 
 export let DEFAULT_POST = [];
 
-// Post ids with a reaction request in flight, so a double click does not send
-// the same reaction twice.
 const reacting = new Set();
 
+let feedRequestId = 0;
+
 export async function sendAllPost(Scroll = false) {
-    let response = await fetchPost(config.offsetPost);
-    
-    console.log(response)
+    const requestId = feedRequestId;
+    let response = await fetchPost(config.postsCursor, config.postsFilters);
+    if (requestId != feedRequestId) return;
+
     if (response.code == 200){
         if (!Array.isArray(response.body)) {
             if (DEFAULT_POST.length === 0) {
@@ -22,22 +23,58 @@ export async function sendAllPost(Scroll = false) {
             }
             return ;
         }
-        DEFAULT_POST.push(...response.body);
-        config.offsetPost += response.len
+        const fresh = appendPosts(response.body);
+        if (DEFAULT_POST.length === 0) {
+            DEFAULT_POST = ["no posts found"];
+            if (Scroll){
+                document.querySelector(".feed").innerHTML += PostCard(DEFAULT_POST[0])
+            }
+            return ;
+        }
         if (Scroll){
-            const postsHtml = response.body.map((e) => {return PostCard(e) }).join('');
+            const postsHtml = fresh.map((e) => {return PostCard(e) }).join('');
             document.querySelector(".feed").innerHTML += postsHtml
         }
-    }else{
-        DEFAULT_POST = ["error in fetch Categories"]
+    }else if (response.code == 401){
+        resetPosts();
+        navigate("/login");
+    }else if (response.code != 1000){
+        if (DEFAULT_POST.length === 0) {
+            DEFAULT_POST = ["error in fetch Posts"]
+        }
+        stopFetchPost();
     }
+}
+
+
+function appendPosts(newPosts) {
+    const known = new Set(DEFAULT_POST.map((e) => {return typeof e == "object" && e ? e.ID?.Value : null }));
+    const fresh = [];
+    for (const post of newPosts) {
+        if (post && !known.has(post.ID?.Value)) {
+            known.add(post.ID?.Value);
+            DEFAULT_POST.push(post);
+            fresh.push(post);
+        }
+    }
+    const last = newPosts[newPosts.length - 1];
+    if (last && last.ID?.Value) {
+        config.postsCursor = last.ID.Value;
+    }
+    return fresh;
 }
 
 
 export function resetPosts() {
     DEFAULT_POST = [];
-    config.offsetPost = 0;
+    config.postsCursor = null;
     resetFetchPost();
+    feedRequestId++;
+}
+
+export function applyPostFilters(filters) {
+    config.postsFilters = filters;
+    resetPosts();
 }
 
 
@@ -98,9 +135,7 @@ function findPost(postID) {
     return null;
 }
 
-// sendPostDetails loads one post through GET /api/posts/{id} and caches it as
-// CURRENT_POST. Returns {post} on success, or {error} with a message ready to
-// show in the page's error state.
+
 export async function sendPostDetails(postID) {
     CURRENT_POST = null;
     if (!postID) return {error: "This post link is missing a post id."};

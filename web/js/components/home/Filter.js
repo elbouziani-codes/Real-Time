@@ -13,6 +13,12 @@ const CATEGORIES_ICON = `
     </svg>
 `;
 
+const LIKED_ICON = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+    </svg>
+`;
+
 /**
  * Filter
  * Generic filter group wrapper (.filter-group).
@@ -41,11 +47,7 @@ export function FilterHeader({
     `;
 }
 
-/**
- * CategoryItem
- * Single category checkbox row.
- * Receives a Category model: { name, colorClass, icon, count }.
- */
+
 export function CategoryItem(category = {}) {
   const { title = "", currentColor = "", icon = "", id = "a" } = category;
   return `
@@ -58,11 +60,6 @@ export function CategoryItem(category = {}) {
     `;
 }
 
-/**
- * Categories
- * Filter group with a "Categories" header and one checkbox row per
- * Category model. Receives the categories from a model / caller.
- */
 export function Categories({
   categories = [],
   title = "Categories",
@@ -76,5 +73,29 @@ export function Categories({
       iconClass: "category-header__icon",
     }),
     children: `<div class="category-body">${categories.map(CategoryItem).join("")}</div>`,
+  });
+}
+
+
+export function LikedFilter({
+  title = "Liked",
+  icon = LIKED_ICON,
+} = {}) {
+  return Filter({
+    header: FilterHeader({
+      title,
+      icon,
+      headerClass: "category-header",
+      iconClass: "category-header__icon",
+    }),
+    children: `
+        <div class="category-body">
+            <label class="category-item">
+                <input type="checkbox" class="category-item__checkbox" id="likedFilter">
+                <span class="category-item__check">${CHECK_SVG}</span>
+                <span class="category-item__text">Liked posts</span>
+            </label>
+        </div>
+    `,
   });
 }

@@ -3,9 +3,6 @@
 import {fetchComments, fetchCreateComment} from "./../api/comments.js"
 import { navigate } from "./../router/router.js"
 
-// sendComments loads the comments of one post. The backend encodes an empty
-// list as null, so anything that is not an array becomes []. Returns
-// {comments} on success, or {error} with a message for the page.
 export async function sendComments(postID) {
     const response = await fetchComments(postID);
     if (response.code == 200) {
@@ -20,9 +17,6 @@ export async function sendComments(postID) {
     return {error: "Could not load the comments."};
 }
 
-// createComment posts a new comment on the post, then reloads the list so the
-// page renders exactly what the backend stored. Returns {comments} on success,
-// or {error} carrying the backend's own validation message.
 export async function createComment(postID, content) {
     const response = await fetchCreateComment(postID, content);
     if (response.code == 200) {

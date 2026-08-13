@@ -1,11 +1,4 @@
-/**
- * UserAvatar
- * Letter-only avatar (the project has no user images) + optional
- * online/offline/away status dot + optional unread badge.
- *
- * Data comes from a User model; the optional second argument only
- * carries presentation classes (size / custom class), never data.
- */
+
 export default function UserAvatar(user = {}, { sizeClass = '', className = '' } = {}) {
     const { letter = '', avatarClass = '', onlineStatus = '', unreadCount = 0 } = user;
 

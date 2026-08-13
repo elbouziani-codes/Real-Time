@@ -1,17 +1,8 @@
-
 import UserAvatar from "./../UserAvatar.js";
 import { authorModel } from "./PostDetails.js";
 import formatDateTime from "./../../utils/time.js";
 import { escapeHTML } from "./../../utils/helpers.js";
 
-/**
- * Comments
- * Comment block of the post details page: the form the backend already accepts
- * (POST /api/comments) plus the comments of this post (GET /api/comments/{id}).
- *
- * A CommentInfo carries ID, Author, Content and CreatedAt. Its like counters are
- * not filled by the backend query, so no reaction control is rendered here.
- */
 
 function Comment(comment = {}) {
     const { Author = {}, Content = '', CreatedAt = 0 } = comment;
@@ -31,13 +22,18 @@ function Comment(comment = {}) {
     `;
 }
 
-// CommentsList is the inner html of the list only, so the listener can refresh
-// the comments after a new one is posted without rebuilding the form.
+
 export function CommentsList(comments = []) {
     if (!comments.length) {
-        return `<p class="empty-state">No comment yet. Be the first one.</p>`;
+        return `
+            <div class="empty-state">
+                <span class="empty-state__icon">💬</span>
+                <p class="empty-state__title">No comments yet</p>
+                <p class="empty-state__text">Be the first to start the conversation.</p>
+            </div>
+        `;
     }
-    return comments.map((e) => { return Comment(e); }).join("");
+    return comments.map((comment) => Comment(comment)).join("");
 }
 
 export default function Comments(comments = []) {

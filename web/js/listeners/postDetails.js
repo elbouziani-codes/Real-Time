@@ -9,7 +9,6 @@ import { navigate } from "./../router/router.js"
 const LIKE = ".post-details__action-btn--like";
 const DISLIKE = ".post-details__action-btn--dislike";
 
-// postID reads the post the url asks for: /postDetails?id=POST_ID
 function postID() {
     return new URLSearchParams(window.location.search).get("id") ?? "";
 }
@@ -17,25 +16,25 @@ function postID() {
 export default async function PostDetailsListener() {
     const main = document.querySelector(".post-details__main");
     if (!main) return;
-
-    // Delegated on the shell, so the same handlers keep working after the post
-    // and the comments are swapped in.
     document.querySelector(".post-details")?.addEventListener("click", backListener);
     main.addEventListener("click", reactListener);
     main.addEventListener("submit", commentListener);
 
     const id = postID();
     const {post, error} = await sendPostDetails(id);
-    // The user may have navigated away while the request was in flight.
     if (!document.contains(main)) return;
     if (!post) {
         main.innerHTML = `<p class="error-state">${error}</p>`;
         return;
     }
 
-    // The post is painted first, the comments land in their slot right after,
-    // so the post is readable while the comments are still loading.
-    main.innerHTML = PostDetails(post) + `<div class="post-details__comments-slot"><p class="loading">Loading comments…</p></div>`;
+    const commentsSkeleton = `
+        <div class="skeleton-comments" role="status" aria-label="Loading comments">
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+        </div>`;
+    main.innerHTML = PostDetails(post) + `<div class="post-details__comments-slot">${commentsSkeleton}</div>`;
 
     const comments = await sendComments(id);
     if (!document.contains(main)) return;
@@ -49,9 +48,6 @@ function backListener(e) {
     if (!e.target.closest(".post-details__back")) return;
     navigate("/");
 }
-
-// reactListener reuses the feed's reaction flow: reactToPost owns the backend
-// rules and the counters, this only repaints the two buttons.
 async function reactListener(e) {
     const button = e.target.closest(`${LIKE}, ${DISLIKE}`);
     if (!button) return;

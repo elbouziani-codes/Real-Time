@@ -1,26 +1,12 @@
 
-
-
-
-/** Single navigation button; only the active item carries the `active` class. */
-
-/**
- * NavItems
- * Navigation buttons block of the navbar.
- * Data-driven: each item is { label, active }.
- */
 export default function NavItems() {
-    let buttonsHtml = `
-    <button class ="active homePage">🏠 Home</button>
-    <button class ="chatPage">💬 Chat</button>
-    <button class ="createPost">➕ Create Post</button>
-    `
-    if (window.location.pathname == "/chat"){
-        buttonsHtml = `
-            <button class ="homePage">🏠 Home</button>
-            <button class ="active chatPage">💬 Chat</button>
-    `
-    }
+    const onChat = window.location.pathname == "/chat";
 
-    return `<div class = "nav-links">${buttonsHtml}</div>`;
+    return `
+        <div class="nav-links">
+            <button class="${onChat ? "" : "active "}homePage">🏠 Home</button>
+            <button class="${onChat ? "active " : ""}chatPage">💬 Chat</button>
+            ${onChat ? "" : `<button class="createPost">➕ Create Post</button>`}
+        </div>
+    `;
 }

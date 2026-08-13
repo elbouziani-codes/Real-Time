@@ -1,20 +1,43 @@
+// The backend fixes the feed page size at 20 and gives back a plain array with
+// no pagination metadata, so a page shorter than that is the only signal that
+// the feed is exhausted. Anything at or below it stops the infinite scroll.
+const POST_PAGE_SIZE = 20;
+
 let loading = false;
 let hasMore = true;
 
-export async function fetchPost(offset) {
-    if (loading || !hasMore) return{code: 1000, body: [], len: 0};
+// fetchPost requests one page of the feed using the backend's keyset cursor:
+//  GET /api/posts?cursor=<last received post id>&category=<id>...&liked=true
+// cursor is the id of the last post the client already holds, or null/empty for
+// the first page. Filters ride along on the query string.
+export async function fetchPost(cursor = null, filters = {}) {
+    if (loading || !hasMore) return {code: 1000, body: [], len: 0};
 
     loading = true;
 
     try{
-        const response = await fetch("/api/posts?offset="+offset , {
-        method:"GET",
-    })
+        const params = new URLSearchParams();
+        if (cursor) params.append("cursor", cursor);
+        for (const categoryID of (filters.categories || [])) {
+            params.append("category", categoryID);
+        }
+        if (filters.liked) params.append("liked", "true");
+
+        const query = params.toString();
+        const response = await fetch("/api/posts" + (query ? "?" + query : ""), {
+            method: "GET",
+        });
         let allResult = await response.json()
 
         if (!Array.isArray(allResult)) {
             hasMore = false;
-            return {code: 1000, body: [], len: 0};
+            // A 200 with a non-array body is the backend saying "no posts match"
+            // (Go encodes a nil slice as null): a legitimately empty page, so
+            // report it as a success so the feed can show an empty state.
+            return {code: response.status, body: [], len: 0};
+        }
+        if (allResult.length < POST_PAGE_SIZE) {
+            hasMore = false;
         }
         return {code: response.status, body: allResult, len: allResult.length}
     }catch(error){
@@ -27,11 +50,18 @@ export async function fetchPost(offset) {
 
 
 
-// resetFetchPost clears the paging guards so a new session starts fetching from
-// the first page again instead of staying on the previous session's state.
+// resetFetchPost clears the paging guards so a new session (a filter change, a
+// logout) starts fetching from the first page again instead of staying on the
+// previous session's state.
 export function resetFetchPost() {
     loading = false;
     hasMore = true;
+}
+
+// stopFetchPost halts pagination after a failed request (unknown cursor, server
+// error...) so the infinite scroll does not keep re-requesting the same page.
+export function stopFetchPost() {
+    hasMore = false;
 }
 
 export async function fetchCreatePost(data) {

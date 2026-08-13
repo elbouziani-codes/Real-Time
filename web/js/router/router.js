@@ -32,8 +32,6 @@ async function router() {
 
   if (page) {
     await Fetching(path);
-    // Fetching may redirect (an unauthenticated user is sent to /login), and
-    // that redirect already rendered its own page.
     if (window.location.pathname !== path) return;
     app.innerHTML = await page();
     await Listening(path);

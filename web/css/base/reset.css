@@ -77,6 +77,30 @@ h6 {
 textarea {
     resize: vertical;
 }
+
+/* Tap feedback should not flash blue boxes on touch devices. */
+button,
+a,
+input,
+select,
+textarea {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* One visible keyboard-focus indicator for every interactive element. */
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--primary-light);
+    outline-offset: 2px;
+}
+
+/* Disabled controls read as inactive. */
+button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
 body{
 
     background:linear-gradient(
@@ -105,4 +129,21 @@ body{
         background-position:left;
     }
 
+}
+
+/* =================================
+   REDUCED MOTION
+   Single global rule so every animation and transition in the app respects
+   the user's motion preference.
+================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

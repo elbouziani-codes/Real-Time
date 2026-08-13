@@ -1,8 +1,4 @@
 
-
-
-// escapeHTML makes user written text safe to drop inside an innerHTML template,
-// so a post or a comment cannot inject markup into the page.
 export function escapeHTML(value = "") {
     return String(value)
         .replaceAll("&", "&amp;")

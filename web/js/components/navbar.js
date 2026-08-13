@@ -1,9 +1,7 @@
 import NavItems from './NavItems.js';
 import UserAvatar from './UserAvatar.js';
-import { CURRENT_USER } from '../services/seed.js';
-import { navigate }  from "./../router/router.js"
-import { logoutMe } from "./../services/me.js"
-
+import { navigate } from "./../router/router.js";
+import { logoutMe } from "./../services/me.js";
 
 const LOGOUT_SVG = `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -13,56 +11,38 @@ const LOGOUT_SVG = `
     </svg>
 `;
 
-function renderLogo() {
-    return `
-        <div class = "logo homePage-logo">
-            <span class="logo-icon">💬</span>
-            <span class="logo-text" >RealTime Forum</span>
-        </div>
-    `;
-}
-
-function renderUserBlock(user) {
-    const { NickName = '' } = user;
-    return `
-        <div class="user">
-            ${UserAvatar(user)}
-            <span class="user-name">${NickName}</span>
-            <button class="logout-btn" aria-label="Logout" title="Logout">
-                ${LOGOUT_SVG}<span class="logout-label">Logout</span>
-            </button>
-        </div>
-    `;
-}
-
-
 export function Navbar(user) {
+    const { NickName = '' } = user;
+
     return `
         <nav class="navbar">
             <div class="navbar-inner">
-                ${renderLogo()}
+                <div class="logo homePage-logo">
+                    <span class="logo-icon">💬</span>
+                    <span class="logo-text">RealTime Forum</span>
+                </div>
                 ${NavItems()}
-                ${renderUserBlock(user)}
+                <div class="user">
+                    ${UserAvatar(user)}
+                    <span class="user-name">${NickName}</span>
+                    <button class="logout-btn" aria-label="Logout" title="Logout">
+                        ${LOGOUT_SVG}<span class="logout-label">Logout</span>
+                    </button>
+                </div>
             </div>
         </nav>
     `;
 }
 
-export function navBarListener(){
+export function navBarListener() {
     const homePageLogo = document.querySelector(".homePage-logo");
     const homePage = document.querySelector(".homePage");
     const chatPage = document.querySelector(".chatPage");
     const logoutBtn = document.querySelector(".logout-btn");
-    homePage?.addEventListener("click", () => {
-    navigate("/");
-    });
-    homePageLogo?.addEventListener("click", ()=>{
-        navigate("/");
-    })
 
-    chatPage?.addEventListener("click", () => {
-    navigate("/chat");
-    });
+    homePage?.addEventListener("click", () => navigate("/"));
+    homePageLogo?.addEventListener("click", () => navigate("/"));
+    chatPage?.addEventListener("click", () => navigate("/chat"));
 
     logoutBtn?.addEventListener("click", async () => {
         logoutBtn.disabled = true;
