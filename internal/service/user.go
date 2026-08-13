@@ -15,7 +15,7 @@ type UserRepo interface {
 	GetByID(context.Context, crypto.UUID) (domain.User, error)
 	CreateUser(context.Context, domain.User) error
 	GetUserProfile(context.Context, crypto.UUID, crypto.UUID) (*domain.UserProfile, error)
-	GetUsers(context.Context, crypto.UUID, int, int) ([]domain.UserContact, error)
+	GetUsers(context.Context, crypto.UUID, int, crypto.UUID) ([]domain.UserContact, error)
 }
 
 func NewUserService(repo UserRepo) *UserService {
@@ -27,8 +27,8 @@ func (svc *UserService) GetUser(ctx context.Context, userID, requesterID crypto.
 }
 
 // GetUsers lists the people visible to userID, most recently talked with first.
-func (svc *UserService) GetUsers(ctx context.Context, userID crypto.UUID, limit, offset int) ([]domain.UserContact, error) {
-	return svc.repo.GetUsers(ctx, userID, limit, offset)
+func (svc *UserService) GetUsers(ctx context.Context, userID crypto.UUID, limit int, cursor crypto.UUID) ([]domain.UserContact, error) {
+	return svc.repo.GetUsers(ctx, userID, limit, cursor)
 }
 
 func (svc *UserService) CreateUser(ctx context.Context, user *domain.User) error {

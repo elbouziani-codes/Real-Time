@@ -22,7 +22,7 @@ type AuthService interface {
 type UserService interface {
 	CreateUser(context.Context, *domain.User) error
 	GetUser(context.Context, crypto.UUID, crypto.UUID) (*domain.UserProfile, error)
-	GetUsers(context.Context, crypto.UUID, int, int) ([]domain.UserContact, error)
+	GetUsers(context.Context, crypto.UUID, int, crypto.UUID) ([]domain.UserContact, error)
 }
 
 type AuthHandler struct {
@@ -77,9 +77,13 @@ func (a *AuthHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	userID := userIDAny.(crypto.UUID)
 
 	query := r.URL.Query()
-	limit, offset := domain.ValidateUserListPaging(query.Get("limit"), query.Get("offset"))
+	limit, cursor, err := domain.ValidateUserListPaging(query.Get("limit"), query.Get("cursor"))
+	if err != nil {
+		Error(err, w)
+		return
+	}
 
-	users, err := a.userSvc.GetUsers(r.Context(), userID, limit, offset)
+	users, err := a.userSvc.GetUsers(r.Context(), userID, limit, cursor)
 	if err != nil {
 		Error(err, w)
 		return
