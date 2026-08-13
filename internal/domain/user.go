@@ -48,9 +48,9 @@ const (
 )
 
 // ValidateUserListPaging clamps the paging parameters. An unparsable or negative
-// value falls back to the default instead of erroring, so a hand-edited link
+// limit falls back to the default instead of erroring, so a hand-edited link
 // still renders a list rather than a 400.
-func ValidateUserListPaging(rawLimit, rawOffset string) (int, int) {
+func ValidateUserListPaging(rawLimit, rawCursor string) (int, crypto.UUID, error) {
 	limit := DefaultUserListLimit
 	if parsed, err := strconv.Atoi(strings.TrimSpace(rawLimit)); err == nil && parsed > 0 {
 		limit = parsed
@@ -59,12 +59,29 @@ func ValidateUserListPaging(rawLimit, rawOffset string) (int, int) {
 		limit = MaxUserListLimit
 	}
 
-	offset := 0
-	if parsed, err := strconv.Atoi(strings.TrimSpace(rawOffset)); err == nil && parsed > 0 {
-		offset = parsed
+	cursor, err := ValidateUserCursor(rawCursor)
+	if err != nil {
+		return 0, crypto.Nil, err
 	}
 
-	return limit, offset
+	return limit, cursor, nil
+}
+
+// ValidateUserCursor parses the id of the last user the client already holds.
+// Paging on that user's sort position rather than a row count keeps a page from
+// skipping or repeating users when the ordering shifts mid-scroll. An empty
+// value asks for the first page, so an opening request carries no cursor.
+func ValidateUserCursor(rawCursor string) (crypto.UUID, error) {
+	rawCursor = strings.TrimSpace(rawCursor)
+	if rawCursor == "" {
+		return crypto.Nil, nil
+	}
+
+	cursor, err := crypto.ParseUUID(rawCursor)
+	if err != nil {
+		return crypto.Nil, Error{Message: "invalid cursor", Code: BadFormatCode}
+	}
+	return cursor, nil
 }
 type RegisterRequest struct {
 	NickName  string `json:"nick_name"`
