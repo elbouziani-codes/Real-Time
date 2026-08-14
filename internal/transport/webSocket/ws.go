@@ -58,9 +58,25 @@ type Client struct {
 	mu     sync.Mutex
 }
 
+func (c *Client) WriteJSON(v any) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.conn.WriteJSON(v)
+}
+
+func (c *Client) Close() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.conn.Close()
+}
+
+
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		return true
+		origin := r.Header.Get("Origin")
+		return origin == "http://localhost:8081"
 	},
 }
 
@@ -78,9 +94,10 @@ func (wss *HandlerWs) engineMessages(ctx context.Context, sender *Client) {
 	}()
 	for {
 		err, wsRequest := wss.readInputMessage(ctx, sender)
-		if err != nil && err.Error() == "Close" {
-			return
-		} else if err != nil {
+		if err != nil {
+			if err.Error() == "Close"{
+				return
+			}
 			continue
 		}
 		chatId, err := wss.GetRoom(ctx, sender.userId,wsRequest.Destination)
@@ -124,39 +141,40 @@ func (wss *HandlerWs) sendTypingReceiver(receiverID crypto.UUID, senderID crypto
 }
 
 func (wss *HandlerWs) readInputMessage(ctx context.Context, client *Client) (error, *domain.WsParsedRequest) {
+
 	var wsRequest domain.WsRequest
 	err := client.conn.ReadJSON(&wsRequest)
 	if err != nil {
 		return errors.New("Close"), &domain.WsParsedRequest{}
 	}
+
 	wsRequestParse, err := wsRequest.ValidRequest()
 	if err != nil {
-		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client , crypto.Nil,0)
+		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client, crypto.Nil, 0,)
+
 		return err, &domain.WsParsedRequest{}
 	}
+
 	_, err = wss.svcUser.GetByID(ctx, wsRequestParse.Destination)
 
 	if err != nil {
-		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client, crypto.Nil,0)
+		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client, crypto.Nil, 0)
 		return err, &domain.WsParsedRequest{}
 	}
 
 	if client.userId.Value == wsRequestParse.Destination.Value {
-		wss.responseWrite(crypto.Nil, 404, "Error in sender == Destination", client.userId, client, crypto.Nil,0)
-		return domain.Error{Message: "Error in sender == Destination", Code: domain.ConflictCode}, &domain.WsParsedRequest{}
+		err := domain.Error{Message: "Error in sender == Destination", Code:domain.ConflictCode}
+		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client, crypto.Nil, 0)
+		return err, &domain.WsParsedRequest{}
 	}
+
 	return nil, wsRequestParse
 }
 
-func (wss *HandlerWs) responseWrite(id crypto.UUID, codeError int, content string, SenderID crypto.UUID, receiver *Client, chatID crypto.UUID, createdAt int64) {
-	MessageOutput := domain.MessageOutput{ID: id, Code: codeError, Content: content, Sender: SenderID, ChatID: chatID, Created_at: createdAt}
-	receiver.mu.Lock()
-	defer receiver.mu.Unlock()
-	err := receiver.conn.WriteJSON(&MessageOutput)
-	if err != nil {
-		go func() {
-			wss.DeleteClient(receiver)
-		}()
+func (wss *HandlerWs) responseWrite( id crypto.UUID, codeError int, content string, senderID crypto.UUID, receiver *Client, chatID crypto.UUID, createdAt int64,) {
+	messageOutput := domain.MessageOutput{ ID:id, Code:codeError, Content:content, Sender:senderID, ChatID:chatID, Created_at:createdAt}
+	if err := receiver.WriteJSON(&messageOutput); err != nil {
+		wss.DeleteClient(receiver)
 	}
 }
 
@@ -187,38 +205,40 @@ func (wss *HandlerWs) DeleteClient(client *Client) {
 	delete(wss.hub.clients, client.userId)
 
 	wss.hub.mu.Unlock()
-	client.conn.Close()
+	client.Close()
 	wss.seedAllClient(client, false)
 }
 
 func (wss *HandlerWs) AddClient(w http.ResponseWriter, r *http.Request) (*Client, error) {
+
 	userIDAny := r.Context().Value("user_id")
-	userID, _ := userIDAny.(crypto.UUID)
-	wss.hub.mu.Lock()
-	oldClient, ok := wss.hub.clients[userID]
-	wss.hub.mu.Unlock()
-	if ok {
-		wss.responseWrite(crypto.Nil, 1, "Close WebSocket Connection and Disable Chat Page", oldClient.userId, oldClient ,crypto.Nil,0)
-		wss.DeleteClient(oldClient)
-	}
+	userID := userIDAny.(crypto.UUID)
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
 		return nil, err
 	}
 
-	wss.hub.mu.Lock()
-
-	sender := &Client{
+	newClient := &Client{
 		userId: userID,
 		conn:   conn,
 	}
 
-	wss.hub.clients[userID] = sender
+	var oldClient *Client
+	wss.hub.mu.Lock()
+	oldClient = wss.hub.clients[userID]
+	wss.hub.clients[userID] = newClient
 	wss.hub.mu.Unlock()
-	wss.seedAllClient(sender, true)
-	return sender, nil
+
+	if oldClient != nil {
+		oldClient.WriteJSON(&domain.MessageOutput{ ID:crypto.Nil, Code:1, Content:"Close WebSocket Connection and Disable Chat Page", Sender:oldClient.userId, ChatID:crypto.Nil, Created_at:0})
+		oldClient.Close()
+		wss.seedAllClient(oldClient, false)
+	}
+
+	wss.seedAllClient(newClient, true)
+
+	return newClient, nil
 }
 
 

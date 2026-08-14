@@ -24,8 +24,10 @@ func NewHandleChat(chatService ChatService, userService UserService) *HandlerCha
 	return &HandlerChat{ChatService: chatService, UserService: userService}
 }
 func (chat *HandlerChat) Chat(w http.ResponseWriter , r *http.Request){
+
 	userIDAny := r.Context().Value("user_id")
 	userID, _ := userIDAny.(crypto.UUID)
+	
 	var chatRoomInput domain.ChatRoomInput
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&chatRoomInput); err != nil{
