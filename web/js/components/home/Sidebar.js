@@ -13,10 +13,11 @@ export default function Sidebar({
             <h3 class="sidebar-title">Filter</h3>
             ${Categories({ categories })}
             ${LikedFilter()}
-            <div class="users-section">
+            <div class="users-panel">
                 <h4 class="users-section-title">💬 List Users</h4>
-                ${UserList(recentMessages, { variant: "message", listClass: "users-list" })}
-                ${UserList(users, { variant: "item", listClass: "users-section" })}
+                ${UserList(recentMessages, { variant: "message", listClass: "last-messages-list", listId: "recent-messages-list" })}
+                ${UserList(users, { variant: "item", listClass: "users-list", listId: "users-list" })}
+                <div class="users-loading-sentinel" data-users-sentinel></div>
             </div>
         </aside>
     `;

@@ -6,9 +6,10 @@ const LIST_CLASSES = {
 };
 
 
-export default function UserList(users = [], { variant = 'item', listClass = '' } = {}) {
+export default function UserList(users = [], { variant = 'item', listClass = '', listId = '' } = {}) {
     const containerClass = listClass || LIST_CLASSES[variant] || LIST_CLASSES.item;
+    const idAttr = listId ? ` id="${listId}"` : '';
     const itemsHtml = users.map((user) => User(user, { variant })).join('');
 
-    return `<div class="${containerClass}">${itemsHtml}</div>`;
+    return `<div class="${containerClass}"${idAttr}>${itemsHtml}</div>`;
 }

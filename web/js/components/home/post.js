@@ -1,7 +1,7 @@
 
 
 import { ZERO_UUID } from "./../../config/config.js";
-
+import formatDateTime from "./../../utils/time.js"
 
 export function reactionState(post = {}) {
     const { LikeInfo = {} } = post;
@@ -31,7 +31,7 @@ export default function PostCard(post = {}) {
         DisLikes = 0,
         CreatedAt = '',
     } = post;
-    const createdAt = new Date(CreatedAt * 1000).toLocaleString();
+    const createdAt = formatDateTime(CreatedAt*1000)
     const { liked, disliked } = reactionState(post);
     const likeClass = liked ? " active" : "";
     const disLikeClass = disliked ? " active" : "";

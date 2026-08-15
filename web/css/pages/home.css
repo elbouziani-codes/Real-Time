@@ -82,6 +82,7 @@
     grid-template-columns:280px 1fr;
 
     gap:24px;
+    align-items:flex-start;
 
 }
 
@@ -96,7 +97,8 @@
 
     top:95px;
 
-    height:max-content;
+    height:calc(100vh - 120px);
+    max-height:calc(100vh - 120px);
 
     background:var(--surface);
 
@@ -107,6 +109,9 @@
     padding:20px;
 
     box-shadow:var(--shadow-md);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
 
 }
 
@@ -322,6 +327,9 @@
     .sidebar{
 
         position:static;
+        height:auto;
+        max-height:none;
+        overflow:visible;
 
     }
 
@@ -354,11 +362,15 @@
    USERS SIDEBAR SECTION
 ================================= */
 
-.users-section {
+.users-panel {
     margin-top: 24px;
     padding-top: 20px;
     border-top: 1px solid var(--border);
     animation: fadeUp 0.5s ease;
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    padding-right:6px;
 }
 
 @keyframes fadeUp {
@@ -372,7 +384,7 @@
     }
 }
 
-.users-section h4 {
+.users-panel h4 {
     font-size: 0.9rem;
     margin-bottom: 12px;
     display: flex;
@@ -452,6 +464,7 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    margin-bottom: 16px;
 }
 
 .last-message-item {
@@ -622,6 +635,19 @@
 
 }
 
+.users-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.users-panel::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+}
+
+.users-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
 
 
 @keyframes sidebarOpen {
@@ -738,10 +764,6 @@
     }
 
 }
-
-
-
-
 
 
 

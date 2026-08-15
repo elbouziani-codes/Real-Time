@@ -82,7 +82,6 @@ func (a *AuthHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		Error(err, w)
 		return
 	}
-
 	users, err := a.userSvc.GetUsers(r.Context(), userID, limit, cursor)
 	if err != nil {
 		Error(err, w)

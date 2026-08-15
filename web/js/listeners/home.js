@@ -1,11 +1,12 @@
 
-import createPostModel from "./../models/Post.js"
 import {fetchPost, fetchCreatePost} from "./../api/posts.js"
 import {sendAllPost, reactToPost, applyPostFilters} from "./../services/posts.js"
 import {reactionState} from "./../components/home/post.js"
 import throttle from "./../utils/helpers.js"
 import {config} from "./../config/config.js"
 import {navigate} from "./../router/router.js"
+import User from "./../components/User.js";
+import { loadMoreUsers, DEFAULT_USERS, DEFAULT_RECENT_MESSAGES } from "./../services/user.js";
 
 export function HomeListener() {
     const createPost = document.querySelector(".createPost");
@@ -76,6 +77,68 @@ function currentStateKey() {
 }
 
 export async function HomeScrollListener() {
+    const usersPanel = document.querySelector(".users-panel");
+    const usersList = document.getElementById("users-list");
+    const recentList = document.getElementById("recent-messages-list");
+    if (!usersPanel || !usersList) return;
+
+    let renderedUsers = usersList.children.length;
+    let renderedRecent = recentList?.children.length ?? 0;
+    let loadingMoreUsers = false;
+    let hasMoreUsers = true;
+
+    const renderMoreUsers = async () => {
+        if (loadingMoreUsers || !hasMoreUsers) return;
+        loadingMoreUsers = true;
+
+        try {
+            const loaded = await loadMoreUsers();
+            if (!loaded) {
+                hasMoreUsers = false;
+                return;
+            }
+
+            const nextUsers = DEFAULT_USERS.slice(renderedUsers);
+            const nextRecent = DEFAULT_RECENT_MESSAGES.slice(renderedRecent);
+
+            if (nextRecent.length && recentList) {
+                recentList.insertAdjacentHTML(
+                    "beforeend",
+                    nextRecent.map((user) => User(user, { variant: "message" })).join(""),
+                );
+                renderedRecent = DEFAULT_RECENT_MESSAGES.length;
+            }
+
+            if (nextUsers.length) {
+                usersList.insertAdjacentHTML(
+                    "beforeend",
+                    nextUsers.map((user) => User(user, { variant: "item" })).join(""),
+                );
+                renderedUsers = DEFAULT_USERS.length;
+            }
+        } finally {
+            loadingMoreUsers = false;
+        }
+    };
+
+    const checkUsersBottom = throttle(async () => {
+        const distanceToBottom = usersPanel.scrollHeight - usersPanel.scrollTop - usersPanel.clientHeight;
+        if (distanceToBottom <= 120) {
+            await renderMoreUsers();
+        }
+    }, 300);
+
+    usersPanel.addEventListener("scroll", checkUsersBottom);
+
+    // A short first page may not create a scrollbar, so scroll events would
+    // never fire. Fill the panel until it can scroll or the API is exhausted.
+    while (usersPanel.scrollHeight <= usersPanel.clientHeight && hasMoreUsers) {
+        const before = DEFAULT_USERS.length + DEFAULT_RECENT_MESSAGES.length;
+        await renderMoreUsers();
+        const after = DEFAULT_USERS.length + DEFAULT_RECENT_MESSAGES.length;
+        if (before === after) break;
+    }
+
     const throttledLoadPosts = throttle(() => {
         lastScrollKey = currentStateKey();
         sendAllPost(true);

@@ -6,6 +6,7 @@ import chat from "../pages/chat.js";
 
 import { navBarListener } from "./../components/navbar.js";
 import HomePage from "../pages/home.js";
+import {seedAllUsers} from "./../services/user.js"
 import {HomeListener, HomeScrollListener} from "./../listeners/home.js";
 
 import pagePost from "../pages/postDetails.js";
@@ -55,6 +56,7 @@ async function Fetching(path) {
   await CreateMe(path);
   switch (path) {
     case "/":
+      await seedAllUsers()
       await sendAllPost();
       await seedCategories();
     default:

@@ -9,8 +9,8 @@ CREATE TABLE
 		last_name TEXT NOT NULL,
 		age INTEGER NOT NULL,
 		gender TEXT NOT NULL,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')), 
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')) 
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')), 
+		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')) 
 	);
 
 CREATE TABLE
@@ -18,7 +18,7 @@ CREATE TABLE
 		id CHAR(36) PRIMARY KEY,
 		user_id CHAR(36) REFERENCES users (id) ON DELETE CASCADE,
 		expire_at TEXT DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+24 hours')),
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
 	);
 
 CREATE TABLE
@@ -29,15 +29,15 @@ CREATE TABLE
 		content TEXT NOT NULL,
 		likes_count INTEGER DEFAULT 0,
 		dislikes_count INTEGER DEFAULT 0,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
+		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
 	);
 CREATE TABLE
 	IF NOT EXISTS categories (
 		id CHAR(36) PRIMARY KEY,
 		title TEXT NOT NULL,
 		icon TEXT NOT NULL,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
 	);
 
 -- A post can carry several categories. The composite primary key rejects
@@ -47,7 +47,7 @@ CREATE TABLE
 	IF NOT EXISTS post_categories (
 		post_id CHAR(36) NOT NULL REFERENCES posts (id) ON DELETE CASCADE,
 		category_id CHAR(36) NOT NULL REFERENCES categories (id) ON DELETE CASCADE,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
 		PRIMARY KEY (post_id, category_id)
 	);
 
@@ -59,8 +59,8 @@ CREATE TABLE
 		content TEXT NOT NULL,
 		likes_count INTEGER DEFAULT 0,
 		dislikes_count INTEGER DEFAULT 0,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
+		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
 	);
 
 
@@ -70,15 +70,15 @@ CREATE TABLE
 		author_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 		parent_id CHAR(36) NOT NULL,	
 		is_like BOOLEAN NOT NULL,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))	
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
+		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))	
 	);
 
 CREATE TABLE
 	IF NOT EXISTS conversations (
 		id CHAR(36) PRIMARY KEY,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
+		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
 	);
 
 CREATE TABLE
@@ -86,7 +86,7 @@ CREATE TABLE
 		id CHAR(36) PRIMARY KEY,
 		user_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 		conversation_id CHAR(36) NOT NULL REFERENCES conversations (id) ON DELETE CASCADE,
-		joined_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
+		joined_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
 		UNIQUE(user_id, conversation_id)
 	);
 
@@ -95,7 +95,7 @@ CREATE TABLE
 		id CHAR(36) PRIMARY KEY,
 		slave_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE, 
 		lord_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
 	);
 
 CREATE TABLE
@@ -104,8 +104,8 @@ CREATE TABLE
 		sender_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE, -- actuallt this must be reviewed if a user delete whta s the correct practice 
 		conversation_id CHAR(36) NOT NULL REFERENCES conversations (id) ON DELETE CASCADE,
 		content TEXT NOT NULL,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
+		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
 	);
 
 CREATE INDEX IF NOT EXISTS poster_idx ON posts (author_id);
