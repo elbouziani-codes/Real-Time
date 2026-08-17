@@ -7,8 +7,8 @@ export const DEFAULT_RECENT_MESSAGES = [];
 function normalizeUser(user = {}) {
     return createUser({
         id: user.ID ?? user.id ?? 0,
-        name: user.NickName ?? user.nick_name ?? user.name ?? "",
-        handle: user.Handle ?? user.handle ?? "",
+        name: user.NickName,
+        handle: "@"+user.NickName,
         letter: user.Letter ?? user.letter ?? "",
         avatarClass: user.AvatarClass ?? user.avatarClass ?? "avatar--mine",
         onlineStatus: user.OnlineStatus ?? user.onlineStatus ?? "",
@@ -52,7 +52,6 @@ export async function seedAllUsers() {
 
     const users = await fetchAllUsers();
     const normalizedUsers = users.map(normalizeUser);
-
     const { usersWithoutMessages, recentMessages } = filterUsers(normalizedUsers, users);
     DEFAULT_USERS.push(...sortUsersAlphabetically(usersWithoutMessages));
     resortDefaultUsers();

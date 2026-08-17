@@ -1,7 +1,10 @@
 import { auth } from "./../pages/auth.js";
 import authListener from "./../listeners/auth.js";
-import CreateMe from "./../services/me.js";
-
+import {CreateMe, me} from "./../services/me.js";
+import {homeListenerUser} from "./../listeners/users.js"
+import chatListener from "./../listeners/chat.js"
+import {connectSocket} from "./../websocket/socket.js"
+import {initChatSocket} from "./../websocket/chat.js"
 import chat from "../pages/chat.js";
 
 import { navBarListener } from "./../components/navbar.js";
@@ -59,8 +62,16 @@ async function Fetching(path) {
       await seedAllUsers()
       await sendAllPost();
       await seedCategories();
+      break;
+    case "/chat":
+      await seedAllUsers()
+      break;
     default:
       return null;
+  }
+  if (me?.ID?.Value) {
+    connectSocket();
+    initChatSocket();
   }
 }
 
@@ -72,11 +83,13 @@ async function Listening(path) {
       break;
     case "/":
       navBarListener();
+      homeListenerUser()
       HomeListener();
       await HomeScrollListener()
       break;
     case "/chat":
       navBarListener();
+      chatListener();
       break;
     case "/postDetails":
       navBarListener();

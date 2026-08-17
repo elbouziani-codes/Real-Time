@@ -5,7 +5,7 @@ export default function ConversationList({ conversations = [], activeId = null }
     return `
         <div class="conversations-list">
             ${conversations
-                .map((conversation) => ConversationItem(conversation, { active: conversation.id === activeId }))
+                .map((conversation) => ConversationItem(conversation, { active: (conversation.id?.Value ?? conversation.id) === (activeId?.Value ?? activeId) }))
                 .join('')}
         </div>
     `;

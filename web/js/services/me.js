@@ -6,7 +6,7 @@ import { resetPosts } from "./posts.js";
 export let me = {}
 
 
-export default async function CreateMe(path){
+export async function CreateMe(path){
     let response = await fetchMe()
     if (response.code == 200) {
         me = {...response.body}

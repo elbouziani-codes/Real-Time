@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"realTime/crypto"
 	"realTime/internal/domain"
@@ -21,6 +22,7 @@ type ChatRepo interface {
 	GetMessages(context.Context, crypto.UUID, int, int) ([]domain.MessageOutput, error) 
 	SendMessage(context.Context, domain.MessageOutput) (int64, error)
 }
+
 
 func NewChatService(ChatRepo ChatRepo, UserRepo UserRepo) *chatService {
 	return &chatService{UserRepo: UserRepo, ChatRepo: ChatRepo}
@@ -39,6 +41,7 @@ func (c *chatService) CheckRoomChat(ctx context.Context, userIDs []crypto.UUID) 
 }
 
 func (c *chatService) CreateRoomChat(ctx context.Context, userIDs []crypto.UUID) (crypto.UUID, error) {
+	fmt.Println(userIDs)
 	idChat, err := crypto.GenerateUUID()
 	if err != nil {
 		return crypto.Nil, err
