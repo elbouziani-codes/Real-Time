@@ -1,5 +1,5 @@
 import UserAvatar from './UserAvatar.js';
-
+import { escapeHTML } from '../utils/helpers.js';
 
 const VARIANTS = {
     item: {
@@ -22,17 +22,16 @@ const VARIANTS = {
     },
 };
 
-
 function renderSpan(className, value) {
     if (!className || !value) return '';
-    return `<span class="${className}">${value}</span>`;
+    return `<span class="${className}">${escapeHTML(value)}</span>`;
 }
 
 function renderInfo(classes, { name, handle, lastMessage }) {
     if (!name) return '';
 
     const lines = [
-        `<span class="${classes.nameClass}">${name}</span>`,
+        `<span class="${classes.nameClass}">${escapeHTML(name)}</span>`,
         renderSpan(classes.subtitleClass, handle),
         renderSpan(classes.messageClass, lastMessage),
     ].join('');
@@ -41,7 +40,8 @@ function renderInfo(classes, { name, handle, lastMessage }) {
 }
 
 export default function User(user = {}, { variant = 'item', active = false } = {}) {
-    const { name = '', handle = '', lastMessage = '', createdAt = '' } = user;
+    const { id = '', name = '', handle = '', lastMessage = '', createdAt = '' } = user;
+    const userId = id?.Value ?? id ?? '';
     const classes = VARIANTS[variant] || VARIANTS.item;
 
     const containerClass = [classes.container, active ? 'active' : ''].filter(Boolean).join(' ');
@@ -49,5 +49,5 @@ export default function User(user = {}, { variant = 'item', active = false } = {
     const infoHtml = renderInfo(classes, { name, handle, lastMessage });
     const timeHtml = renderSpan(classes.timeClass, createdAt);
 
-    return `<div class="${containerClass}">${avatarHtml}${infoHtml}${timeHtml}</div>`;
+    return `<div class="${containerClass}" data-user-id="${userId}">${avatarHtml}${infoHtml}${timeHtml}</div>`;
 }

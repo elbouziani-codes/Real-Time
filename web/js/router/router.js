@@ -35,10 +35,14 @@ async function router() {
   const app = document.getElementById("app");
 
   if (page) {
+
     await Fetching(path);
+    // Another navigation may have happened while fetching; never render a
+    // stale page over the current route.
     if (window.location.pathname !== path) return;
     app.innerHTML = await page();
     await Listening(path);
+
   } else {
     app.innerHTML = `
             <h1>
@@ -50,29 +54,31 @@ async function router() {
 
 function navigate(path) {
   if (window.location.pathname === path) return;
-
   history.pushState({}, "", path);
   router();
 }
 
 async function Fetching(path) {
   await CreateMe(path);
+  // CreateMe redirects unauthenticated visitors to /login; never seed data (or
+  // open the socket) for a session that is about to be redirected.
+  if (path == "/login" || path == "/register") return;
+  if (!me?.ID?.Value) return;
+
   switch (path) {
     case "/":
-      await seedAllUsers()
+      await seedAllUsers();
       await sendAllPost();
       await seedCategories();
       break;
     case "/chat":
-      await seedAllUsers()
+      await seedAllUsers();
       break;
     default:
       return null;
   }
-  if (me?.ID?.Value) {
-    connectSocket();
-    initChatSocket();
-  }
+  connectSocket();
+  initChatSocket();
 }
 
 async function Listening(path) {

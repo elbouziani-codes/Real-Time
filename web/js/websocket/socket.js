@@ -1,4 +1,3 @@
-
 // Singleton WebSocket connection to the backend's /api/ws endpoint (the same
 // origin the app is served from, so the session cookie travels with the
 // handshake). One socket is shared by every feature and reconnects with a short
@@ -42,9 +41,30 @@ export function connectSocket() {
         console.log("WebSocket closed");
         socket = null;
         if (shouldReconnect) {
+            console.log("WebSocket reconnecting in 3s...");
             reconnectTimer = setTimeout(connectSocket, 3000);
         }
     };
+}
+
+// Closes the socket (used on logout) and stops the automatic reconnect loop so
+// a signed-out tab does not keep a stale connection alive.
+export function disconnectSocket() {
+    shouldReconnect = false;
+    if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+    }
+    if (socket) {
+        const closing = socket;
+        socket = null;
+        closing.onclose = null;
+        try {
+            closing.close();
+        } catch (error) {
+            console.error("WebSocket close failed:", error);
+        }
+    }
 }
 
 // Sends one request in the existing protocol:

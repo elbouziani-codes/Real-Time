@@ -1,5 +1,5 @@
 import { me } from "../services/me.js";
-import { roomIds, selectChat, loadOlderMessages, sendMessage } from "../services/messages.js";
+import { getRoomId, selectChat, loadOlderMessages, sendMessage, sendTyping } from "../services/messages.js";
 import { chat, setChat } from "./users.js";
 import throttle from "../utils/helpers.js";
 
@@ -20,6 +20,7 @@ export default function chatListener() {
             onSend();
         }
     });
+    chatInput?.addEventListener("input", throttle(sendTyping, 2000));
 
     const scroller = document.querySelector(".messages-container");
     scroller?.addEventListener("scroll", throttle(onMessagesScroll, 200));
@@ -30,7 +31,7 @@ function onConversationClick(event) {
     const friendId = item?.dataset.userId;
     if (!friendId) return;
 
-    const roomId = roomIds.get(friendId) ?? null;
+    const roomId = getRoomId(friendId);
     setChat({
         UserA: me.ID?.Value ?? "",
         UserB: friendId,
@@ -47,6 +48,7 @@ function onSend() {
 
     if (sendMessage(content)) {
         chatInput.value = "";
+        chatInput.focus();
     }
 }
 

@@ -1,7 +1,6 @@
-
-
 import { ZERO_UUID } from "./../../config/config.js";
-import formatDateTime from "./../../utils/time.js"
+import formatDateTime from "./../../utils/time.js";
+import { escapeHTML } from "./../../utils/helpers.js";
 
 export function reactionState(post = {}) {
     const { LikeInfo = {} } = post;
@@ -14,10 +13,9 @@ export function reactionState(post = {}) {
 
 export default function PostCard(post = {}) {
     if (typeof post == "string") {
-        
         return `
         <article class="post-card post-card--state">
-            <h3>${post}</h3>
+            <h3>${escapeHTML(post)}</h3>
         </article>
         `;
     }
@@ -31,7 +29,7 @@ export default function PostCard(post = {}) {
         DisLikes = 0,
         CreatedAt = '',
     } = post;
-    const createdAt = formatDateTime(CreatedAt*1000)
+    const createdAt = formatDateTime(CreatedAt * 1000);
     const { liked, disliked } = reactionState(post);
     const likeClass = liked ? " active" : "";
     const disLikeClass = disliked ? " active" : "";
@@ -40,13 +38,13 @@ export default function PostCard(post = {}) {
         <article class="post-card" data-post-id="${ID.Value ?? ''}">
             <div class="post-header">
                 <div>
-                    <h3>${Title}</h3>
-                    <span>by <span class="user-info__name">${Author.NickName}</span></span>
+                    <h3>${escapeHTML(Title)}</h3>
+                    <span>by <span class="user-info__name">${escapeHTML(Author.NickName ?? '')}</span></span>
                 </div>
                 <span class="post-time">${createdAt}</span>
             </div>
-            <p>${Content}</p>
-            <div class="post-categories"> ${Categories.map((e) => `<span class="post-category">${e.title}</span>`).join("")} </div>
+            <p>${escapeHTML(Content)}</p>
+            <div class="post-categories"> ${Categories.map((e) => `<span class="post-category">${escapeHTML(e.title ?? '')}</span>`).join("")} </div>
             <div class="post-actions">
                 <button class="like-btn${likeClass}">👍 ${Likes}</button>
                 <button class="comment-btn${disLikeClass}">👎 ${DisLikes}</button>

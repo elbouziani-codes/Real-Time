@@ -1,7 +1,7 @@
 import { Categories, LikedFilter } from "./Filter.js";
 import UserList from "../UserList.js";
 import { DEFAULT_CATEGORIES } from "../../services/categories.js";
-import { DEFAULT_USERS, DEFAULT_RECENT_MESSAGES } from "../../services/seed.js";
+import { DEFAULT_USERS, DEFAULT_RECENT_MESSAGES } from "../../services/user.js";
 
 export default function Sidebar({
     users = DEFAULT_USERS,

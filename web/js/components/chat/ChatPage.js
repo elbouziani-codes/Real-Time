@@ -1,11 +1,10 @@
 import ChatSidebar from './ChatSidebar.js';
 import ChatMain from './ChatMain.js';
-import { DEFAULT_CONVERSATIONS, DEFAULT_MESSAGES } from '../../services/seed.js';
 
 
 export default function ChatPage({
-    conversations = DEFAULT_CONVERSATIONS,
-    messages = DEFAULT_MESSAGES,
+    conversations = [],
+    messages = [],
 } = {}) {
     const active = conversations[0] || {};
 

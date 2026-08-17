@@ -14,6 +14,7 @@ export default function createPost(categories = DEFAULT_CATEGORIES) {
                     <input type="text" placeholder="enter Title" class = "modal-input">
                     <textarea id="message" maxlength="200" placeholder="write your message" class = "modal-textarea"></textarea>
                     ${Categories({ categories })}
+                    <p class="modal-status" role="alert" aria-live="polite"></p>
                     <button class = "modal-submit-btn" type = "submit">submit</button>
                 </form>
             </div>

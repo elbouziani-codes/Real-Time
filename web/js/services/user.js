@@ -1,17 +1,23 @@
 import createUser from "../models/User.js";
 import { fetchAllUsers, resetUsersPaging } from "../api/users.js";
+import { isOnline } from "./online.js";
 
 export const DEFAULT_USERS = [];
 export const DEFAULT_RECENT_MESSAGES = [];
 
 function normalizeUser(user = {}) {
+    // Reduce the backend's {Value: "<uuid>"} wrapper to the plain uuid string
+    // so it matches the keys used by the WebSocket presence set.
+    const id = user.ID?.Value ?? user.ID ?? user.id?.Value ?? user.id ?? 0;
     return createUser({
-        id: user.ID ?? user.id ?? 0,
+        id,
         name: user.NickName,
         handle: "@"+user.NickName,
         letter: user.Letter ?? user.letter ?? "",
         avatarClass: user.AvatarClass ?? user.avatarClass ?? "avatar--mine",
-        onlineStatus: user.OnlineStatus ?? user.onlineStatus ?? "",
+        // The HTTP list has no presence data; online status comes from the
+        // WebSocket presence events, so ask the tracked set.
+        onlineStatus: isOnline(id) ? "online" : "offline",
         lastMessage: user.LastMessage ?? user.lastMessage ?? "",
         unreadCount: user.UnreadCount ?? user.unreadCount ?? 0,
         createdAt: user.CreatedAt ?? user.createdAt ?? "",

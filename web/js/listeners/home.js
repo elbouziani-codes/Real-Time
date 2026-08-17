@@ -1,10 +1,9 @@
-
-import {fetchPost, fetchCreatePost} from "./../api/posts.js"
-import {sendAllPost, reactToPost, applyPostFilters} from "./../services/posts.js"
-import {reactionState} from "./../components/home/post.js"
-import throttle from "./../utils/helpers.js"
-import {config} from "./../config/config.js"
-import {navigate} from "./../router/router.js"
+import { fetchCreatePost } from "./../api/posts.js";
+import { sendAllPost, reactToPost, applyPostFilters } from "./../services/posts.js";
+import { reactionState } from "./../components/home/post.js";
+import throttle from "./../utils/helpers.js";
+import { config } from "./../config/config.js";
+import { navigate } from "./../router/router.js";
 import User from "./../components/User.js";
 import { loadMoreUsers, DEFAULT_USERS, DEFAULT_RECENT_MESSAGES } from "./../services/user.js";
 
@@ -12,17 +11,17 @@ export function HomeListener() {
     const createPost = document.querySelector(".createPost");
     const cancelCreatePost = document.getElementById("cancelCreatePost");
     const modalOverlay = document.querySelector(".modal-overlay");
-    const submitCreatePost = document.querySelector(".modal-overlay .modal-submit-btn");
+    const modalForm = modalOverlay?.querySelector("form");
 
     createPost?.addEventListener("click", () => {
-        modalOverlay.className = "modal-overlay visible"
-    })
+        modalOverlay.className = "modal-overlay visible";
+    });
     cancelCreatePost?.addEventListener("click", () => {
-        modalOverlay.className = "modal-overlay hidden"
-    })
-    submitCreatePost?.addEventListener("click",  submitPost)
-    document.querySelector(".feed")?.addEventListener("click", reactListener)
-    document.querySelector(".sidebar")?.addEventListener("change", filterListener)
+        modalOverlay.className = "modal-overlay hidden";
+    });
+    modalForm?.addEventListener("submit", submitPost);
+    document.querySelector(".feed")?.addEventListener("click", reactListener);
+    document.querySelector(".sidebar")?.addEventListener("change", filterListener);
 }
 
 async function filterListener(e) {
@@ -34,14 +33,10 @@ async function filterListener(e) {
         .map((input) => input.id);
     const liked = document.getElementById("likedFilter")?.checked || false;
 
-    applyPostFilters({categories, liked});
+    applyPostFilters({ categories, liked });
 
     const dispatchedKey = currentStateKey();
-
-    const feed = document.querySelector(".feed");
-    if (feed) feed.innerHTML = `<h2>📰 Latest Posts</h2>`;
-    await sendAllPost(true);
-
+    await renderFeedFirstPage();
     lastScrollKey = dispatchedKey;
 }
 
@@ -62,15 +57,23 @@ async function reactListener(e) {
 
     const likeBtn = card.querySelector(".like-btn");
     const disLikeBtn = card.querySelector(".comment-btn");
-    const {liked, disliked} = reactionState(post);
+    const { liked, disliked } = reactionState(post);
     likeBtn.textContent = `👍 ${post.Likes}`;
     disLikeBtn.textContent = `👎 ${post.DisLikes}`;
     likeBtn.classList.toggle("active", liked);
     disLikeBtn.classList.toggle("active", disliked);
 }
 
+// Renders the feed from the first page. The feed element is cleared first so a
+// reload never duplicates posts already on screen.
+async function renderFeedFirstPage() {
+    const feed = document.querySelector(".feed");
+    if (feed) feed.innerHTML = `<h2>📰 Latest Posts</h2>`;
+    await sendAllPost(true);
+}
 
 let lastScrollKey = null;
+let windowScrollHandler = null;
 
 function currentStateKey() {
     return config.postsCursor + "|" + JSON.stringify(config.postsFilters);
@@ -144,25 +147,72 @@ export async function HomeScrollListener() {
         sendAllPost(true);
     }, 1500);
 
-    window.addEventListener("scroll", async () => {
+    // The window listener persists across SPA mounts: detach the previous one
+    // so revisiting the home page never stacks duplicate scroll handlers.
+    if (windowScrollHandler) {
+        window.removeEventListener("scroll", windowScrollHandler);
+    }
+    windowScrollHandler = () => {
         const scrollTop = window.scrollY;
         const windowHeight = window.innerHeight;
         const documentHeight = document.documentElement.scrollHeight;
 
         if (scrollTop + windowHeight >= documentHeight - 100 && lastScrollKey != currentStateKey()) {
-            throttledLoadPosts()
+            throttledLoadPosts();
         }
-    });
+    };
+    window.addEventListener("scroll", windowScrollHandler);
 }
 
-async function submitPost(e){
-    e.preventDefault()
+async function submitPost(e) {
+    e.preventDefault();
+
+    const modal = document.querySelector(".modal-overlay");
+    const status = modal?.querySelector(".modal-status");
+    const submit = modal?.querySelector(".modal-submit-btn");
+    if (status) status.textContent = "";
 
     const data = {
-        title:document.querySelector(".modal-input").value,
-        category_ids:Array.from(document.querySelectorAll(".modal-overlay .category-item input")).filter((e) => {return e.checked}).map((e) => {return e.id}),
-        content:document.querySelector(".modal-textarea").value,
+        title: document.querySelector(".modal-input").value.trim(),
+        category_ids: Array.from(document.querySelectorAll(".modal-overlay .category-item input"))
+            .filter((box) => box.checked)
+            .map((box) => box.id),
+        content: document.querySelector(".modal-textarea").value.trim(),
+    };
+
+    if (!data.title || !data.content) {
+        if (status) status.textContent = "Title and content are required.";
+        return;
     }
-    // fetch 
-    let Response =  await fetchCreatePost(data)
+    if (data.category_ids.length === 0) {
+        if (status) status.textContent = "Pick at least one category.";
+        return;
+    }
+
+    if (submit) submit.disabled = true;
+    try {
+        const response = await fetchCreatePost(data);
+        if (response.code == 401) {
+            navigate("/login");
+            return;
+        }
+        if (response.code != 200) {
+            const message = typeof response.body == "string" && response.body.trim()
+                ? response.body.trim()
+                : "Could not create the post. Please try again.";
+            if (status) status.textContent = message;
+            return;
+        }
+
+        if (modal) modal.className = "modal-overlay hidden";
+        document.querySelector(".modal-input").value = "";
+        document.querySelector(".modal-textarea").value = "";
+        document.querySelectorAll(".modal-overlay .category-item input").forEach((box) => { box.checked = false; });
+
+        // The new post is at the top of the next page: reload from the start.
+        applyPostFilters(config.postsFilters);
+        await renderFeedFirstPage();
+    } finally {
+        if (submit) submit.disabled = false;
+    }
 }

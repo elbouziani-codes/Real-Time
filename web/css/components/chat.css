@@ -133,6 +133,18 @@
     background: var(--border);
 }
 
+/* Sender name label above the bubble content */
+.message-sender {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+.message-mine .message-sender {
+    text-align: right;
+}
+
 /* Message status */
 .message-status {
     font-size: 10px;

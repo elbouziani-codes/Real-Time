@@ -2,6 +2,7 @@ import NavItems from './NavItems.js';
 import UserAvatar from './UserAvatar.js';
 import { navigate } from "./../router/router.js";
 import { logoutMe } from "./../services/me.js";
+import { escapeHTML } from "../utils/helpers.js";
 
 const LOGOUT_SVG = `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -24,7 +25,7 @@ export function Navbar(user) {
                 ${NavItems()}
                 <div class="user">
                     ${UserAvatar(user)}
-                    <span class="user-name">${NickName}</span>
+                    <span class="user-name">${escapeHTML(NickName)}</span>
                     <button class="logout-btn" aria-label="Logout" title="Logout">
                         ${LOGOUT_SVG}<span class="logout-label">Logout</span>
                     </button>

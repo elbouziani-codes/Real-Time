@@ -145,6 +145,14 @@
     transform: translateY(0);
 }
 
+.modal-status {
+    min-height: 1.2em;
+    margin: 0;
+    color: var(--danger);
+    font-size: 0.85rem;
+    text-align: center;
+}
+
 /* Create post form */
 .create-post-form {
     display: flex;

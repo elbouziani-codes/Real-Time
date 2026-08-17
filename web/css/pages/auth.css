@@ -444,6 +444,18 @@ button:hover::before {
     display:none;
 }
 
+/* =====================================================
+   Form error / status message
+===================================================== */
+
+.auth-error {
+    min-height: 1.2em;
+    margin: 0;
+    color: var(--danger);
+    font-size: 0.85rem;
+    text-align: center;
+}
+
 
 
 /* =====================================================

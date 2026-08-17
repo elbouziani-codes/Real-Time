@@ -1,4 +1,5 @@
 import UserAvatar from '../UserAvatar.js';
+import { escapeHTML } from '../../utils/helpers.js';
 
 
 export default function ConversationItem(conversation = {}, { active = false } = {}) {
@@ -9,10 +10,10 @@ export default function ConversationItem(conversation = {}, { active = false } =
         <div class="conversation-item${active ? ' active' : ''}" data-user-id="${userId}">
             ${UserAvatar(conversation, { sizeClass: 'user-avatar--md', className: 'conv-avatar' })}
             <div class="conv-info">
-                <div class="conv-name">${name}</div>
-                <div class="conv-preview">${lastMessage}</div>
+                <div class="conv-name">${escapeHTML(name)}</div>
+                <div class="conv-preview">${escapeHTML(lastMessage)}</div>
             </div>
-            <span class="conv-meta">${createdAt}</span>
+            <span class="conv-meta">${escapeHTML(createdAt)}</span>
         </div>
     `;
 }

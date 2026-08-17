@@ -29,7 +29,11 @@ export async function fetchAllUsers() {
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to fetch users: ${response.status}`);
+            // A 401 (e.g. the session was just invalidated by a logout racing
+            // an in-flight navigation) is handled by the router's auth redirect;
+            // report the page as empty instead of crashing the console.
+            console.warn(`Failed to fetch users: ${response.status}`);
+            return [];
         }
 
         const users = await response.json();

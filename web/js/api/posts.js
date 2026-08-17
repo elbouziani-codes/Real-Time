@@ -64,18 +64,29 @@ export function stopFetchPost() {
     hasMore = false;
 }
 
+// Creates a post and returns the backend response. The new post id arrives as
+// JSON on success; failures are plain-text bodies.
 export async function fetchCreatePost(data) {
+    try {
+        const response = await fetch("/api/posts", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        });
 
-    try{
-        const response = await fetch("/api/posts" , {
-        method:"POST",
-        body: JSON.stringify(data),
-        })
-        //let allResult = await response.json()
-        return {code:response.status, body:"allResult"}
-    }catch(error){
-        console.log(error)
-        return {code:500 , body:"Error in request"}
+        const text = await response.text();
+        let body;
+        try {
+            body = JSON.parse(text);
+        } catch {
+            body = text;
+        }
+        return { code: response.status, body };
+    } catch (error) {
+        console.error(error);
+        return { code: 500, body: "Error in request" };
     }
 }
 

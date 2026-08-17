@@ -61,7 +61,6 @@ type Client struct {
 func (c *Client) WriteJSON(v any) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-
 	return c.conn.WriteJSON(v)
 }
 
@@ -85,7 +84,11 @@ func (wss *HandlerWs) ChatWs(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	go wss.engineMessages(r.Context(), client)
+	// engineMessages outlives the HTTP request (it lives as long as the
+	// WebSocket connection), so it must not use r.Context(): net/http cancels
+	// the request context as soon as ChatWs returns, which would make every
+	// DB call inside the loop fail with "context canceled".
+	go wss.engineMessages(context.Background(), client)
 }
 
 func (wss *HandlerWs) engineMessages(ctx context.Context, sender *Client) {

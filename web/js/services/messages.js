@@ -5,15 +5,61 @@ import ChatHeader from "../components/chat/ChatHeader.js";
 import { me } from "./me.js";
 import { DEFAULT_USERS, DEFAULT_RECENT_MESSAGES } from "./user.js";
 import { sendWsRequest } from "../websocket/socket.js";
+import { applyPresenceEvent } from "./online.js";
 import { escapeHTML } from "../utils/helpers.js";
 
-// The backend serves messages in pages of 10 (LIMIT offset+10 OFFSET offset).
+// The backend serves messages in pages (LIMIT offset+10 OFFSET offset).
 const PAGE_SIZE = 10;
 
-// friendId -> roomId learned from WebSocket chat_id fields. The users list does
-// not carry the conversation id, so this map is how the frontend knows which
-// room to ask the HTTP API for.
+// friendId -> roomId learned from WebSocket chat_id fields (and restored from
+// localStorage across reloads). The users list does not carry the conversation
+// id, so this map is how the frontend knows which room to ask the HTTP API for.
 export const roomIds = new Map();
+
+const ROOM_IDS_KEY = "realtime-forum:room-ids:";
+let roomIdsLoadedFor = null;
+
+function currentUserKey() {
+    return ROOM_IDS_KEY + (me?.ID?.Value ?? "anon");
+}
+
+function loadRoomIds() {
+    const key = currentUserKey();
+    if (roomIdsLoadedFor === key) return;
+    roomIdsLoadedFor = key;
+    roomIds.clear();
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed == "object") {
+            for (const [friendId, roomId] of Object.entries(parsed)) {
+                if (friendId && roomId) roomIds.set(friendId, roomId);
+            }
+        }
+    } catch (error) {
+        console.warn("Failed to restore chat rooms:", error);
+    }
+}
+
+function persistRoomId(friendId, roomId) {
+    if (!friendId || !roomId) return;
+    roomIds.set(friendId, roomId);
+    try {
+        const map = {};
+        roomIds.forEach((value, key) => { map[key] = value; });
+        localStorage.setItem(currentUserKey(), JSON.stringify(map));
+    } catch (error) {
+        console.warn("Failed to persist chat rooms:", error);
+    }
+}
+
+// Looks up the room id for a friend, restoring the per-user cache on first use.
+export function getRoomId(friendId) {
+    if (!friendId) return null;
+    loadRoomIds();
+    return roomIds.get(friendId) ?? null;
+}
 
 // Messages of the currently selected room, oldest -> newest.
 export let messages = [];
@@ -57,9 +103,9 @@ function formatTime(createdAt) {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-// The ChatMessage component renders {mine, letter, avatarClass, content, time}.
-// mine is decided by the authenticated user id (currentChat.UserA), never by a
-// DOM class.
+// The ChatMessage component renders {mine, letter, avatarClass, name, content,
+// time}. mine is decided by the authenticated user id (currentChat.UserA),
+// never by a DOM class. All user content is escaped here, once.
 function toView(message) {
     const mine = String(message.senderId) === String(currentChat?.UserA);
     const friend = findFriend(currentChat?.UserB);
@@ -67,11 +113,13 @@ function toView(message) {
         ? (me?.NickName?.[0] ?? "").toUpperCase()
         : (friend?.letter ?? "");
     const avatarClass = mine ? "avatar--mine" : (friend?.avatarClass ?? "");
+    const senderName = mine ? (me?.NickName ?? "You") : (friend?.name ?? "");
 
     return {
         mine,
         letter,
         avatarClass,
+        name: escapeHTML(senderName),
         content: escapeHTML(message.content ?? ""),
         time: formatTime(message.createdAt),
     };
@@ -123,7 +171,7 @@ function renderActiveConversation() {
 function renderLoading() {
     const list = messagesListEl();
     if (!list) return;
-    list.innerHTML = `<div class="loading">Loading messages...</div>`;
+    list.innerHTML = `<div class="loading" role="status">Loading messages...</div>`;
 }
 
 function renderEmpty() {
@@ -163,20 +211,62 @@ function showNewMessagesButton() {
     container.appendChild(button);
 }
 
+// --- Typing indicator -----------------------------------------------------
+
+let typingHideTimer = null;
+
+function hideTypingIndicator() {
+    messagesListEl()?.querySelector(".typing-indicator")?.remove();
+}
+
+function showTypingIndicator() {
+    const list = messagesListEl();
+    if (!list || list.querySelector(".typing-indicator")) return;
+    list.insertAdjacentHTML(
+        "beforeend",
+        `<div class="typing-indicator" role="status" aria-label="The other person is typing"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`,
+    );
+    const scroller = messagesScrollerEl();
+    if (scroller) scroller.scrollTop = scroller.scrollHeight;
+    clearTimeout(typingHideTimer);
+    typingHideTimer = setTimeout(hideTypingIndicator, 4000);
+}
+
+// Sends the "typing" request over the existing WebSocket protocol so the other
+// participant can show a typing indicator. Callers throttle it.
+export function sendTyping() {
+    const friend = currentChat?.UserB;
+    if (!friend) return;
+    sendWsRequest({
+        request_type: "typing",
+        mod: "",
+        id: "",
+        content: "",
+        destination: friend,
+    });
+}
+
+// --- Conversation selection & history -------------------------------------
+
 // Selects a conversation: resets the previous room's state, then loads its
 // history when the room id is known (otherwise the chat is still empty).
 export function selectChat(next) {
     sessionId += 1;
     loading = false;
+    // A previously selected conversation may have learned its room id from a
+    // WebSocket frame or localStorage since the `chat` state was saved, so fall
+    // back to the persisted room map when the passed value is still unknown.
+    const roomId = next?.RoomID ?? next?.roomId ?? getRoomId(next?.UserB);
     currentChat = {
         UserA: next?.UserA ?? "",
         UserB: next?.UserB ?? "",
-        RoomID: next?.RoomID ?? next?.roomId ?? null,
+        RoomID: roomId,
     };
     messages = [];
     offset = 0;
     hasMore = true;
     knownIds.clear();
+    hideTypingIndicator();
 
     renderHeader();
     renderActiveConversation();
@@ -234,9 +324,12 @@ export async function getMessages(roomId, options = {}) {
 
         if (older) {
             // The backend returns the page newest-first; flip it so prepending
-            // keeps the whole list oldest -> newest.
+            // keeps the whole list oldest -> newest. Optimistic (temp) copies
+            // of the user's own sends are dropped: their authoritative versions
+            // ride inside the fetched page (they are the newest rows), so
+            // keeping both would duplicate them.
             fresh.reverse();
-            messages = [...fresh, ...messages];
+            messages = [...fresh, ...messages.filter((message) => !message.temp)];
         } else {
             // Optimistic (unsent-confirmed) messages are superseded by history.
             messages = [...messages.filter((message) => !message.temp), ...fresh];
@@ -276,6 +369,7 @@ function appendMessage(message) {
     if (knownIds.has(message.id)) return;
     knownIds.add(message.id);
     messages.push(message);
+    hideTypingIndicator();
 
     const list = messagesListEl();
     const scroller = messagesScrollerEl();
@@ -311,33 +405,36 @@ export function sendMessage(content) {
         return false;
     }
 
-    const temp = {
-        ...createMessage({
-            id: "temp-" + Date.now(),
-            roomId: currentChat.RoomID,
-            senderId: currentChat.UserA,
-            content: content.trim(),
-            createdAt: Math.floor(Date.now() / 1000),
-        }),
-        temp: true,
-    };
+    const temp = createMessage({
+        id: "temp-" + Date.now(),
+        roomId: currentChat.RoomID,
+        senderId: currentChat.UserA,
+        content: content.trim(),
+        createdAt: Math.floor(Date.now() / 1000),
+    });
+    Object.assign(temp, { temp: true });
     appendMessage(temp);
     return true;
 }
 
-// Handles a WebSocket frame. code 200 is a new message for whoever receives it;
-// control codes (1-4) and errors (404) are logged and ignored.
+// Handles a WebSocket frame. code 200 is a new message for whoever receives
+// it; code 2 is a typing frame; codes 3/4 are presence events; 404 is an error.
 export function handleWsMessage(data) {
     if (!data || typeof data !== "object") return;
 
     const code = data.code;
+
     if (code == 200 && data.chat_id?.Value) {
         const senderId = uuidString(data.sender);
         const roomId = uuidString(data.chat_id);
-        if (senderId) roomIds.set(senderId, roomId);
-
-        if (currentChat?.RoomID && String(currentChat.RoomID) === roomId) {
-            appendMessage(normalizeMessage(data));
+        if (senderId && roomId) {
+            persistRoomId(senderId, roomId);
+            // A message for the currently open conversation — even when the
+            // room id was still unknown (a fresh conversation), attach it now.
+            if (currentChat?.UserB && String(currentChat.UserB) === senderId) {
+                currentChat.RoomID = roomId;
+                appendMessage(normalizeMessage(data));
+            }
         }
         return;
     }
@@ -346,10 +443,19 @@ export function handleWsMessage(data) {
         console.log("WebSocket replaced by another connection:", data.content);
         return;
     }
-    if (code == 2 || code == 3 || code == 4) {
-        console.log("WebSocket event", code, ":", data.content);
+
+    if (code == 2) {
+        if (currentChat?.UserB && String(currentChat.UserB) === uuidString(data.sender)) {
+            showTypingIndicator();
+        }
         return;
     }
+
+    if (code == 3 || code == 4) {
+        applyPresenceEvent(code, data.content);
+        return;
+    }
+
     if (code == 404) {
         console.error("WebSocket request failed:", data.content);
     }

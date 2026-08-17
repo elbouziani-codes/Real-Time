@@ -1,62 +1,93 @@
+import { navigate } from "./../router/router.js";
+import { fetchLogin, fetchRegister } from "./../api/auth.js";
 
-import {navigate} from "./../router/router.js"
-import {fetchLogin, fetchRegister }from  "./../api/auth.js"
 export default function authListener() {
     const loginTab = document.getElementById("loginTab");
-
     const registerTab = document.getElementById("registerTab");
 
     loginTab?.addEventListener("click", () => {
-    navigate("/login");
+        navigate("/login");
     });
 
     registerTab?.addEventListener("click", () => {
-    navigate("/register");
+        navigate("/register");
     });
 
     const loginForm = document.getElementById("loginForm");
-
     loginForm?.addEventListener("submit", loginSubmit);
 
     const registerForm = document.getElementById("registerForm");
-
     registerForm?.addEventListener("submit", registerSubmit);
 }
 
-
-
-
-
-function loginSubmit(e) {
-    e.preventDefault();
-
-    const data = {
-    identifier: document.getElementById("loginIdentifier").value,
-
-    password: document.getElementById("loginPassword").value,
-    };
-
-    let response = fetchLogin(data);
+function errorText(body) {
+    if (typeof body == "string" && body.trim()) return body.trim();
+    return "Something went wrong. Please try again.";
 }
 
-function registerSubmit(e) {
+async function loginSubmit(e) {
     e.preventDefault();
 
+    const form = e.currentTarget;
+    const submit = form.querySelector(".auth-submit");
+    const status = form.querySelector(".auth-error");
+    status.textContent = "";
+
     const data = {
-    nick_name: document.getElementById("nickname").value,
+        identifier: document.getElementById("loginIdentifier").value.trim(),
+        password: document.getElementById("loginPassword").value,
+    };
 
-    last_name: document.getElementById("lastName").value,
+    if (!data.identifier || !data.password) {
+        status.textContent = "Enter your nickname/email and password.";
+        return;
+    }
 
-    first_name: document.getElementById("firstName").value,
+    submit.disabled = true;
+    try {
+        const response = await fetchLogin(data);
+        if (response.ok) {
+            navigate("/");
+            return;
+        }
+        status.textContent = errorText(response.body);
+    } finally {
+        submit.disabled = false;
+    }
+}
 
-    email: document.getElementById("email").value,
+async function registerSubmit(e) {
+    e.preventDefault();
 
-    password: document.getElementById("password").value,
+    const form = e.currentTarget;
+    const submit = form.querySelector(".auth-submit");
+    const status = form.querySelector(".auth-error");
+    status.textContent = "";
 
-    gender: document.getElementById("gender").value,
+    const data = {
+        nick_name: document.getElementById("nickname").value.trim(),
+        last_name: document.getElementById("lastName").value.trim(),
+        first_name: document.getElementById("firstName").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value,
+        gender: document.getElementById("gender").value,
+        age: Number(document.getElementById("age").value),
+    };
 
-    age: Number(document.getElementById("age").value, 10),
+    if (!data.nick_name || !data.first_name || !data.last_name || !data.email || !data.password) {
+        status.textContent = "Please fill in all the required fields.";
+        return;
+    }
 
-};
-    let ok = fetchRegister(data)
+    submit.disabled = true;
+    try {
+        const response = await fetchRegister(data);
+        if (response.ok) {
+            navigate("/");
+            return;
+        }
+        status.textContent = errorText(response.body);
+    } finally {
+        submit.disabled = false;
+    }
 }
