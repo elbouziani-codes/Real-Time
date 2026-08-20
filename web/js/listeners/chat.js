@@ -24,6 +24,8 @@ export default function chatListener() {
 
     const scroller = document.querySelector(".messages-container");
     scroller?.addEventListener("scroll", throttle(onMessagesScroll, 200));
+
+    document.addEventListener("click", onChatSidebarToggle);
 }
 
 function onConversationClick(event) {
@@ -58,4 +60,18 @@ function onMessagesScroll() {
     if (scroller.scrollTop <= 30) {
         loadOlderMessages();
     }
+}
+
+function onChatSidebarToggle(event) {
+    const toggleButton = event.target.closest(".chat-sidebar__toggle");
+    if (!toggleButton) return;
+
+    const sidebar = toggleButton.closest(".chat-sidebar");
+    const drawer = sidebar?.querySelector(".chat-sidebar__drawer");
+    if (!sidebar || !drawer) return;
+
+    const shouldOpen = !sidebar.classList.contains("chat-sidebar--open");
+    sidebar.classList.toggle("chat-sidebar--open", shouldOpen);
+    toggleButton.classList.toggle("active", shouldOpen);
+    toggleButton.setAttribute("aria-expanded", String(shouldOpen));
 }

@@ -7,6 +7,7 @@ import { escapeHTML } from "./../../utils/helpers.js";
 function Comment(comment = {}) {
     const { Author = {}, Content = '', CreatedAt = 0 } = comment;
     const author = authorModel(Author);
+    const createdAt = formatDateTime(CreatedAt);
 
     return `
         <div class="post-details__comment">
@@ -14,7 +15,7 @@ function Comment(comment = {}) {
             <div class="post-details__comment-body">
                 <div class="post-details__comment-header">
                     <span class="post-details__comment-author">${escapeHTML(author.name)}</span>
-                    <span class="post-details__comment-time">${formatDateTime(CreatedAt)}</span>
+                    <span class="post-details__comment-time">${createdAt}</span>
                 </div>
                 <p class="post-details__comment-text">${escapeHTML(Content)}</p>
             </div>

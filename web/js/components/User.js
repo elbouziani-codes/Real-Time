@@ -1,5 +1,6 @@
 import UserAvatar from './UserAvatar.js';
 import { escapeHTML } from '../utils/helpers.js';
+import formatDateTime from "../utils/time.js";
 
 const VARIANTS = {
     item: {
@@ -27,6 +28,15 @@ function renderSpan(className, value) {
     return `<span class="${className}">${escapeHTML(value)}</span>`;
 }
 
+function renderTime(className, value) {
+    if (!className || !value) return '';
+    const numericValue = Number(value);
+    const rendered = Number.isFinite(numericValue) && numericValue > 0
+        ? formatDateTime(numericValue)
+        : String(value);
+    return `<span class="${className}">${escapeHTML(rendered)}</span>`;
+}
+
 function renderInfo(classes, { name, handle, lastMessage }) {
     if (!name) return '';
 
@@ -47,7 +57,7 @@ export default function User(user = {}, { variant = 'item', active = false } = {
     const containerClass = [classes.container, active ? 'active' : ''].filter(Boolean).join(' ');
     const avatarHtml = UserAvatar(user, { sizeClass: classes.sizeClass });
     const infoHtml = renderInfo(classes, { name, handle, lastMessage });
-    const timeHtml = renderSpan(classes.timeClass, createdAt);
+    const timeHtml = classes.timeClass ? renderTime(classes.timeClass, createdAt) : '';
 
     return `<div class="${containerClass}" data-user-id="${userId}">${avatarHtml}${infoHtml}${timeHtml}</div>`;
 }

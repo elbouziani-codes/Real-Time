@@ -35,6 +35,7 @@ export default function PostDetails(post = {}) {
     } = post;
 
     const author = authorModel(Author);
+    const createdAt = formatDateTime(CreatedAt);
     const { liked, disliked } = reactionState(post);
     const likeClass = liked ? " active" : "";
     const disLikeClass = disliked ? " active" : "";
@@ -52,7 +53,7 @@ export default function PostDetails(post = {}) {
                 </div>
                 <div class="post-details__date">
                     <span>📅</span>
-                    <span>${formatDateTime(CreatedAt)}</span>
+                    <span>${createdAt}</span>
                 </div>
             </div>
             <div class="post-details__categories">

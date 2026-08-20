@@ -26,7 +26,7 @@ function normalizeUser(user = {}) {
 
 function formatLastMessageTime(lastMessageAt) {
     if (!lastMessageAt) return "";
-    return String(lastMessageAt);
+    return Number(lastMessageAt);
 }
 
 function sortUsersAlphabetically(users = []) {
@@ -106,4 +106,39 @@ export function filterUsers(defaultUsers = [], rawUsers = defaultUsers) {
     }
 
     return { usersWithoutMessages, recentMessages };
+}
+
+export function updateRecentConversation(friendId, { lastMessage = "", createdAt = Date.now() } = {}) {
+    if (!friendId) return;
+
+    const existingIndex = DEFAULT_RECENT_MESSAGES.findIndex(
+        (conversation) => String(conversation.id?.Value ?? conversation.id) === String(friendId),
+    );
+
+    const sourceUser = [...DEFAULT_RECENT_MESSAGES, ...DEFAULT_USERS].find(
+        (conversation) => String(conversation.id?.Value ?? conversation.id) === String(friendId),
+    );
+
+    const updatedConversation = {
+        ...(sourceUser ?? {}),
+        lastMessage,
+        createdAt: Number(createdAt),
+    };
+
+    if (existingIndex >= 0) {
+        DEFAULT_RECENT_MESSAGES[existingIndex] = updatedConversation;
+    } else {
+        DEFAULT_RECENT_MESSAGES.push(updatedConversation);
+    }
+
+    DEFAULT_RECENT_MESSAGES.sort((a, b) => Number(b.createdAt ?? 0) - Number(a.createdAt ?? 0));
+}
+
+export function getUnmessagedUsers() {
+    const recentIds = new Set(
+        DEFAULT_RECENT_MESSAGES.map((conversation) => String(conversation.id?.Value ?? conversation.id)),
+    );
+    return DEFAULT_USERS.filter(
+        (user) => !recentIds.has(String(user.id?.Value ?? user.id)),
+    );
 }

@@ -6,6 +6,8 @@ import chatListener from "./../listeners/chat.js"
 import {connectSocket} from "./../websocket/socket.js"
 import {initChatSocket} from "./../websocket/chat.js"
 import chat from "../pages/chat.js";
+import endPage from "../pages/end.js";
+import endListener from "../listeners/end.js";
 
 import { navBarListener } from "./../components/navbar.js";
 import HomePage from "../pages/home.js";
@@ -23,6 +25,8 @@ const routes = {
   "/postDetails": pagePost,
 
   "/chat": chat,
+
+  "/end": endPage,
 
   "/login": auth,
 
@@ -96,6 +100,9 @@ async function Listening(path) {
     case "/chat":
       navBarListener();
       chatListener();
+      break;
+    case "/end":
+      endListener();
       break;
     case "/postDetails":
       navBarListener();
