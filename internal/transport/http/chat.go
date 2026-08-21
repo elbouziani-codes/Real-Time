@@ -2,7 +2,9 @@ package handler
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"realTime/crypto"
@@ -14,64 +16,53 @@ type HandlerChat struct {
 	UserService UserService
 }
 
-
 type ChatService interface {
-	IsChatNotFound(error) bool
 	CheckRoomChat(context.Context, []crypto.UUID) (crypto.UUID, error)
 	GetMessages(context.Context, crypto.UUID, int) ([]domain.MessageOutput, error)
 }
-func NewHandleChat(chatService ChatService, userService UserService) *HandlerChat{
+
+func NewHandleChat(chatService ChatService, userService UserService) *HandlerChat {
 	return &HandlerChat{ChatService: chatService, UserService: userService}
 }
-func (chat *HandlerChat) Chat(w http.ResponseWriter , r *http.Request){
+func (chat *HandlerChat) Chat(w http.ResponseWriter, r *http.Request) {
 
 	userIDAny := r.Context().Value("user_id")
 	userID, _ := userIDAny.(crypto.UUID)
-	
+
 	var chatRoomInput domain.ChatRoomInput
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&chatRoomInput); err != nil{
-		http.Error(w,err.Error(), 404)
+	if err := decoder.Decode(&chatRoomInput); err != nil {
+		http.Error(w, err.Error(), 404)
 		return
 	}
-	err ,chatRoomOrigin :=  chatRoomInput.ValidateAndParse(userID)
-	if err != nil{
-		http.Error(w,err.Error(), 404)
+	friendID, err := crypto.ParseUUID(chatRoomInput.Friend)
+	if err != nil {
+		http.Error(w, "invalid friend id", http.StatusBadRequest)
 		return
 	}
-	err = chat.CheckRoomChat(r.Context(), chatRoomOrigin)
-	if err != nil{
-		http.Error(w,err.Error(), 404)
+	if friendID == userID {
+		http.Error(w, "cannot open a conversation with yourself", http.StatusBadRequest)
 		return
-	}else if chat.ChatService.IsChatNotFound(err){
-		Response := domain.ChatRoomOutput{ID:chatRoomInput.ID, Messages:[]domain.MessageOutput{}}
-		err = json.NewEncoder(w).Encode(&Response)
-		if err != nil{
-			http.Error(w,err.Error(), 404)
+	}
+
+	chatID, err := chat.ChatService.CheckRoomChat(r.Context(), []crypto.UUID{userID, friendID})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			json.NewEncoder(w).Encode(&domain.ChatRoomOutput{Messages: []domain.MessageOutput{}})
 			return
 		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	messages, err := chat.ChatService.GetMessages(r.Context(), chatRoomOrigin.ID, chatRoomInput.Offset)
-	if err != nil{
-		http.Error(w,err.Error(), 404)
+	messages, err := chat.ChatService.GetMessages(r.Context(), chatID, chatRoomInput.Offset)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	Response := domain.ChatRoomOutput{ID:chatRoomInput.ID, Messages: messages}
+	Response := domain.ChatRoomOutput{ID: chatID.Value.String(), Messages: messages}
 	err = json.NewEncoder(w).Encode(&Response)
-	if err != nil{
-		http.Error(w,err.Error(), 404)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-}
-
-func (chat *HandlerChat) CheckRoomChat(ctx context.Context, chatRoomOrigin *domain.ChatRoomOrigin) error{
-	idChat, err := chat.ChatService.CheckRoomChat(ctx, []crypto.UUID{chatRoomOrigin.Me, chatRoomOrigin.Freind})
-	if err != nil{
-		return err
-	}
-	if idChat != chatRoomOrigin.ID{
-		return domain.Error{Message: "Error in ID Chat NOT Valid", Code: 401}
-	}
-	return nil
 }

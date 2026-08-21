@@ -1,5 +1,5 @@
 import { me } from "../services/me.js";
-import { getRoomId, selectChat, loadOlderMessages, sendMessage, sendTyping } from "../services/messages.js";
+import { selectChat, loadOlderMessages, sendMessage, sendTyping } from "../services/messages.js";
 import { chat, setChat } from "./users.js";
 import throttle from "../utils/helpers.js";
 
@@ -33,12 +33,9 @@ function onConversationClick(event) {
     const friendId = item?.dataset.userId;
     if (!friendId) return;
 
-    const roomId = getRoomId(friendId);
     setChat({
         UserA: me.ID?.Value ?? "",
         UserB: friendId,
-        RoomID: roomId,
-        RequestApi: roomId != null,
     });
     selectChat(chat);
 }
