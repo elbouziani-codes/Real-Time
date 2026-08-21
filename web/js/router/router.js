@@ -8,6 +8,7 @@ import {initChatSocket} from "./../websocket/chat.js"
 import chat from "../pages/chat.js";
 import endPage from "../pages/end.js";
 import endListener from "../listeners/end.js";
+import ErrorPage from "../pages/notFound.js"
 
 import { navBarListener } from "./../components/navbar.js";
 import HomePage from "../pages/home.js";
@@ -49,11 +50,8 @@ async function router() {
     await Listening(path);
 
   } else {
-    app.innerHTML = `
-            <h1>
-                404
-            </h1>
-        `;
+    console.log("aaa")
+    app.innerHTML = ErrorPage({})
   }
 }
 
