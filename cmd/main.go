@@ -80,7 +80,9 @@ func spaHandler() func(http.Handler) http.Handler {
 			}
 
 			path := "./web" + r.URL.Path
+			
 			_, err := os.Stat(path)
+			
 			if os.IsNotExist(err) {
 				http.ServeFile(
 					w,
