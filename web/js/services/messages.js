@@ -12,59 +12,9 @@ import { escapeHTML } from "../utils/helpers.js";
 // The backend serves messages in pages (LIMIT offset+10 OFFSET offset).
 const PAGE_SIZE = 10;
 
-// friendId -> roomId learned from WebSocket chat_id fields (and restored from
-// localStorage across reloads). The users list does not carry the conversation
-// id, so this map is how the frontend knows which room to ask the HTTP API for.
-export const roomIds = new Map();
-
-const ROOM_IDS_KEY = "realtime-forum:room-ids:";
-let roomIdsLoadedFor = null;
-
-function currentUserKey() {
-    return ROOM_IDS_KEY + (me?.ID?.Value ?? "anon");
-}
-
-function loadRoomIds() {
-    const key = currentUserKey();
-    if (roomIdsLoadedFor === key) return;
-    roomIdsLoadedFor = key;
-    roomIds.clear();
-    try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed == "object") {
-            for (const [friendId, roomId] of Object.entries(parsed)) {
-                if (friendId && roomId) roomIds.set(friendId, roomId);
-            }
-        }
-    } catch (error) {
-        console.warn("Failed to restore chat rooms:", error);
-    }
-}
-
-function persistRoomId(friendId, roomId) {
-    if (!friendId || !roomId) return;
-    roomIds.set(friendId, roomId);
-    try {
-        const map = {};
-        roomIds.forEach((value, key) => { map[key] = value; });
-        localStorage.setItem(currentUserKey(), JSON.stringify(map));
-    } catch (error) {
-        console.warn("Failed to persist chat rooms:", error);
-    }
-}
-
-// Looks up the room id for a friend, restoring the per-user cache on first use.
-export function getRoomId(friendId) {
-    if (!friendId) return null;
-    loadRoomIds();
-    return roomIds.get(friendId) ?? null;
-}
-
 // Messages of the currently selected room, oldest -> newest.
 export let messages = [];
-export let currentChat = { UserA: "", UserB: "", RoomID: null };
+export let currentChat = { UserA: "", UserB: "" };
 
 let loading = false;
 let hasMore = true;
@@ -252,19 +202,14 @@ export function sendTyping() {
 
 // --- Conversation selection & history -------------------------------------
 
-// Selects a conversation: resets the previous room's state, then loads its
-// history when the room id is known (otherwise the chat is still empty).
+// The server resolves the shared room from the two participants, so history
+// loads even after a refresh.
 export function selectChat(next) {
     sessionId += 1;
     loading = false;
-    // A previously selected conversation may have learned its room id from a
-    // WebSocket frame or localStorage since the `chat` state was saved, so fall
-    // back to the persisted room map when the passed value is still unknown.
-    const roomId = next?.RoomID ?? next?.roomId ?? getRoomId(next?.UserB);
     currentChat = {
         UserA: next?.UserA ?? "",
         UserB: next?.UserB ?? "",
-        RoomID: roomId,
     };
     messages = [];
     offset = 0;
@@ -279,20 +224,15 @@ export function selectChat(next) {
         renderPlaceholder();
         return;
     }
-    if (currentChat.RoomID) {
-        renderLoading();
-        getMessages(currentChat.RoomID);
-    } else {
-        renderEmpty();
-    }
+    renderLoading();
+    getMessages();
 }
 
-// Loads one page of messages for the current room.
-//   getMessages(roomId)              -> first page, render, scroll to bottom
-//   getMessages(roomId, {older:true})-> next older page, prepend, keep position
-export async function getMessages(roomId, options = {}) {
+// Loads one page of messages for the selected user. With { older: true }, it
+// prepends the next page while keeping the scroll position.
+export async function getMessages(options = {}) {
     const { older = false } = options;
-    if (!currentChat || String(currentChat.RoomID) !== String(roomId)) return;
+    if (!currentChat?.UserB) return;
     if (loading) return;
     if (older && !hasMore) return;
 
@@ -302,14 +242,12 @@ export async function getMessages(roomId, options = {}) {
 
     try {
         const response = await fetchMessages({
-            id: roomId,
-            me: currentChat.UserA,
-            freind: currentChat.UserB,
+            friend: currentChat.UserB,
             offset: requestOffset,
         });
 
         // A newer selection (or a different room) superseded this request.
-        if (sid !== sessionId || !currentChat || String(currentChat.RoomID) !== String(roomId)) return;
+        if (sid !== sessionId || !currentChat?.UserB) return;
 
         if (response.code != 200) {
             console.error("Failed to load messages:", response.code, response.body);
@@ -364,9 +302,9 @@ export async function getMessages(roomId, options = {}) {
 // Infinite scroll entry point: fetch the next older page while preserving the
 // scroll position. Guards against duplicate requests for the same page.
 export function loadOlderMessages() {
-    if (!currentChat?.RoomID || loading || !hasMore) return;
+    if (!currentChat?.UserB || loading || !hasMore) return;
     if (messages.length === 0) return;
-    getMessages(currentChat.RoomID, { older: true });
+    getMessages({ older: true });
 }
 
 // Appends one new message (WebSocket delivery or optimistic own send) without
@@ -413,7 +351,7 @@ export function sendMessage(content) {
 
     const temp = createMessage({
         id: "temp-" + Date.now(),
-        roomId: currentChat.RoomID,
+        roomId: "",
         senderId: currentChat.UserA,
         content: content.trim(),
         createdAt: Date.now(),
@@ -439,16 +377,13 @@ export async function handleWsMessage(data) {
         const senderId = uuidString(data.sender);
         const roomId = uuidString(data.chat_id);
         if (senderId && roomId) {
-            persistRoomId(senderId, roomId);
             updateRecentConversation(senderId, {
                 lastMessage: data.content ?? "",
                 createdAt: normalizeTimestamp(data.created_at ?? data.CreatedAt ?? Date.now()),
             });
             renderConversationSidebar();
-            // A message for the currently open conversation — even when the
-            // room id was still unknown (a fresh conversation), attach it now.
+            // A message for the currently open conversation.
             if (currentChat?.UserB && String(currentChat.UserB) === senderId) {
-                currentChat.RoomID = roomId;
                 appendMessage(normalizeMessage(data));
             }
         }

@@ -41,10 +41,11 @@ async function router() {
   if (page) {
 
     await Fetching(path);
-    // Another navigation may have happened while fetching; never render a
-    // stale page over the current route.
+
     if (window.location.pathname !== path) return;
     app.innerHTML = await page();
+
+    
     await Listening(path);
 
   } else {
