@@ -37,7 +37,7 @@ async function router() {
   const path = window.location.pathname;
   const page = routes[path];
   const app = document.getElementById("app");
-
+ console.log("sssss")
   if (page) {
 
     await Fetching(path);
