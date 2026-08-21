@@ -93,7 +93,9 @@ type RegisterRequest struct {
 	Age       int    `json:"age"`
 }
 
-var nameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]*$`) // would deleted later
+var nickNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`) // would deleted later
+var nameRegex = regexp.MustCompile(`^[a-zA-Z]+(?: [a-zA-Z]+)*$`) // would deleted later
+
 
 func ValueidateUserInfo(registerRequest RegisterRequest) (User, error) {
 	var user User
@@ -104,8 +106,8 @@ func ValueidateUserInfo(registerRequest RegisterRequest) (User, error) {
 	user.FirstName = strings.TrimSpace(registerRequest.FirstName)
 	user.Gender = strings.TrimSpace(registerRequest.Gender)
 	user.Age = registerRequest.Age
-	if len(user.Password) < 8 || len(user.Password) > 20 {
-		return user, Error{Message: "password length must be between 8 and 20", Code: BadFormatCode}
+	if len(user.Password) < 8 || len(user.Password) > 60 {
+		return user, Error{Message: "password length must be between 8 and 60", Code: BadFormatCode}
 	}
 
 	if len(user.Email) < 6 || len(user.Email) > 75 {
@@ -116,7 +118,7 @@ func ValueidateUserInfo(registerRequest RegisterRequest) (User, error) {
 		return user, Error{Message: "email invalid format", Code: BadFormatCode}
 	}
 
-	if !usernameRegex.MatchString(user.NickName) {
+	if !nickNameRegex.MatchString(user.NickName) {
 		return user, Error{Message: "nickname invalid format", Code: BadFormatCode}
 	}
 

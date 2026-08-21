@@ -96,7 +96,7 @@ type GetCommentsRequest struct {
 	Limit   int  `json:"limit"`
 }
 
-func ValueidateGetCommentsRequest(request GetCommentsRequest) (error) {
+func ValidateGetCommentsRequest(request GetCommentsRequest) (error) {
 	if request.Offset <= 0 || request.Limit <= 0 {
 			return Error{Message: "invalid filters", Code: BadFormatCode}		
 	}	

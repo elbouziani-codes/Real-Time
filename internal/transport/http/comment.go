@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"realTime/crypto"
 	"realTime/internal/domain"
 )
@@ -12,7 +13,7 @@ type commentService interface {
 	CreateComment(context.Context, *domain.Comment) error
 	GetComment(context.Context, crypto.UUID, crypto.UUID) (*domain.CommentInfo, error)
 	DeleteComment(context.Context, crypto.UUID) (error)
-	GetComments(context.Context, crypto.UUID, crypto.UUID) ([]*domain.CommentInfo, error)
+	GetComments(context.Context, crypto.UUID, crypto.UUID, int) ([]*domain.CommentInfo, error)
 	PatchComment(context.Context, domain.PatchCommentRequest, crypto.UUID) (error)
 }
 
@@ -93,13 +94,20 @@ func (c *CommentHandler) GetComments(w http.ResponseWriter, r *http.Request) {
 	userID := userIDAny.(crypto.UUID)
 
 	id, err := crypto.ParseUUID(r.PathValue("id")) 
+	cursor := r.PathValue("cursor") 
+	
 	if err != nil {
 			Error(domain.Error{Message: "invalid id", Code: domain.BadFormatCode}, w)
 			return
 	}		
-
-
-	comments, err := c.commentSvc.GetComments(r.Context(), userID, id)
+	
+	cur, err := strconv.Atoi(cursor)		
+	if err != nil {
+		Error(domain.Error{Message: "invalid cursor", Code: domain.BadFormatCode}, w)
+		return
+	
+	}
+	comments, err := c.commentSvc.GetComments(r.Context(), userID, id, cur)
 	if err != nil {
 		Error(err, w)
 		return
@@ -110,7 +118,6 @@ func (c *CommentHandler) GetComments(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "uknown error", http.StatusInternalServerError)
 		return
 	}
-
 }
 
 func (c *CommentHandler) GetComment(w http.ResponseWriter, r *http.Request) {

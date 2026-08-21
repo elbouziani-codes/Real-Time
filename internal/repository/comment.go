@@ -81,7 +81,7 @@ func (p *commentRepo) GetComment(ctx context.Context, userID, commentID crypto.U
 //						ORDER BY created_at DESC 
 //						LIMIT ? OFFSET ?; `
 
-func (p *commentRepo) GetComments(ctx context.Context, userID, parentID crypto.UUID) ([]*domain.CommentInfo, error) {
+func (p *commentRepo) GetComments(ctx context.Context, userID, parentID crypto.UUID, cursor int) ([]*domain.CommentInfo, error) {
 	rows, err := p.db.QueryContext(ctx, getCommentsQuery, userID.Value, parentID.Value)	
 	
 	if err != nil {
