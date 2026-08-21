@@ -78,15 +78,6 @@ func (a *AuthRepo) DeleteSession(ctx context.Context, userID crypto.UUID) error 
 	return nil
 }
 
-const GetSessionByUserIDQuery = `
-	SELECT id, user_id FROM sessions WHERE user_id = ?  
-`
-
-func (a *AuthRepo) GetByUserID(ctx context.Context, userID crypto.UUID) (domain.Session, error) {
-	row := a.db.QueryRowContext(ctx, GetSessionByUserIDQuery, userID.Value)
-	return scanSession(row)
-}
-
 const GetSessionByIDQuery = `
 	SELECT id, user_id, created_at, expire_at FROM sessions WHERE id = ?  
 `

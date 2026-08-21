@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"realTime/crypto"
 	"realTime/internal/domain"
 )
 
@@ -12,7 +11,6 @@ type categoryService struct {
 
 type CategoryRepo interface {
 	GetCategories(context.Context) ([]*domain.Category, error)
-	GetCategory(context.Context, crypto.UUID) (*domain.Category, error)
 }
 
 func NewCategoryService(repo CategoryRepo) *categoryService {
@@ -21,8 +19,4 @@ func NewCategoryService(repo CategoryRepo) *categoryService {
 
 func (c *categoryService) GetCategories(ctx context.Context) ([]*domain.Category, error) {
 	return c.categoryRepo.GetCategories(ctx)
-}
-
-func (c *categoryService) GetCategory(ctx context.Context, categoryID crypto.UUID) (*domain.Category, error) {
-	return c.categoryRepo.GetCategory(ctx, categoryID)
 }

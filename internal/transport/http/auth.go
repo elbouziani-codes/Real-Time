@@ -9,10 +9,6 @@ import (
 	"realTime/internal/domain"
 )
 
-type AuthRepo interface {
-	SaveSession(context.Context, crypto.UUID, crypto.UUID) error
-}
-
 type AuthService interface {
 	Login(context.Context, domain.Credentials, int) (crypto.UUID, error)
 	CreateSession(context.Context, crypto.UUID) (crypto.UUID, error)
@@ -31,38 +27,20 @@ type AuthHandler struct {
 	middleware middleWare
 }
 
-type TestHandler struct {
-}
-
-func NewTestHandler(authSvc AuthService, userSvc UserService) TestHandler {
-	return TestHandler{}
-}
-
-func (t *TestHandler) Test(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id")
-	if err := json.NewEncoder(w).Encode(userID); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
 func NewAuthHandler(authSvc AuthService, userSvc UserService) *AuthHandler {
 	return &AuthHandler{authSvc: authSvc, userSvc: userSvc}
 }
 
-
 func (a *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
 	userID := userIDAny.(crypto.UUID)
-	
+
 	user, err := a.userSvc.GetUser(r.Context(), userID, userID)
 	if err != nil {
 		Error(err, w)
 		return
 	}
-	
-	
-	
+
 	if err := json.NewEncoder(w).Encode(user); err != nil {
 		http.Error(w, "uknown error", http.StatusInternalServerError)
 		return

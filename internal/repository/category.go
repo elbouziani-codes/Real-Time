@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"realTime/crypto"
 	"realTime/internal/domain"
 	"realTime/internal/repository/sqlite"
 )
@@ -52,15 +51,4 @@ func (c *categoryRepo) GetCategories(ctx context.Context) ([]*domain.Category, e
 		return nil, sqlite.TranslateError(err)
 	}
 	return categories, nil
-}
-
-const getCategoryQuery = `
-SELECT C.id, C.title, C.icon, C.created_at
-FROM categories C
-WHERE C.id = ?
-`
-
-func (c *categoryRepo) GetCategory(ctx context.Context, categoryID crypto.UUID) (*domain.Category, error) {
-	row := c.db.QueryRowContext(ctx, getCategoryQuery, categoryID.Value)
-	return scanCategory(row)
 }

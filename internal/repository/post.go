@@ -1,10 +1,10 @@
 package repository
+
 import (
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 
 	"realTime/crypto"
@@ -19,7 +19,6 @@ type postRepo struct {
 func NewPostRepo(db DB) *postRepo {
 	return &postRepo{db: db}
 }
-
 
 // postCategoriesColumn aggregates a post's categories into one JSON array. It
 // is a correlated subquery rather than a join so it cannot multiply post rows
@@ -224,9 +223,8 @@ func (p *postRepo) GetPost(ctx context.Context, userID, postID crypto.UUID) (*do
 	return scanPost(row)
 }
 
-
-//const getPostsQuery = `SELECT id, author_id, title, content, created_at, updated_at FROM posts 
-//						ORDER BY created_at DESC 
+//const getPostsQuery = `SELECT id, author_id, title, content, created_at, updated_at FROM posts
+//						ORDER BY created_at DESC
 //						LIMIT ? OFFSET ?; `
 
 func (p *postRepo) GetPosts(ctx context.Context, userID crypto.UUID, filter domain.PostFilter, limit int, cursor crypto.UUID) ([]*domain.PostInfo, error) {
@@ -264,29 +262,3 @@ func (p *postRepo) GetPosts(ctx context.Context, userID crypto.UUID, filter doma
 	}
 	return posts, nil
 }
-
-const deletePostQuery = `DELETE FROM posts WHERE id = ?`
-
-func (p *postRepo) DeletePost(ctx context.Context, postID crypto.UUID) error {
-	_, err := p.db.ExecContext(ctx, deletePostQuery, postID.Value)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *postRepo) ExecPatchQuery(ctx context.Context, query string, postID crypto.UUID, args []any) error {
-	result, err := p.db.ExecContext(ctx, query, append(args, postID.Value)...) 	
-	if err != nil {
-		return err
-	}
-	rows, err := result.RowsAffected() 
-	if err != nil {
-		return err
-	}
-	if rows != 1 {
-		return fmt.Errorf("expected edited rows")
-	}
-	return nil	
-}
-

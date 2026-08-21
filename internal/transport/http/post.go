@@ -12,7 +12,6 @@ type postService interface {
 	CreatePost(context.Context, *domain.Post) error
 	GetPost(context.Context, crypto.UUID, crypto.UUID) (*domain.PostInfo, error)
 	GetPosts(context.Context, crypto.UUID, domain.PostFilter, int, crypto.UUID) ([]*domain.PostInfo, error)
-	PatchPost(context.Context, domain.PatchPostRequest, crypto.UUID) (error)
 }
 
 type PostHandler struct {
@@ -79,7 +78,6 @@ func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	if err := json.NewEncoder(w).Encode(posts); err != nil {
 		http.Error(w, "uknown error", http.StatusInternalServerError)
 		return
@@ -90,9 +88,9 @@ func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 func (p *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
 	userID := userIDAny.(crypto.UUID)
-	postID, err := crypto.ParseUUID(r.PathValue("id")) 
+	postID, err := crypto.ParseUUID(r.PathValue("id"))
 	if err != nil {
-		Error(domain.Error{Message: "invalid post id", Code: domain.BadFormatCode}, w)	
+		Error(domain.Error{Message: "invalid post id", Code: domain.BadFormatCode}, w)
 		return
 	}
 	post, err := p.postSvc.GetPost(r.Context(), userID, postID)
@@ -102,46 +100,6 @@ func (p *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(post); err != nil {
-		http.Error(w, "uknown error", http.StatusInternalServerError)
-		return
-	}
-	
-}
-
-func (p *PostHandler) PatchPost(w http.ResponseWriter, r *http.Request) {
-	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
-	postID, err := crypto.ParseUUID(r.PathValue("id")) 
-	if err != nil {
-		Error(domain.Error{Message: "invalid post id", Code: domain.BadFormatCode}, w)	
-		return
-	}
-
-	request := domain.EditPostRequest{}
-	defer r.Body.Close()
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		Error(domain.Error{Message: "invalid json", Code: domain.BadFormatCode}, w)
-		return
-	}
-
-	editPostObject, err := domain.ValueidateEditPostRequest(request)
-	if err != nil {
-		Error(err, w)
-		return
-	}
-
-	post, err := p.postSvc.GetPost(r.Context(), userID, postID)
-	if err != nil {
-		Error(err, w)
-		return
-	}
-	
-	if post.Author.ID.Value != userID.Value {
-		Error(domain.Error{Message: "unauthorized action", Code: domain.UnauthorizedCode}, w)
-		return
-	}
-	err = p.postSvc.PatchPost(r.Context(), editPostObject, postID)
-	if err := json.NewEncoder(w).Encode(post.ID); err != nil {
 		http.Error(w, "uknown error", http.StatusInternalServerError)
 		return
 	}

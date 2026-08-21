@@ -4,13 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"realTime/crypto"
 	"realTime/internal/domain"
 )
 
 type categoryService interface {
 	GetCategories(context.Context) ([]*domain.Category, error)
-	GetCategory(context.Context, crypto.UUID) (*domain.Category, error)
 }
 
 type CategoryHandler struct {

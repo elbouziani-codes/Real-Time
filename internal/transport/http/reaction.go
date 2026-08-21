@@ -11,18 +11,17 @@ import (
 type reactionService interface {
 	CreateReaction(context.Context, *domain.Reaction) error
 	GetReaction(context.Context, crypto.UUID) (*domain.ReactionInfo, error)
-	DeleteReaction(context.Context, crypto.UUID) (error)
 	GetReactions(context.Context, crypto.UUID) ([]*domain.ReactionInfo, error)
-	PatchReaction(context.Context, *domain.ReactionInfo, bool) (error)
+	PatchReaction(context.Context, *domain.ReactionInfo, bool) error
 }
 
 type ReactionHandler struct {
 	reactionSvc reactionService
-	postSvc postService
+	postSvc     postService
 }
 
 func NewReactionHandler(reactionSvc reactionService, postSvc postService) *ReactionHandler {
-		return &ReactionHandler{reactionSvc: reactionSvc, postSvc: postSvc}
+	return &ReactionHandler{reactionSvc: reactionSvc, postSvc: postSvc}
 }
 
 func (c *ReactionHandler) React(w http.ResponseWriter, r *http.Request) {
@@ -34,8 +33,6 @@ func (c *ReactionHandler) React(w http.ResponseWriter, r *http.Request) {
 		Error(domain.Error{Message: "invalid json", Code: domain.BadFormatCode}, w)
 		return
 	}
-
-	
 
 	reaction, err := domain.NewReactionRequest(request)
 	if err != nil {
@@ -55,55 +52,20 @@ func (c *ReactionHandler) React(w http.ResponseWriter, r *http.Request) {
 
 }
 
-
-func (c *ReactionHandler) DeleteReaction(w http.ResponseWriter, r *http.Request) {
-	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
-	
-
-	reactionID, err := crypto.ParseUUID(r.PathValue("id")) 
-	if err != nil {
-		Error(domain.Error{Message: "invalid reaction id", Code: domain.BadFormatCode}, w)	
-		return
-	}
-	reaction, err := c.reactionSvc.GetReaction(r.Context(), reactionID)
-	if err != nil {
-		Error(err, w)
-		return
-	}
-	if reaction.Author.ID.Value != userID.Value {
-			Error(domain.Error{Message: "unauthorized action", Code: domain.UnauthorizedCode}, w)	
-		return
-	}
-	err =c.reactionSvc.DeleteReaction(r.Context(), reactionID)
-	if err != nil {
-		Error(err, w)
-		return
-	}
-
-	if err := json.NewEncoder(w).Encode("success"); err != nil {
-		http.Error(w, "uknown error", http.StatusInternalServerError)
-		return
-	}
-
-}
-
 func (c *ReactionHandler) GetReactions(w http.ResponseWriter, r *http.Request) {
 
 	id, err := crypto.ParseUUID(r.PathValue("parent_id"))
 	if err != nil {
-			Error(domain.Error{Message: "invalid id", Code: domain.BadFormatCode}, w)
-			return
-	}		
-
+		Error(domain.Error{Message: "invalid id", Code: domain.BadFormatCode}, w)
+		return
+	}
 
 	reactions, err := c.reactionSvc.GetReactions(r.Context(), id)
 	if err != nil {
 		Error(err, w)
 		return
 	}
-	
-	
+
 	if err := json.NewEncoder(w).Encode(reactions); err != nil {
 		http.Error(w, "uknown error", http.StatusInternalServerError)
 		return
@@ -111,31 +73,12 @@ func (c *ReactionHandler) GetReactions(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (c *ReactionHandler) GetReaction(w http.ResponseWriter, r *http.Request) {
-	reactionID, err := crypto.ParseUUID(r.PathValue("id")) 
-	if err != nil {
-		Error(domain.Error{Message: "invalid reaction id", Code: domain.BadFormatCode}, w)	
-		return
-	}
-	reaction, err :=c.reactionSvc.GetReaction(r.Context(), reactionID)
-	if err != nil {
-		Error(err, w)
-		return
-	}
-
-	if err := json.NewEncoder(w).Encode(reaction); err != nil {
-		http.Error(w, "uknown error", http.StatusInternalServerError)
-		return
-	}
-	
-}
-
 func (c *ReactionHandler) UpdateReaction(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
 	userID := userIDAny.(crypto.UUID)
-	reactionID, err := crypto.ParseUUID(r.PathValue("id")) 
+	reactionID, err := crypto.ParseUUID(r.PathValue("id"))
 	if err != nil {
-		Error(domain.Error{Message: "invalid reaction id", Code: domain.BadFormatCode}, w)	
+		Error(domain.Error{Message: "invalid reaction id", Code: domain.BadFormatCode}, w)
 		return
 	}
 
@@ -146,14 +89,12 @@ func (c *ReactionHandler) UpdateReaction(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-
-
 	react, err := c.reactionSvc.GetReaction(r.Context(), reactionID)
 	if err != nil {
 		Error(err, w)
 		return
 	}
-	
+
 	if react.Author.ID.Value != userID.Value {
 		Error(domain.Error{Message: "unauthorized action", Code: domain.UnauthorizedCode}, w)
 		return
@@ -168,4 +109,3 @@ func (c *ReactionHandler) UpdateReaction(w http.ResponseWriter, r *http.Request)
 		return
 	}
 }
-
