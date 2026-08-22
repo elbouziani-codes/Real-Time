@@ -27,9 +27,11 @@ export function applyPresenceEvent(code, content) {
     }
 }
 
+export { extractUserIds };
+
 // Marks a single user online/offline and updates every visible indicator that
 // belongs to them (avatar dots, chat header status label).
-export function setUserOnline(userId, online) {
+function setUserOnline(userId, online) {
     if (!userId) return;
     const key = String(userId);
     if (online) {
@@ -51,12 +53,4 @@ function updatePresenceDom(userId, online) {
         label.classList.toggle("offline", !online);
         label.textContent = online ? "Online" : "Offline";
     });
-}
-
-// Re-applies the known presence to the current DOM (after a page re-render, so
-// rows that were drawn before the events arrived get their correct state).
-export function syncPresenceDom() {
-    for (const id of onlineUsers) {
-        updatePresenceDom(id, true);
-    }
 }

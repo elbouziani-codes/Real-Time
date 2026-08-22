@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"realTime/crypto"
 	"realTime/internal/domain"
+	"uuid"
 
 	"github.com/gorilla/websocket"
 )
@@ -27,17 +27,17 @@ type HandlerWs struct {
 
 type hub struct {
 	mu      sync.RWMutex
-	clients map[crypto.UUID]*Client
+	clients map[uuid.UUID]*Client
 }
 type UserService interface {
-	GetByID(context.Context, crypto.UUID) (domain.User, error)
+	GetByID(context.Context, uuid.UUID) (domain.User, error)
 }
 
 type ChatService interface {
 	IsChatNotFound(error) bool
-	CheckRoomChat(context.Context, []crypto.UUID) (crypto.UUID, error)
-	CreateRoomChat(context.Context, []crypto.UUID) (crypto.UUID, error)
-	SendMessageRoomChat(context.Context, string, crypto.UUID, crypto.UUID) (crypto.UUID, int64, error)
+	CheckRoomChat(context.Context, []uuid.UUID) (uuid.UUID, error)
+	CreateRoomChat(context.Context, []uuid.UUID) (uuid.UUID, error)
+	SendMessageRoomChat(context.Context, string, uuid.UUID, uuid.UUID) (uuid.UUID, int64, error)
 }
 
 func NewHandleWs(svcChat ChatService, svcUser UserService) *HandlerWs {
@@ -45,15 +45,13 @@ func NewHandleWs(svcChat ChatService, svcUser UserService) *HandlerWs {
 		svcChat: svcChat,
 		svcUser: svcUser,
 		hub: &hub{
-			clients: make(map[crypto.UUID]*Client),
+			clients: make(map[uuid.UUID]*Client),
 		},
 	}
 }
 
-
-
 type Client struct {
-	userId crypto.UUID
+	userId uuid.UUID
 	conn   *websocket.Conn
 	mu     sync.Mutex
 }
@@ -70,7 +68,6 @@ func (c *Client) Close() error {
 
 	return c.conn.Close()
 }
-
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -98,48 +95,47 @@ func (wss *HandlerWs) engineMessages(ctx context.Context, sender *Client) {
 	for {
 		err, wsRequest := wss.readInputMessage(ctx, sender)
 		if err != nil {
-			if err.Error() == "Close"{
+			if err.Error() == "Close" {
 				return
 			}
 			continue
 		}
-		chatId, err := wss.GetRoom(ctx, sender.userId,wsRequest.Destination)
+		chatId, err := wss.GetRoom(ctx, sender.userId, wsRequest.Destination)
 		if err != nil {
-			wss.responseWrite(crypto.Nil, 404, err.Error(), sender.userId, sender , chatId ,0)
+			wss.responseWrite(uuid.Nil(), 404, err.Error(), sender.userId, sender, chatId, 0)
 			continue
 		}
-		
+
 		if wsRequest.RequestType == "typing" {
-			wss.sendTypingReceiver(wsRequest.Destination, sender.userId , chatId)
+			wss.sendTypingReceiver(wsRequest.Destination, sender.userId, chatId)
 			continue
 		}
-		
 
 		messageID, createAt, err := wss.svcChat.SendMessageRoomChat(ctx, wsRequest.Content, sender.userId, chatId)
 		if err != nil {
-			wss.responseWrite(crypto.Nil, 404, err.Error(), sender.userId, sender , chatId ,createAt)
+			wss.responseWrite(uuid.Nil(), 404, err.Error(), sender.userId, sender, chatId, createAt)
 			continue
 		}
 
-		wss.sendReceiver(wsRequest, messageID, sender.userId ,chatId ,createAt)
+		wss.sendReceiver(wsRequest, messageID, sender.userId, chatId, createAt)
 	}
 }
 
-func (wss *HandlerWs) sendReceiver(wsRequest *domain.WsParsedRequest, messageID crypto.UUID, senderID crypto.UUID , chatId crypto.UUID , create_at int64) {
+func (wss *HandlerWs) sendReceiver(wsRequest *domain.WsParsedRequest, messageID uuid.UUID, senderID uuid.UUID, chatId uuid.UUID, create_at int64) {
 	wss.hub.mu.RLock()
 	receiver := wss.hub.clients[wsRequest.Destination]
 	wss.hub.mu.RUnlock()
 	if receiver != nil {
-		wss.responseWrite(messageID, 200, wsRequest.Content, senderID, receiver,chatId,create_at)
+		wss.responseWrite(messageID, 200, wsRequest.Content, senderID, receiver, chatId, create_at)
 	}
 }
 
-func (wss *HandlerWs) sendTypingReceiver(receiverID crypto.UUID, senderID crypto.UUID,chatId crypto.UUID) {
+func (wss *HandlerWs) sendTypingReceiver(receiverID uuid.UUID, senderID uuid.UUID, chatId uuid.UUID) {
 	wss.hub.mu.RLock()
 	receiver := wss.hub.clients[receiverID]
 	wss.hub.mu.RUnlock()
 	if receiver != nil {
-		wss.responseWrite(crypto.Nil, 2, "typing", senderID, receiver , chatId ,0)
+		wss.responseWrite(uuid.Nil(), 2, "typing", senderID, receiver, chatId, 0)
 	}
 }
 
@@ -153,7 +149,7 @@ func (wss *HandlerWs) readInputMessage(ctx context.Context, client *Client) (err
 
 	wsRequestParse, err := wsRequest.ValidRequest()
 	if err != nil {
-		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client, crypto.Nil, 0,)
+		wss.responseWrite(uuid.Nil(), 404, err.Error(), client.userId, client, uuid.Nil(), 0)
 
 		return err, &domain.WsParsedRequest{}
 	}
@@ -161,36 +157,36 @@ func (wss *HandlerWs) readInputMessage(ctx context.Context, client *Client) (err
 	_, err = wss.svcUser.GetByID(ctx, wsRequestParse.Destination)
 
 	if err != nil {
-		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client, crypto.Nil, 0)
+		wss.responseWrite(uuid.Nil(), 404, err.Error(), client.userId, client, uuid.Nil(), 0)
 		return err, &domain.WsParsedRequest{}
 	}
 
-	if client.userId.Value == wsRequestParse.Destination.Value {
-		err := domain.Error{Message: "Error in sender == Destination", Code:domain.ConflictCode}
-		wss.responseWrite(crypto.Nil, 404, err.Error(), client.userId, client, crypto.Nil, 0)
+	if client.userId.String() == wsRequestParse.Destination.String() {
+		err := domain.Error{Message: "Error in sender == Destination", Code: domain.ConflictCode}
+		wss.responseWrite(uuid.Nil(), 404, err.Error(), client.userId, client, uuid.Nil(), 0)
 		return err, &domain.WsParsedRequest{}
 	}
 
 	return nil, wsRequestParse
 }
 
-func (wss *HandlerWs) responseWrite( id crypto.UUID, codeError int, content string, senderID crypto.UUID, receiver *Client, chatID crypto.UUID, createdAt int64,) {
-	messageOutput := domain.MessageOutput{ ID:id, Code:codeError, Content:content, Sender:senderID, ChatID:chatID, Created_at:createdAt}
+func (wss *HandlerWs) responseWrite(id uuid.UUID, codeError int, content string, senderID uuid.UUID, receiver *Client, chatID uuid.UUID, createdAt int64) {
+	messageOutput := domain.MessageOutput{ID: id, Code: codeError, Content: content, Sender: senderID, ChatID: chatID, Created_at: createdAt}
 	if err := receiver.WriteJSON(&messageOutput); err != nil {
 		wss.DeleteClient(receiver)
 	}
 }
 
-func (wss *HandlerWs) GetRoom(ctx context.Context, userId crypto.UUID, ReceiverID crypto.UUID) (crypto.UUID, error) {
-	userIDs := []crypto.UUID{userId, ReceiverID}
+func (wss *HandlerWs) GetRoom(ctx context.Context, userId uuid.UUID, ReceiverID uuid.UUID) (uuid.UUID, error) {
+	userIDs := []uuid.UUID{userId, ReceiverID}
 	idChat, err := wss.svcChat.CheckRoomChat(ctx, userIDs)
 	if wss.svcChat.IsChatNotFound(err) {
 		idChat, err = wss.svcChat.CreateRoomChat(ctx, userIDs)
 		if err != nil {
-			return crypto.Nil, err
+			return uuid.Nil(), err
 		}
 	} else if err != nil {
-		return crypto.Nil, err
+		return uuid.Nil(), err
 	}
 	return idChat, err
 }
@@ -215,7 +211,7 @@ func (wss *HandlerWs) DeleteClient(client *Client) {
 func (wss *HandlerWs) AddClient(w http.ResponseWriter, r *http.Request) (*Client, error) {
 
 	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
+	userID := userIDAny.(uuid.UUID)
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -234,7 +230,7 @@ func (wss *HandlerWs) AddClient(w http.ResponseWriter, r *http.Request) (*Client
 	wss.hub.mu.Unlock()
 
 	if oldClient != nil {
-		oldClient.WriteJSON(&domain.MessageOutput{ ID:crypto.Nil, Code:1, Content:"Close WebSocket Connection and Disable Chat Page", Sender:oldClient.userId, ChatID:crypto.Nil, Created_at:0})
+		oldClient.WriteJSON(&domain.MessageOutput{ID: uuid.Nil(), Code: 1, Content: "Close WebSocket Connection and Disable Chat Page", Sender: oldClient.userId, ChatID: uuid.Nil(), Created_at: 0})
 		oldClient.Close()
 		wss.seedAllClient(oldClient, false)
 	}
@@ -244,36 +240,32 @@ func (wss *HandlerWs) AddClient(w http.ResponseWriter, r *http.Request) (*Client
 	return newClient, nil
 }
 
-
 func (wss *HandlerWs) seedAllClient(Me *Client, addNewClient bool) {
-    wss.hub.mu.RLock()
-	allListClient := make(map[crypto.UUID]*Client, len(wss.hub.clients))
+	wss.hub.mu.RLock()
+	allListClient := make(map[uuid.UUID]*Client, len(wss.hub.clients))
 
 	for uuid, client := range wss.hub.clients {
-    	allListClient[uuid] = client
+		allListClient[uuid] = client
 	}
 
-
 	wss.hub.mu.RUnlock()
-	
-    allClient := []string{}
 
-    for uuid, client := range allListClient {
-        if Me.userId == uuid {
-            continue
-        }
+	allClient := []string{}
 
-        if addNewClient {
-            allClient = append(allClient, uuid.Value.String())
-            wss.responseWrite( crypto.Nil, 3, "add client "+Me.userId.Value.String(), Me.userId, client, crypto.Nil, 0, )
-        } else {
-            wss.responseWrite(crypto.Nil, 4, "closed webSocket client "+Me.userId.Value.String(), Me.userId, client, crypto.Nil, 0,
-            )
-        }
-    }
+	for id, client := range allListClient {
+		if Me.userId == id {
+			continue
+		}
 
-    if addNewClient {
-        wss.responseWrite(crypto.Nil, 3, "add client "+strings.Join(allClient, " || "), Me.userId, Me, crypto.Nil, 0,
-        )
-    }
+		if addNewClient {
+			allClient = append(allClient, id.String())
+			wss.responseWrite(uuid.Nil(), 3, "add client "+Me.userId.String(), Me.userId, client, uuid.Nil(), 0)
+		} else {
+			wss.responseWrite(uuid.Nil(), 4, "closed webSocket client "+Me.userId.String(), Me.userId, client, uuid.Nil(), 0)
+		}
+	}
+
+	if addNewClient {
+		wss.responseWrite(uuid.Nil(), 3, "add client "+strings.Join(allClient, " || "), Me.userId, Me, uuid.Nil(), 0)
+	}
 }

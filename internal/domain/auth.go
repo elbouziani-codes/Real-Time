@@ -1,8 +1,8 @@
 package domain
 
 import (
-	"realTime/crypto"
 	"regexp"
+	"uuid"
 )
 
 const (
@@ -16,8 +16,8 @@ type Credentials struct {
 }
 
 type Session struct {
-	ID        crypto.UUID
-	UserID    crypto.UUID
+	ID        uuid.UUID
+	UserID    uuid.UUID
 	CreatedAt int64
 	ExpireAt  int64
 }

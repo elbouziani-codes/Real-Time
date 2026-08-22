@@ -17,7 +17,7 @@ func NewCategoryRepo(db DBTX) *categoryRepo {
 func scanCategory(row scanner) (*domain.Category, error) {
 	category := domain.Category{}
 	err := row.Scan(
-		&category.ID.Value,
+		&category.ID,
 		&category.Title,
 		&category.Icon,
 		&category.CreatedAt)

@@ -5,14 +5,16 @@ import ChatMain from './ChatMain.js';
 export default function ChatPage({
     conversations = [],
     messages = [],
-    suggestions = [],
+    activeId = null,
 } = {}) {
-    const active = conversations[0] || {};
+    const active = conversations.find(
+        (conversation) => String(conversation.id) === String(activeId),
+    ) || conversations[0] || {};
 
     return `
         <section class="chat-page">
             <div class="chat-container">
-                ${ChatSidebar({ conversations, activeId: active.id, suggestions })}
+                ${ChatSidebar({ conversations, activeId: active.id ?? activeId })}
                 ${ChatMain({ active, messages })}
             </div>
         </section>

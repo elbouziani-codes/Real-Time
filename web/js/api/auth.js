@@ -32,7 +32,6 @@ export async function fetchLogin(credentials) {
         } catch {
             data = text;
         }
-
         return { ok: response.ok, body: data, code: response.status };
     } catch (error) {
         console.error("login request failed:", error);

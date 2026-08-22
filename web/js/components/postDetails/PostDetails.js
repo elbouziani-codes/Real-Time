@@ -65,7 +65,7 @@ export default function PostDetails(post = {}) {
             ${renderBody(Content)}
         </div>
 
-        <div class="post-details__actions" data-post-id="${ID.Value ?? ''}">
+        <div class="post-details__actions" data-post-id="${ID ?? ''}">
             <button class="post-details__action-btn post-details__action-btn--like${likeClass}">
                 <span>👍</span>
                 <span class="post-details__action-count">${Likes}</span>

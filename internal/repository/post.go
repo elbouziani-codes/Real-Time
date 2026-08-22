@@ -7,9 +7,9 @@ import (
 	"errors"
 	"strings"
 
-	"realTime/crypto"
 	"realTime/internal/domain"
 	"realTime/internal/repository/sqlite"
+	"uuid"
 )
 
 type postRepo struct {
@@ -58,19 +58,19 @@ const getPostCursorQuery = `SELECT created_at FROM posts WHERE id = ?`
 // belongs to it because created_at alone does not identify a single row.
 type postCursorKey struct {
 	createdAt int
-	id        crypto.UUID
+	id        uuid.UUID
 }
 
 // resolvePostCursor reads the sort position of the cursor post. A cursor naming
 // a post that has since been deleted is reported rather than silently returning
 // an empty page, which a client could not tell apart from the end of the feed.
-func (p *postRepo) resolvePostCursor(ctx context.Context, cursor crypto.UUID) (*postCursorKey, error) {
-	if cursor == crypto.Nil {
+func (p *postRepo) resolvePostCursor(ctx context.Context, cursor uuid.UUID) (*postCursorKey, error) {
+	if cursor == uuid.Nil() {
 		return nil, nil
 	}
 
 	key := postCursorKey{id: cursor}
-	err := p.db.QueryRowContext(ctx, getPostCursorQuery, cursor.Value).Scan(&key.createdAt)
+	err := p.db.QueryRowContext(ctx, getPostCursorQuery, cursor.String()).Scan(&key.createdAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, domain.Error{Message: "unknown cursor", Code: domain.NotFoundCode}
 	}
@@ -94,7 +94,7 @@ func buildPostFilter(filter domain.PostFilter, cursor *postCursorKey) (string, [
 	WHERE PC.post_id = P.id AND PC.category_id IN (`+placeholders+`)
 )`)
 		for _, categoryID := range filter.Categories {
-			args = append(args, categoryID.Value)
+			args = append(args, categoryID.String())
 		}
 	}
 
@@ -109,7 +109,7 @@ func buildPostFilter(filter domain.PostFilter, cursor *postCursorKey) (string, [
 	// follow the category ones in the argument list.
 	if cursor != nil {
 		conditions = append(conditions, "(P.created_at < ? OR (P.created_at = ? AND P.id < ?))")
-		args = append(args, cursor.createdAt, cursor.createdAt, cursor.id.Value)
+		args = append(args, cursor.createdAt, cursor.createdAt, cursor.id.String())
 	}
 
 	if len(conditions) == 0 {
@@ -119,7 +119,7 @@ func buildPostFilter(filter domain.PostFilter, cursor *postCursorKey) (string, [
 }
 
 // categoryRow mirrors the json_object keys above. Decoding through it keeps the
-// SQL free of any knowledge of how crypto.UUID is laid out in Go.
+// SQL free of any knowledge of how uuid.UUID is laid out in Go.
 type categoryRow struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
@@ -134,7 +134,7 @@ func decodeCategories(raw string) ([]domain.Category, error) {
 	}
 	categories := make([]domain.Category, 0, len(rows))
 	for _, row := range rows {
-		id, err := crypto.ParseUUID(row.ID)
+		id, err := uuid.Parse(row.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -152,20 +152,20 @@ func scanPost(row scanner) (*domain.PostInfo, error) {
 	post := domain.PostInfo{}
 	var rawCategories string
 	err := row.Scan(
-		&post.ID.Value,
+		&post.ID,
 		&post.Title,
 		&post.Content,
 		&post.Likes,
 		&post.DisLikes,
 		&post.CreatedAt,
-		&post.Author.ID.Value,
+		&post.Author.ID,
 		&post.Author.NickName,
 		&post.Author.FirstName,
 		&post.Author.LastName,
 		&post.Author.Gender,
 		&post.Author.Age,
 		&post.Author.CreatedAt,
-		&post.LikeInfo.ID.Value,
+		&post.LikeInfo.ID,
 		&post.LikeInfo.IsLike,
 		&rawCategories)
 	if err != nil {
@@ -192,12 +192,12 @@ func (p *postRepo) SavePost(ctx context.Context, post domain.Post) error {
 	}
 	defer tx.Rollback()
 
-	if _, err := tx.ExecContext(ctx, savePostQuery, post.ID.Value, post.AuthorID.Value, post.Title, post.Content); err != nil {
+	if _, err := tx.ExecContext(ctx, savePostQuery, post.ID.String(), post.AuthorID.String(), post.Title, post.Content); err != nil {
 		return sqlite.TranslateError(err)
 	}
 
 	for _, categoryID := range post.Categories {
-		if _, err := tx.ExecContext(ctx, savePostCategoryQuery, post.ID.Value, categoryID.Value); err != nil {
+		if _, err := tx.ExecContext(ctx, savePostCategoryQuery, post.ID.String(), categoryID.String()); err != nil {
 			return sqlite.TranslateError(err)
 		}
 	}
@@ -218,16 +218,12 @@ ON P.id = R.parent_id AND R.author_id = ?
 WHERE P.id = ?
 `
 
-func (p *postRepo) GetPost(ctx context.Context, userID, postID crypto.UUID) (*domain.PostInfo, error) {
-	row := p.db.QueryRowContext(ctx, getPostQuery, userID.Value, postID.Value)
+func (p *postRepo) GetPost(ctx context.Context, userID, postID uuid.UUID) (*domain.PostInfo, error) {
+	row := p.db.QueryRowContext(ctx, getPostQuery, userID.String(), postID.String())
 	return scanPost(row)
 }
 
-//const getPostsQuery = `SELECT id, author_id, title, content, created_at, updated_at FROM posts
-//						ORDER BY created_at DESC
-//						LIMIT ? OFFSET ?; `
-
-func (p *postRepo) GetPosts(ctx context.Context, userID crypto.UUID, filter domain.PostFilter, limit int, cursor crypto.UUID) ([]*domain.PostInfo, error) {
+func (p *postRepo) GetPosts(ctx context.Context, userID uuid.UUID, filter domain.PostFilter, limit int, cursor uuid.UUID) ([]*domain.PostInfo, error) {
 	cursorKey, err := p.resolvePostCursor(ctx, cursor)
 	if err != nil {
 		return nil, err
@@ -239,7 +235,7 @@ func (p *postRepo) GetPosts(ctx context.Context, userID crypto.UUID, filter doma
 	query := getPostsQueryHead + where + getPostsQueryTail
 
 	args := make([]any, 0, len(filterArgs)+2)
-	args = append(args, userID.Value)
+	args = append(args, userID.String())
 	args = append(args, filterArgs...)
 	args = append(args, limit)
 

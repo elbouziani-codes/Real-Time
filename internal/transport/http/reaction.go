@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"realTime/crypto"
 	"realTime/internal/domain"
+	"uuid"
 )
 
 type reactionService interface {
 	CreateReaction(context.Context, *domain.Reaction) error
-	GetReaction(context.Context, crypto.UUID) (*domain.ReactionInfo, error)
-	GetReactions(context.Context, crypto.UUID) ([]*domain.ReactionInfo, error)
+	GetReaction(context.Context, uuid.UUID) (*domain.ReactionInfo, error)
+	GetReactions(context.Context, uuid.UUID) ([]*domain.ReactionInfo, error)
 	PatchReaction(context.Context, *domain.ReactionInfo, bool) error
 }
 
@@ -26,7 +26,7 @@ func NewReactionHandler(reactionSvc reactionService, postSvc postService) *React
 
 func (c *ReactionHandler) React(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
+	userID := userIDAny.(uuid.UUID)
 	request := domain.ReactionRequest{}
 	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -54,7 +54,7 @@ func (c *ReactionHandler) React(w http.ResponseWriter, r *http.Request) {
 
 func (c *ReactionHandler) GetReactions(w http.ResponseWriter, r *http.Request) {
 
-	id, err := crypto.ParseUUID(r.PathValue("parent_id"))
+	id, err := uuid.Parse(r.PathValue("parent_id"))
 	if err != nil {
 		Error(domain.Error{Message: "invalid id", Code: domain.BadFormatCode}, w)
 		return
@@ -75,8 +75,8 @@ func (c *ReactionHandler) GetReactions(w http.ResponseWriter, r *http.Request) {
 
 func (c *ReactionHandler) UpdateReaction(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
-	reactionID, err := crypto.ParseUUID(r.PathValue("id"))
+	userID := userIDAny.(uuid.UUID)
+	reactionID, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		Error(domain.Error{Message: "invalid reaction id", Code: domain.BadFormatCode}, w)
 		return
@@ -95,7 +95,7 @@ func (c *ReactionHandler) UpdateReaction(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if react.Author.ID.Value != userID.Value {
+	if react.Author.ID.String() != userID.String() {
 		Error(domain.Error{Message: "unauthorized action", Code: domain.UnauthorizedCode}, w)
 		return
 	}

@@ -4,7 +4,7 @@ import { escapeHTML } from "./../../utils/helpers.js";
 
 export function reactionState(post = {}) {
     const { LikeInfo = {} } = post;
-    const reacted = Boolean(LikeInfo.ID?.Value) && LikeInfo.ID.Value != ZERO_UUID;
+    const reacted = Boolean(LikeInfo.ID) && LikeInfo.ID != ZERO_UUID;
     return {
         liked: reacted && LikeInfo.IsLike === true,
         disliked: reacted && LikeInfo.IsLike === false,
@@ -45,7 +45,7 @@ export default function PostCard(post = {}) {
     const previewContent = truncateText(Content, 80);
 
     return `
-        <article class="post-card" data-post-id="${ID.Value ?? ''}">
+        <article class="post-card" data-post-id="${ID ?? ''}">
             <div class="post-header">
                 <div>
                     <h3>${escapeHTML(previewTitle)}</h3>

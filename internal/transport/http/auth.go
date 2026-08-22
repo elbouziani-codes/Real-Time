@@ -5,20 +5,21 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"realTime/crypto"
 	"realTime/internal/domain"
+	"uuid"
 )
 
 type AuthService interface {
-	Login(context.Context, domain.Credentials, int) (crypto.UUID, error)
-	CreateSession(context.Context, crypto.UUID) (crypto.UUID, error)
-	Logout(context.Context, crypto.UUID) error
+	Login(context.Context, domain.Credentials, int) (uuid.UUID, error)
+	CreateSession(context.Context, uuid.UUID) (uuid.UUID, error)
+	Logout(context.Context, uuid.UUID) error
 }
 
 type UserService interface {
 	CreateUser(context.Context, *domain.User) error
-	GetUser(context.Context, crypto.UUID, crypto.UUID) (*domain.UserProfile, error)
-	GetUsers(context.Context, crypto.UUID, int, crypto.UUID) ([]domain.UserContact, error)
+	GetByID(context.Context, uuid.UUID) (domain.User, error)
+	GetUser(context.Context, uuid.UUID, uuid.UUID) (*domain.UserProfile, error)
+	GetUsers(context.Context, uuid.UUID, int, uuid.UUID) ([]domain.UserContact, error)
 }
 
 type AuthHandler struct {
@@ -33,7 +34,7 @@ func NewAuthHandler(authSvc AuthService, userSvc UserService) *AuthHandler {
 
 func (a *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
+	userID := userIDAny.(uuid.UUID)
 
 	user, err := a.userSvc.GetUser(r.Context(), userID, userID)
 	if err != nil {
@@ -50,9 +51,37 @@ func (a *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 
 // GetUsers lists the other users, ordered so the person this user talked with
 // most recently comes first and people they have never messaged come last.
+// GetUser serves one profile by id. It answers the WebSocket presence flow:
+// when a user nobody has paged in yet comes online, the sidebar needs their
+// row. The password never leaves the repository; UserProfile omits it.
+func (a *AuthHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+	userID, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		Error(domain.Error{Message: "invalid id", Code: domain.BadFormatCode}, w)
+		return
+	}
+
+	user, err := a.userSvc.GetByID(r.Context(), userID)
+	if err != nil {
+		Error(err, w)
+		return
+	}
+
+	json.NewEncoder(w).Encode(domain.UserProfile{
+		ID:        user.ID,
+		Email:     user.Email,
+		NickName:  user.NickName,
+		LastName:  user.LastName,
+		FirstName: user.FirstName,
+		Gender:    user.Gender,
+		Age:       user.Age,
+		CreatedAt: user.CreatedAt,
+	})
+}
+
 func (a *AuthHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
+	userID := userIDAny.(uuid.UUID)
 
 	query := r.URL.Query()
 	limit, cursor, err := domain.ValidateUserListPaging(query.Get("limit"), query.Get("cursor"))
@@ -110,7 +139,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 func (a *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
+	userID := userIDAny.(uuid.UUID)
 
 	if err := a.authSvc.Logout(r.Context(), userID); err != nil {
 		Error(err, w)
@@ -152,10 +181,10 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // I may need to pass pointer
-func (a *AuthHandler) setCookie(w http.ResponseWriter, sessionID crypto.UUID) {
+func (a *AuthHandler) setCookie(w http.ResponseWriter, sessionID uuid.UUID) {
 	cookie := &http.Cookie{
 		Name:     "session-id",
-		Value:    sessionID.Value.String(),
+		Value:    sessionID.String(),
 		Path:     "/",
 		MaxAge:   3600 * 24,
 		HttpOnly: true,

@@ -7,8 +7,8 @@ import (
 	"errors"
 	"net/http"
 
-	"realTime/crypto"
 	"realTime/internal/domain"
+	"uuid"
 )
 
 type HandlerChat struct {
@@ -17,8 +17,8 @@ type HandlerChat struct {
 }
 
 type ChatService interface {
-	CheckRoomChat(context.Context, []crypto.UUID) (crypto.UUID, error)
-	GetMessages(context.Context, crypto.UUID, int) ([]domain.MessageOutput, error)
+	CheckRoomChat(context.Context, []uuid.UUID) (uuid.UUID, error)
+	GetMessages(context.Context, uuid.UUID, int) ([]domain.MessageOutput, error)
 }
 
 func NewHandleChat(chatService ChatService, userService UserService) *HandlerChat {
@@ -27,7 +27,7 @@ func NewHandleChat(chatService ChatService, userService UserService) *HandlerCha
 func (chat *HandlerChat) Chat(w http.ResponseWriter, r *http.Request) {
 
 	userIDAny := r.Context().Value("user_id")
-	userID, _ := userIDAny.(crypto.UUID)
+	userID, _ := userIDAny.(uuid.UUID)
 
 	var chatRoomInput domain.ChatRoomInput
 	decoder := json.NewDecoder(r.Body)
@@ -35,7 +35,7 @@ func (chat *HandlerChat) Chat(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 404)
 		return
 	}
-	friendID, err := crypto.ParseUUID(chatRoomInput.Friend)
+	friendID, err := uuid.Parse(chatRoomInput.Friend)
 	if err != nil {
 		http.Error(w, "invalid friend id", http.StatusBadRequest)
 		return
@@ -45,7 +45,7 @@ func (chat *HandlerChat) Chat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chatID, err := chat.ChatService.CheckRoomChat(r.Context(), []crypto.UUID{userID, friendID})
+	chatID, err := chat.ChatService.CheckRoomChat(r.Context(), []uuid.UUID{userID, friendID})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			json.NewEncoder(w).Encode(&domain.ChatRoomOutput{Messages: []domain.MessageOutput{}})
@@ -59,7 +59,7 @@ func (chat *HandlerChat) Chat(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	Response := domain.ChatRoomOutput{ID: chatID.Value.String(), Messages: messages}
+	Response := domain.ChatRoomOutput{ID: chatID.String(), Messages: messages}
 	err = json.NewEncoder(w).Encode(&Response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

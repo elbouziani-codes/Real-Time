@@ -2,24 +2,23 @@ package domain
 
 import (
 	"fmt"
-	"realTime/crypto"
 	"strings"
+	"uuid"
 )
 
 const MaxPostCategories = 5
 
 type Post struct {
-	ID         crypto.UUID
-	AuthorID   crypto.UUID
-	Categories []crypto.UUID
+	ID         uuid.UUID
+	AuthorID   uuid.UUID
+	Categories []uuid.UUID
 	Title      string
 	Content    string
 	CreatedAt  int
-	UpdatedAt  int
 }
 
 type PostInfo struct {
-	ID         crypto.UUID
+	ID         uuid.UUID
 	Author     UserProfile
 	Title      string
 	Content    string
@@ -28,11 +27,10 @@ type PostInfo struct {
 	DisLikes   int
 	LikeInfo   LikeInfo
 	CreatedAt  int
-	UpdatedAt  int
 }
 
 type LikeInfo struct {
-	ID     crypto.UUID
+	ID     uuid.UUID
 	IsLike bool
 }
 
@@ -54,10 +52,10 @@ func ValidatePostRequest(request CreatePostRequest) (Post, error) {
 		return post, Error{Message: "missing post content", Code: BadFormatCode}
 	}
 
-	if len(request.Title) < 10 || len(request.Title) > 100 {
+	if len(request.Title) < 1 || len(request.Title) > 25 {
 		return post, Error{Message: "post title length must be between 10 and 100 chars", Code: BadFormatCode}
 	}
-	if len(request.Content) < 10 || len(request.Content) > 4096 {
+	if len(request.Content) < 1 || len(request.Content) > 4096 {
 		return post, Error{Message: "post content length must be between 10 and 4096 chars", Code: BadFormatCode}
 	}
 	if len(request.Categories) == 0 {
@@ -69,9 +67,9 @@ func ValidatePostRequest(request CreatePostRequest) (Post, error) {
 
 	// Reject duplicates here so a repeated id is a 400 rather than a primary
 	// key violation surfacing from post_categories.
-	seen := make(map[crypto.UUID]struct{}, len(request.Categories))
+	seen := make(map[uuid.UUID]struct{}, len(request.Categories))
 	for _, rawID := range request.Categories {
-		categoryID, err := crypto.ParseUUID(rawID)
+		categoryID, err := uuid.Parse(rawID)
 		if err != nil {
 			return post, Error{Message: "invalid post category", Code: BadFormatCode}
 		}
@@ -94,7 +92,7 @@ const MaxFilterCategories = 20
 // PostFilter narrows a post listing. A zero value means "no filtering", so the
 // unfiltered listing keeps working unchanged.
 type PostFilter struct {
-	Categories []crypto.UUID
+	Categories []uuid.UUID
 	LikedOnly  bool
 }
 
@@ -118,9 +116,9 @@ func ValidatePostFilter(rawCategories []string, rawLiked string) (PostFilter, er
 
 	// Duplicates would only repeat a placeholder without changing the result,
 	// so drop them rather than reject the request.
-	seen := make(map[crypto.UUID]struct{}, len(rawCategories))
+	seen := make(map[uuid.UUID]struct{}, len(rawCategories))
 	for _, rawID := range rawCategories {
-		categoryID, err := crypto.ParseUUID(rawID)
+		categoryID, err := uuid.Parse(rawID)
 		if err != nil {
 			return PostFilter{}, Error{Message: "invalid category filter", Code: BadFormatCode}
 		}
@@ -138,15 +136,15 @@ func ValidatePostFilter(rawCategories []string, rawLiked string) (PostFilter, er
 // Paging on that post's sort position rather than a row count keeps a page from
 // skipping or repeating posts when others are published mid-scroll. An empty
 // value asks for the first page, so an opening request carries no cursor.
-func ValidatePostCursor(rawCursor string) (crypto.UUID, error) {
+func ValidatePostCursor(rawCursor string) (uuid.UUID, error) {
 	rawCursor = strings.TrimSpace(rawCursor)
 	if rawCursor == "" {
-		return crypto.Nil, nil
+		return uuid.Nil(), nil
 	}
 
-	cursor, err := crypto.ParseUUID(rawCursor)
+	cursor, err := uuid.Parse(rawCursor)
 	if err != nil {
-		return crypto.Nil, Error{Message: "invalid cursor", Code: BadFormatCode}
+		return uuid.Nil(), Error{Message: "invalid cursor", Code: BadFormatCode}
 	}
 	return cursor, nil
 }

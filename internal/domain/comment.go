@@ -1,27 +1,26 @@
 package domain
 
 import (
-	"realTime/crypto"
 	"strings"
+	"uuid"
 )
 
 type Comment struct {
-	ID       crypto.UUID
-	ParentID crypto.UUID
-	AuthorID crypto.UUID
+	ID       uuid.UUID
+	ParentID uuid.UUID
+	AuthorID uuid.UUID
 	Content  string
 }
 
 type CommentInfo struct {
-	ID        crypto.UUID
-	ParentID  crypto.UUID
+	ID        uuid.UUID
+	ParentID  uuid.UUID
 	Author    UserProfile
 	Likes     int
 	DisLike   int
 	Content   string
 	LikeInfo  LikeInfo
 	CreatedAt int
-	UpdatedAt int
 }
 
 type CreateCommentRequest struct {
@@ -44,7 +43,7 @@ func NewCommentRequest(request CreateCommentRequest) (Comment, error) {
 		return comment, Error{Message: "comment content length must be between 1 and 4096 chars", Code: BadFormatCode}
 	}
 	var err error
-	comment.ParentID, err = crypto.ParseUUID(request.ParentID)
+	comment.ParentID, err = uuid.Parse(request.ParentID)
 	if err != nil {
 		return comment, Error{Message: "invalid parent_id", Code: BadFormatCode}
 	}

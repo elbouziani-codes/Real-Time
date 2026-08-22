@@ -13,7 +13,7 @@ export async function sendComments(postID) {
         navigate("/login");
         return {error: "You need to sign in to read the comments."};
     }
-    console.log(response.body);
+    (response.body);
     return {error: "Could not load the comments."};
 }
 
@@ -30,6 +30,6 @@ export async function createComment(postID, content) {
     if (response.code == 400) {
         return {error: typeof response.body == "string" && response.body ? response.body.trim() : "This comment is not valid."};
     }
-    console.log(response.body);
+    (response.body);
     return {error: "Could not post this comment. Please try again."};
 }

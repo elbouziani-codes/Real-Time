@@ -1,4 +1,3 @@
-import { DEFAULT_CATEGORIES } from "../../services/categories.js";
 const CHECK_SVG = `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="20 6 9 17 4 12"></polyline>
@@ -52,7 +51,7 @@ export function CategoryItem(category = {}) {
   const { title = "", currentColor = "", icon = "", id = "a" } = category;
   return `
         <label class="category-item ${currentColor}" >
-            <input type="checkbox" class="category-item__checkbox" id="${id.Value}">
+            <input type="checkbox" class="category-item__checkbox" id="${id}">
             <span class="category-item__check">${CHECK_SVG}</span>
             <span class="category-item__icon">${icon}</span>
             <span class="category-item__text">${title}</span>

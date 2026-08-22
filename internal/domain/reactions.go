@@ -1,23 +1,22 @@
 package domain
 
 import (
-	"realTime/crypto"
+	"uuid"
 )
 
 type Reaction struct {
-	ID       crypto.UUID
-	ParentID crypto.UUID
-	AuthorID crypto.UUID
+	ID       uuid.UUID
+	ParentID uuid.UUID
+	AuthorID uuid.UUID
 	IsLike   bool
 }
 
 type ReactionInfo struct {
-	ID        crypto.UUID
-	ParentID  crypto.UUID
+	ID        uuid.UUID
+	ParentID  uuid.UUID
 	Author    UserProfile
 	IsLike    bool
 	CreatedAt int
-	UpdatedAt int
 }
 
 type ReactionRequest struct {
@@ -33,7 +32,7 @@ func NewReactionRequest(request ReactionRequest) (Reaction, error) {
 	}
 
 	var err error
-	react.ParentID, err = crypto.ParseUUID(request.ParentID)
+	react.ParentID, err = uuid.Parse(request.ParentID)
 	if err != nil {
 		return react, Error{Message: "invalid parent_id", Code: BadFormatCode}
 	}

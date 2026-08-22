@@ -3,7 +3,7 @@ package domain
 import (
 	"strings"
 
-	"realTime/crypto"
+	"uuid"
 )
 
 type WsRequest struct {
@@ -17,11 +17,11 @@ type WsRequest struct {
 
 type WsParsedRequest struct {
 	// message or typing...
-	RequestType string      `json:"request_type"`
-	Mod         string      `json:"mod"`
-	//ID          crypto.UUID `json:"id"`
-	Content     string      `json:"content"`
-	Destination crypto.UUID `json:"destination"`
+	RequestType string `json:"request_type"`
+	Mod         string `json:"mod"`
+	//ID          uuid.UUID `json:"id"`
+	Content     string    `json:"content"`
+	Destination uuid.UUID `json:"destination"`
 }
 
 func (wsR *WsRequest) ValidRequest() (*WsParsedRequest, error) {
@@ -40,8 +40,8 @@ func (wsR *WsRequest) ValidRequest() (*WsParsedRequest, error) {
 			return nil, Error{Message: "error in ID Message", Code: BadFormatCode}
 		}
 	}
-	Destination, err := crypto.ParseUUID(wsR.Destination)
-	if err != nil{
+	Destination, err := uuid.Parse(wsR.Destination)
+	if err != nil {
 		return nil, Error{Message: "error in ID Message", Code: BadFormatCode}
 	}
 	var parsed WsParsedRequest

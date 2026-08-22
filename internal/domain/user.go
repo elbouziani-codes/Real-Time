@@ -1,14 +1,15 @@
 package domain
 
 import (
-	"realTime/crypto"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+	"uuid"
 )
 
 type User struct {
-	ID        crypto.UUID
+	ID        uuid.UUID
 	NickName  string
 	LastName  string
 	FirstName string
@@ -17,12 +18,11 @@ type User struct {
 	Gender    string
 	Age       int
 	CreatedAt int
-	UpdatedAt int
 }
 
 type UserProfile struct {
-	ID        crypto.UUID
-	Email  	string
+	ID        uuid.UUID
+	Email     string
 	NickName  string
 	LastName  string
 	FirstName string
@@ -50,7 +50,7 @@ const (
 // ValidateUserListPaging clamps the paging parameters. An unparsable or negative
 // limit falls back to the default instead of erroring, so a hand-edited link
 // still renders a list rather than a 400.
-func ValidateUserListPaging(rawLimit, rawCursor string) (int, crypto.UUID, error) {
+func ValidateUserListPaging(rawLimit, rawCursor string) (int, uuid.UUID, error) {
 	limit := DefaultUserListLimit
 	if parsed, err := strconv.Atoi(strings.TrimSpace(rawLimit)); err == nil && parsed > 0 {
 		limit = parsed
@@ -61,7 +61,7 @@ func ValidateUserListPaging(rawLimit, rawCursor string) (int, crypto.UUID, error
 
 	cursor, err := ValidateUserCursor(rawCursor)
 	if err != nil {
-		return 0, crypto.Nil, err
+		return 0, uuid.Nil(), err
 	}
 
 	return limit, cursor, nil
@@ -71,18 +71,19 @@ func ValidateUserListPaging(rawLimit, rawCursor string) (int, crypto.UUID, error
 // Paging on that user's sort position rather than a row count keeps a page from
 // skipping or repeating users when the ordering shifts mid-scroll. An empty
 // value asks for the first page, so an opening request carries no cursor.
-func ValidateUserCursor(rawCursor string) (crypto.UUID, error) {
+func ValidateUserCursor(rawCursor string) (uuid.UUID, error) {
 	rawCursor = strings.TrimSpace(rawCursor)
 	if rawCursor == "" {
-		return crypto.Nil, nil
+		return uuid.Nil(), nil
 	}
 
-	cursor, err := crypto.ParseUUID(rawCursor)
+	cursor, err := uuid.Parse(rawCursor)
 	if err != nil {
-		return crypto.Nil, Error{Message: "invalid cursor", Code: BadFormatCode}
+		return uuid.Nil(), Error{Message: "invalid cursor", Code: BadFormatCode}
 	}
 	return cursor, nil
 }
+
 type RegisterRequest struct {
 	NickName  string `json:"nick_name"`
 	LastName  string `json:"last_name"`
@@ -108,14 +109,13 @@ func ValueidateUserInfo(registerRequest RegisterRequest) (User, error) {
 		return user, Error{Message: "password length must be between 8 and 20", Code: BadFormatCode}
 	}
 
+	if !emailRegex.MatchString(user.Email) {
+		fmt.Println(user.Email)
+		return user, Error{Message: "email invalid format", Code: BadFormatCode}
+	}
 	if len(user.Email) < 6 || len(user.Email) > 75 {
 		return user, Error{Message: "email length must be between 6 and 75", Code: BadFormatCode} // 400
 	}
-
-	if !emailRegex.MatchString(user.Email) {
-		return user, Error{Message: "email invalid format", Code: BadFormatCode}
-	}
-
 	if !usernameRegex.MatchString(user.NickName) {
 		return user, Error{Message: "nickname invalid format", Code: BadFormatCode}
 	}

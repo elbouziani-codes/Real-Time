@@ -77,7 +77,7 @@ async function commentListener(e) {
     const main = form.closest(".post-details__main");
     const input = form.querySelector(".post-details__comment-input");
     const submit = form.querySelector(".post-details__comment-submit");
-    const id = CURRENT_POST?.ID?.Value;
+    const id = CURRENT_POST?.ID;
     const content = input.value.trim();
 
     if (!id) return;

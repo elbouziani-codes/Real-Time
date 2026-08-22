@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"errors"
+	"time"
+
 	"realTime/crypto"
 	"realTime/internal/domain"
-	"time"
+	"uuid"
 )
 
 type AuthService struct {
@@ -14,9 +16,9 @@ type AuthService struct {
 }
 
 type authRepository interface {
-	DeleteSession(context.Context, crypto.UUID) error
-	SaveSession(context.Context, crypto.UUID, crypto.UUID) error
-	GetByID(context.Context, crypto.UUID) (domain.Session, error)
+	DeleteSession(context.Context, uuid.UUID) error
+	SaveSession(context.Context, uuid.UUID, uuid.UUID) error
+	GetByID(context.Context, uuid.UUID) (domain.Session, error)
 }
 
 type userGetterRepo interface {
@@ -28,21 +30,18 @@ func NewAuthService(authRepo authRepository, userGetter userGetterRepo) *AuthSer
 	return &AuthService{authRepo: authRepo, userGetter: userGetter}
 }
 
-func (a *AuthService) CreateSession(ctx context.Context, userID crypto.UUID) (crypto.UUID, error) {
-	id, err := crypto.GenerateUUID()
-	if err != nil {
-		return crypto.Nil, err
-	}
+func (a *AuthService) CreateSession(ctx context.Context, userID uuid.UUID) (uuid.UUID, error) {
+	id := uuid.NewV4()
 
-	err = a.authRepo.SaveSession(ctx, id, userID)
+	err := a.authRepo.SaveSession(ctx, id, userID)
 	if err != nil {
-		return crypto.Nil, err
+		return uuid.Nil(), err
 	}
 
 	return id, nil
 }
 
-func (a *AuthService) ValueidateSession(ctx context.Context, sessionID crypto.UUID) (domain.Session, error) {
+func (a *AuthService) ValueidateSession(ctx context.Context, sessionID uuid.UUID) (domain.Session, error) {
 	session, err := a.authRepo.GetByID(ctx, sessionID)
 	if err != nil {
 		return domain.Session{}, err
@@ -57,7 +56,7 @@ func (a *AuthService) ValueidateSession(ctx context.Context, sessionID crypto.UU
 	return session, nil
 }
 
-func (a *AuthService) Logout(ctx context.Context, userID crypto.UUID) error {
+func (a *AuthService) Logout(ctx context.Context, userID uuid.UUID) error {
 	err := a.authRepo.DeleteSession(ctx, userID)
 	if err != nil {
 		var buckErr domain.Error
@@ -71,14 +70,14 @@ func (a *AuthService) Logout(ctx context.Context, userID crypto.UUID) error {
 	return nil
 }
 
-func (a *AuthService) Login(ctx context.Context, creds domain.Credentials, idType int) (crypto.UUID, error) {
+func (a *AuthService) Login(ctx context.Context, creds domain.Credentials, idType int) (uuid.UUID, error) {
 	// phas_1 finding target user
-	var userID crypto.UUID
+	var userID uuid.UUID
 	var hashedPassword string
 	if idType == domain.EmailType {
 		user, err := a.userGetter.GetByEmail(ctx, creds.Identifier)
 		if err != nil {
-			return crypto.Nil, domain.Error{Message: "invalid credentials", Code: domain.UnauthorizedCode}
+			return uuid.Nil(), domain.Error{Message: "invalid credentials", Code: domain.UnauthorizedCode}
 
 		}
 		userID = user.ID
@@ -86,7 +85,7 @@ func (a *AuthService) Login(ctx context.Context, creds domain.Credentials, idTyp
 	} else {
 		user, err := a.userGetter.GetByNickName(ctx, creds.Identifier)
 		if err != nil {
-			return crypto.Nil, domain.Error{Message: "invalid credentials", Code: domain.UnauthorizedCode}
+			return uuid.Nil(), domain.Error{Message: "invalid credentials", Code: domain.UnauthorizedCode}
 
 		}
 		userID = user.ID
@@ -95,19 +94,19 @@ func (a *AuthService) Login(ctx context.Context, creds domain.Credentials, idTyp
 	// phase_2 matching password
 	err := crypto.CompareHashWithPassword(hashedPassword, creds.Password)
 	if err != nil {
-		return crypto.Nil, domain.Error{Message: "invalid credentials", Code: domain.UnauthorizedCode}
+		return uuid.Nil(), domain.Error{Message: "invalid credentials", Code: domain.UnauthorizedCode}
 	}
 
 	// clearing old session
 	err = a.Logout(ctx, userID)
 	if err != nil {
-		return crypto.Nil, err
+		return uuid.Nil(), err
 	}
 
 	//spawnning new one
 	sessionID, err := a.CreateSession(ctx, userID)
 	if err != nil {
-		return crypto.Nil, err
+		return uuid.Nil(), err
 	}
 	return sessionID, nil
 }

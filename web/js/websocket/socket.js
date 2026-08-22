@@ -1,7 +1,3 @@
-// Singleton WebSocket connection to the backend's /api/ws endpoint (the same
-// origin the app is served from, so the session cookie travels with the
-// handshake). One socket is shared by every feature and reconnects with a short
-// delay when it drops.
 let socket = null;
 let reconnectTimer = null;
 let shouldReconnect = true;
@@ -19,7 +15,7 @@ export function connectSocket() {
     socket = new WebSocket(wsUrl());
 
     socket.onopen = () => {
-        console.log("WebSocket connected");
+        ("WebSocket connected");
     };
 
     socket.onmessage = (event) => {
@@ -38,10 +34,10 @@ export function connectSocket() {
     };
 
     socket.onclose = () => {
-        console.log("WebSocket closed");
+        ("WebSocket closed");
         socket = null;
         if (shouldReconnect) {
-            console.log("WebSocket reconnecting in 3s...");
+            ("WebSocket reconnecting in 3s...");
             reconnectTimer = setTimeout(connectSocket, 3000);
         }
     };

@@ -14,7 +14,7 @@ export async function fetchComments(postID) {
         }
         return {code: response.status, body: await response.json()}
     }catch(error){
-        console.log(error)
+        (error)
         return {code:500 , body:"Error in request"}
     }
 }
@@ -34,7 +34,7 @@ export async function fetchCreateComment(postID, content) {
         }
         return {code: response.status, body: await response.json()}
     }catch(error){
-        console.log(error)
+        (error)
         return {code:500 , body:"Error in request"}
     }
 }

@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"realTime/crypto"
 	"realTime/internal/domain"
+	"uuid"
 )
 
 type postService interface {
 	CreatePost(context.Context, *domain.Post) error
-	GetPost(context.Context, crypto.UUID, crypto.UUID) (*domain.PostInfo, error)
-	GetPosts(context.Context, crypto.UUID, domain.PostFilter, int, crypto.UUID) ([]*domain.PostInfo, error)
+	GetPost(context.Context, uuid.UUID, uuid.UUID) (*domain.PostInfo, error)
+	GetPosts(context.Context, uuid.UUID, domain.PostFilter, int, uuid.UUID) ([]*domain.PostInfo, error)
 }
 
 type PostHandler struct {
@@ -24,7 +24,7 @@ func NewPostHandler(svc postService) *PostHandler {
 
 func (p *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
+	userID := userIDAny.(uuid.UUID)
 	request := domain.CreatePostRequest{}
 	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -53,7 +53,7 @@ func (p *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
+	userID := userIDAny.(uuid.UUID)
 	query := r.URL.Query()
 
 	// Paging is keyed on the last post the client already received:
@@ -87,8 +87,8 @@ func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 
 func (p *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
-	postID, err := crypto.ParseUUID(r.PathValue("id"))
+	userID := userIDAny.(uuid.UUID)
+	postID, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		Error(domain.Error{Message: "invalid post id", Code: domain.BadFormatCode}, w)
 		return

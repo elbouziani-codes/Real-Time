@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"realTime/crypto"
 	"realTime/internal/domain"
+	"uuid"
 )
 
 type commentService interface {
 	CreateComment(context.Context, *domain.Comment) error
-	GetComment(context.Context, crypto.UUID, crypto.UUID) (*domain.CommentInfo, error)
-	DeleteComment(context.Context, crypto.UUID) error
-	GetComments(context.Context, crypto.UUID, crypto.UUID) ([]*domain.CommentInfo, error)
+	GetComment(context.Context, uuid.UUID, uuid.UUID) (*domain.CommentInfo, error)
+	DeleteComment(context.Context, uuid.UUID) error
+	GetComments(context.Context, uuid.UUID, uuid.UUID) ([]*domain.CommentInfo, error)
 }
 
 type CommentHandler struct {
@@ -26,7 +26,7 @@ func NewCommentHandler(commentSvc commentService, postSvc postService) *CommentH
 
 func (c *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
+	userID := userIDAny.(uuid.UUID)
 	request := domain.CreateCommentRequest{}
 	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -54,9 +54,9 @@ func (c *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 
 func (c *CommentHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
+	userID := userIDAny.(uuid.UUID)
 
-	commentID, err := crypto.ParseUUID(r.PathValue("id"))
+	commentID, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		Error(domain.Error{Message: "invalid comment id", Code: domain.BadFormatCode}, w)
 		return
@@ -66,7 +66,7 @@ func (c *CommentHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 		Error(err, w)
 		return
 	}
-	if comment.Author.ID.Value != userID.Value {
+	if comment.Author.ID.String() != userID.String() {
 		Error(domain.Error{Message: "unauthorized action", Code: domain.UnauthorizedCode}, w)
 		return
 	}
@@ -85,9 +85,9 @@ func (c *CommentHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 
 func (c *CommentHandler) GetComments(w http.ResponseWriter, r *http.Request) {
 	userIDAny := r.Context().Value("user_id")
-	userID := userIDAny.(crypto.UUID)
+	userID := userIDAny.(uuid.UUID)
 
-	id, err := crypto.ParseUUID(r.PathValue("id"))
+	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		Error(domain.Error{Message: "invalid id", Code: domain.BadFormatCode}, w)
 		return

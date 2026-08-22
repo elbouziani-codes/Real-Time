@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-	"realTime/crypto"
 	"realTime/internal/domain"
 	"realTime/internal/repository/sqlite"
+	"uuid"
 )
 
 type AuthRepo struct {
@@ -17,14 +17,14 @@ func NewAuthRepo(db DBTX) *AuthRepo {
 
 func scanSession(row scanner) (domain.Session, error) {
 	session := domain.Session{}
-	//	session.ID = &crypto.Nil
-	//	session.UserID = &crypto.Nil
+	//	session.ID = &uuid.Nil()
+	//	session.UserID = &uuid.Nil()
 
 	//	var sessionID any
 	//	var userID any
 	err := row.Scan(
-		&session.ID.Value,
-		&session.UserID.Value,
+		&session.ID,
+		&session.UserID,
 		&session.CreatedAt,
 		&session.ExpireAt)
 	if err != nil {
@@ -49,8 +49,8 @@ const createSessionQuery = `
 	INSERT into sessions (id, user_id) VALUES (?, ?)
 `
 
-func (a *AuthRepo) SaveSession(ctx context.Context, sessionID, userID crypto.UUID) error {
-	_, err := a.db.ExecContext(ctx, createSessionQuery, sessionID.Value, userID.Value)
+func (a *AuthRepo) SaveSession(ctx context.Context, sessionID, userID uuid.UUID) error {
+	_, err := a.db.ExecContext(ctx, createSessionQuery, sessionID.String(), userID.String())
 	if err != nil {
 		return sqlite.TranslateError(err)
 	}
@@ -63,8 +63,8 @@ const DeleteSessionQuery = `
 
 // DeleteSession reports NotFound when the user had no session, so callers can
 // tell "nothing to clear" apart from a genuine failure.
-func (a *AuthRepo) DeleteSession(ctx context.Context, userID crypto.UUID) error {
-	result, err := a.db.ExecContext(ctx, DeleteSessionQuery, userID.Value)
+func (a *AuthRepo) DeleteSession(ctx context.Context, userID uuid.UUID) error {
+	result, err := a.db.ExecContext(ctx, DeleteSessionQuery, userID.String())
 	if err != nil {
 		return sqlite.TranslateError(err)
 	}
@@ -82,7 +82,7 @@ const GetSessionByIDQuery = `
 	SELECT id, user_id, created_at, expire_at FROM sessions WHERE id = ?  
 `
 
-func (a *AuthRepo) GetByID(ctx context.Context, sessionID crypto.UUID) (domain.Session, error) {
-	row := a.db.QueryRowContext(ctx, GetSessionByIDQuery, sessionID.Value)
+func (a *AuthRepo) GetByID(ctx context.Context, sessionID uuid.UUID) (domain.Session, error) {
+	row := a.db.QueryRowContext(ctx, GetSessionByIDQuery, sessionID.String())
 	return scanSession(row)
 }

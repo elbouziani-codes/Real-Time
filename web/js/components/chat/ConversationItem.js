@@ -5,7 +5,7 @@ import formatDateTime from '../../utils/time.js';
 
 export default function ConversationItem(conversation = {}, { active = false } = {}) {
     const { name = '', lastMessage = '', createdAt = '' } = conversation;
-    const userId = conversation.id?.Value ?? conversation.id ?? '';
+    const userId = conversation.id ?? '';
     const timeLabel = Number.isFinite(Number(createdAt)) && Number(createdAt) > 0
         ? formatDateTime(createdAt)
         : createdAt;

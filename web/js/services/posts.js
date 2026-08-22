@@ -48,18 +48,18 @@ export async function sendAllPost(Scroll = false) {
 
 
 function appendPosts(newPosts) {
-    const known = new Set(DEFAULT_POST.map((e) => {return typeof e == "object" && e ? e.ID?.Value : null }));
+    const known = new Set(DEFAULT_POST.map((e) => {return typeof e == "object" && e ? e.ID : null }));
     const fresh = [];
     for (const post of newPosts) {
-        if (post && !known.has(post.ID?.Value)) {
-            known.add(post.ID?.Value);
+        if (post && !known.has(post.ID)) {
+            known.add(post.ID);
             DEFAULT_POST.push(post);
             fresh.push(post);
         }
     }
     const last = newPosts[newPosts.length - 1];
-    if (last && last.ID?.Value) {
-        config.postsCursor = last.ID.Value;
+    if (last && last.ID) {
+        config.postsCursor = last.ID;
     }
     return fresh;
 }
@@ -84,11 +84,11 @@ export async function reactToPost(postID, isLike) {
 
     reacting.add(postID);
     try {
-        const reactionID = post.LikeInfo?.ID?.Value;
+        const reactionID = post.LikeInfo?.ID;
         if (reactionID == ZERO_UUID) {
             const response = await fetchReact(postID, isLike);
             if (response.code != 200) return failedReaction(response);
-            post.LikeInfo = {ID: {Value: response.body.Value}, IsLike: isLike};
+            post.LikeInfo = {ID: response.body, IsLike: isLike};
             countReaction(post, isLike, 1);
             return post;
         }
@@ -96,7 +96,7 @@ export async function reactToPost(postID, isLike) {
         const response = await fetchUpdateReact(reactionID, isLike);
         if (response.code != 200) return failedReaction(response);
         if (post.LikeInfo.IsLike == isLike) {
-            post.LikeInfo = {ID: {Value: ZERO_UUID}, IsLike: false};
+            post.LikeInfo = {ID: ZERO_UUID, IsLike: false};
             countReaction(post, isLike, -1);
         } else {
             post.LikeInfo.IsLike = isLike;
@@ -118,7 +118,6 @@ function countReaction(post, isLike, delta) {
 }
 
 function failedReaction(response) {
-    console.log(response.body);
     if (response.code == 401) {
         navigate("/login");
     }
@@ -129,9 +128,9 @@ function failedReaction(response) {
 export let CURRENT_POST = null;
 
 function findPost(postID) {
-    const post = DEFAULT_POST.find((e) => typeof e != "string" && e.ID?.Value == postID);
+    const post = DEFAULT_POST.find((e) => typeof e != "string" && e.ID == postID);
     if (post) return post;
-    if (CURRENT_POST && CURRENT_POST.ID?.Value == postID) return CURRENT_POST;
+    if (CURRENT_POST && CURRENT_POST.ID == postID) return CURRENT_POST;
     return null;
 }
 
@@ -152,6 +151,6 @@ export async function sendPostDetails(postID) {
     }
     if (response.code == 400) return {error: "This post id is not valid."};
     if (response.code == 404) return {error: "This post does not exist."};
-    console.log(response.body);
+    (response.body);
     return {error: "Could not load this post. Please try again."};
 }

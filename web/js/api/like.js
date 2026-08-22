@@ -20,7 +20,7 @@ export async function fetchReact(parentID, isLike) {
         }
         return {code: response.status, body: await response.json()}
     }catch(error){
-        console.log(error)
+        (error)
         return {code:500 , body:"Error in request"}
     }
 }
@@ -38,7 +38,7 @@ export async function fetchUpdateReact(reactionID, isLike) {
         })
         return {code: response.status, body: await response.text()}
     }catch(error){
-        console.log(error)
+        (error)
         return {code:500 , body:"Error in request"}
     }
 }

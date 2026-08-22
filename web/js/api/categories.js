@@ -11,7 +11,7 @@ export default async function fetchCategories() {
         const code = response.ok
         return {code:code , body:categories}
     }catch(error){
-        console.log(error)
+        (error)
         return {code:500 , body:"Error in request"}
     }
 }

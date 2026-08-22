@@ -4,8 +4,9 @@ import { escapeHTML } from '../../utils/helpers.js';
 
 export default function ChatHeader(conversation = {}) {
     const { name = '', onlineStatus = '', id = '' } = conversation;
-    const userId = id?.Value ?? id ?? '';
+    const userId = id ?? '';
     const statusLabel = onlineStatus ? onlineStatus.charAt(0).toUpperCase() + onlineStatus.slice(1) : '';
+	(conversation)
 
     return `
         <div class="chat-header" data-user-id="${userId}">

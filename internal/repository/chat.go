@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 
-	"realTime/crypto"
 	"realTime/internal/domain"
 	"realTime/internal/repository/sqlite"
+	"uuid"
 )
 
 // / this would migrated to sqlite package
@@ -49,14 +49,14 @@ const createChatQuery = `INSERT into conversations (id) VALUES (?)`
 
 // CreateConversation takes a DBTX so it works both on its own and as one step
 // of CreateConversationWithParticipants' transaction.
-func (q *ChatRepo) CreateConversation(ctx context.Context, chatID crypto.UUID, db DBTX) error {
-	_, err := db.ExecContext(ctx, createChatQuery, chatID.Value)
+func (q *ChatRepo) CreateConversation(ctx context.Context, chatID uuid.UUID, db DBTX) error {
+	_, err := db.ExecContext(ctx, createChatQuery, chatID.String())
 	return sqlite.TranslateError(err)
 }
 
 const CreateConversationParticipantsQuery = `INSERT INTO conversation_participants (id, user_id, conversation_id) VALUES (?, ?, ?)`
 
-func (q *ChatRepo) CreateConversationWithParticipants(ctx context.Context, chatID crypto.UUID, idUUID, userIDs []crypto.UUID) error {
+func (q *ChatRepo) CreateConversationWithParticipants(ctx context.Context, chatID uuid.UUID, idUUID, userIDs []uuid.UUID) error {
 	tx, err := q.db.BeginTx(ctx, nil)
 	if err != nil {
 		return sqlite.TranslateError(err)
@@ -69,7 +69,7 @@ func (q *ChatRepo) CreateConversationWithParticipants(ctx context.Context, chatI
 	}
 
 	for i, userID := range userIDs {
-		_, err = tx.ExecContext(ctx, CreateConversationParticipantsQuery, idUUID[i].Value, userID.Value, chatID.Value)
+		_, err = tx.ExecContext(ctx, CreateConversationParticipantsQuery, idUUID[i].String(), userID.String(), chatID.String())
 		if err != nil {
 			return sqlite.TranslateError(err)
 		}
@@ -86,26 +86,14 @@ const getChatQuery = `
 		AND cp2.user_id = ?
 `
 
-
-
-func (q *ChatRepo) GetChat(ctx context.Context, usersID []crypto.UUID) (crypto.UUID, error) {
-	//                                             b                  a 
-	row := q.db.QueryRowContext(ctx, getChatQuery, usersID[0].Value, usersID[1].Value) // must be updated later
-	var chat crypto.UUID
-	err := row.Scan(&chat.Value)
+func (q *ChatRepo) GetChat(ctx context.Context, usersID []uuid.UUID) (uuid.UUID, error) {
+	//                                             b                  a
+	row := q.db.QueryRowContext(ctx, getChatQuery, usersID[0].String(), usersID[1].String()) // must be updated later
+	var chat uuid.UUID
+	err := row.Scan(&chat)
 	return chat, err
 }
-/*
-CREATE TABLE
-	IF NOT EXISTS messages (
-		id CHAR(36) PRIMARY KEY,
-		sender_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE, -- actuallt this must be reviewed if a user delete whta s the correct practice 
-		conversation_id CHAR(36) NOT NULL REFERENCES conversations (id) ON DELETE CASCADE,
-		content TEXT NOT NULL,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours')),
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+1 hours'))
-	);
-	*/
+
 const getMessagesQuery = `
 	SELECT id, sender_id, conversation_id, content , created_at FROM messages
 	WHERE conversation_id  = ?
@@ -114,8 +102,8 @@ const getMessagesQuery = `
 	OFFSET ?
 `
 
-func (q *ChatRepo) GetMessages(ctx context.Context, chatID crypto.UUID, offset, limit int) ([]domain.MessageOutput, error) {
-	rows, err := q.db.QueryContext(ctx, getMessagesQuery, chatID.Value, limit, offset) // must be updated later
+func (q *ChatRepo) GetMessages(ctx context.Context, chatID uuid.UUID, offset, limit int) ([]domain.MessageOutput, error) {
+	rows, err := q.db.QueryContext(ctx, getMessagesQuery, chatID.String(), limit, offset) // must be updated later
 	if err != nil {
 		return nil, sqlite.TranslateError(err)
 	}
@@ -123,13 +111,13 @@ func (q *ChatRepo) GetMessages(ctx context.Context, chatID crypto.UUID, offset, 
 	defer rows.Close()
 	for rows.Next() {
 		var message domain.MessageOutput
-		err := rows.Scan(&message.ID.Value, &message.Sender.Value, &message.ChatID.Value, &message.Content, &message.Created_at)
-		if err != nil { 
+		err := rows.Scan(&message.ID, &message.Sender, &message.ChatID, &message.Content, &message.Created_at)
+		if err != nil {
 			return nil, sqlite.TranslateError(err)
 		}
 		messages = append(messages, message)
 	}
-	if err = rows.Err(); err != nil{
+	if err = rows.Err(); err != nil {
 		return nil, sqlite.TranslateError(err)
 	}
 	return messages, nil
@@ -140,7 +128,7 @@ const sendMessageQuery = `INSERT INTO messages (id, sender_id, content, conversa
 func (q *ChatRepo) SendMessage(ctx context.Context, message domain.MessageOutput) (int64, error) {
 	var createdAt int64
 
-	err := q.db.QueryRowContext(ctx, sendMessageQuery, message.ID.Value, message.Sender.Value, message.Content, message.ChatID.Value).Scan(&createdAt)
+	err := q.db.QueryRowContext(ctx, sendMessageQuery, message.ID.String(), message.Sender.String(), message.Content, message.ChatID.String()).Scan(&createdAt)
 	if err != nil {
 		return -1, sqlite.TranslateError(err)
 	}

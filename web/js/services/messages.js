@@ -6,14 +6,16 @@ import ChatHeader from "../components/chat/ChatHeader.js";
 import { me } from "./me.js";
 import { DEFAULT_USERS, DEFAULT_RECENT_MESSAGES, updateRecentConversation } from "./user.js";
 import { disconnectSocket, sendWsRequest } from "../websocket/socket.js";
-import { applyPresenceEvent } from "./online.js";
+import { applyPresenceEvent, extractUserIds } from "./online.js";
+import { moveOnlineUserToFront } from "./user.js";
 import { escapeHTML } from "../utils/helpers.js";
+import { showToast } from "../utils/toast.js";
 
 // The backend serves messages in pages (LIMIT offset+10 OFFSET offset).
 const PAGE_SIZE = 10;
 
 // Messages of the currently selected room, oldest -> newest.
-export let messages = [];
+let messages = [];
 export let currentChat = { UserA: "", UserB: "" };
 
 let loading = false;
@@ -25,7 +27,7 @@ let sessionId = 0;
 const knownIds = new Set();
 
 function uuidString(value) {
-    return String(value?.Value ?? value ?? "");
+    return String(value ?? "");
 }
 
 function normalizeTimestamp(value) {
@@ -34,13 +36,13 @@ function normalizeTimestamp(value) {
     return numeric < 1e12 ? numeric * 1000 : numeric;
 }
 
-// Maps the backend MessageOutput shape ({id:{Value}, sender:{Value},
-// chat_id:{Value}, content, created_at}) onto the frontend message model.
+// Maps the backend MessageOutput shape ({id, sender,
+// chat_id, content, created_at}) onto the frontend message model.
 function normalizeMessage(raw = {}) {
     return createMessage({
-        id: raw.id?.Value ?? raw.id ?? 0,
-        roomId: raw.chat_id?.Value ?? raw.chat_id ?? 0,
-        senderId: raw.sender?.Value ?? raw.sender ?? 0,
+        id: raw.id ?? 0,
+        roomId: raw.chat_id ?? 0,
+        senderId: raw.sender ?? 0,
         content: raw.content ?? raw.Content ?? "",
         createdAt: normalizeTimestamp(raw.created_at ?? raw.CreatedAt ?? 0),
     });
@@ -57,7 +59,7 @@ function sortMessages(list = []) {
 function findFriend(userId) {
     if (!userId) return null;
     return [...DEFAULT_RECENT_MESSAGES, ...DEFAULT_USERS].find(
-        (user) => String(user.id?.Value ?? user.id) === String(userId),
+        (user) => String(user.id) === String(userId),
     ) ?? null;
 }
 
@@ -230,7 +232,7 @@ export function selectChat(next) {
 
 // Loads one page of messages for the selected user. With { older: true }, it
 // prepends the next page while keeping the scroll position.
-export async function getMessages(options = {}) {
+async function getMessages(options = {}) {
     const { older = false } = options;
     if (!currentChat?.UserB) return;
     if (loading) return;
@@ -372,8 +374,7 @@ export async function handleWsMessage(data) {
     if (!data || typeof data !== "object") return;
 
     const code = data.code;
-
-    if (code == 200 && data.chat_id?.Value) {
+    if (code == 200 && data.chat_id) {
         const senderId = uuidString(data.sender);
         const roomId = uuidString(data.chat_id);
         if (senderId && roomId) {
@@ -385,13 +386,15 @@ export async function handleWsMessage(data) {
             // A message for the currently open conversation.
             if (currentChat?.UserB && String(currentChat.UserB) === senderId) {
                 appendMessage(normalizeMessage(data));
+            } else {
+                notifyNewMessage(senderId, data.content ?? "");
             }
         }
         return;
     }
 
     if (code == 1) {
-        console.log("WebSocket replaced by another connection:", data.content);
+        ("WebSocket replaced by another connection:", data.content);
         disconnectSocket();
         const { navigate } = await import("../router/router.js");
         navigate("/end");
@@ -407,12 +410,43 @@ export async function handleWsMessage(data) {
 
     if (code == 3 || code == 4) {
         applyPresenceEvent(code, data.content);
+        // Online users surface at the top of the people list; fetch anyone
+        // no page has brought in yet.
+        for (const id of code == 3 ? extractUserIds(data.content) : []) {
+            await moveOnlineUserToFront(id);
+            renderConversationSidebar();
+        }
         return;
     }
 
     if (code == 404) {
         console.error("WebSocket request failed:", data.content);
     }
+}
+
+// The recipient is connected but looking somewhere else: raise a clickable
+// toast that jumps straight into the conversation.
+function notifyNewMessage(senderId, content) {
+    const friend = findFriend(senderId);
+    showToast({
+        title: friend?.name ?? "New message",
+        message: content,
+        onClick: () => openConversation(senderId),
+    });
+}
+
+async function openConversation(senderId) {
+    if (window.location.pathname === "/chat") {
+        selectChat({ UserA: me.ID, UserB: senderId });
+        return;
+    }
+    // Another page: stage the chat so the /chat listener selects it on mount.
+    const [{ navigate }, { setChat }] = await Promise.all([
+        import("../router/router.js"),
+        import("../listeners/users.js"),
+    ]);
+    setChat({ UserA: me.ID, UserB: senderId });
+    navigate("/chat");
 }
 
 function renderConversationSidebar() {
@@ -425,7 +459,7 @@ function renderConversationSidebar() {
     list.innerHTML = conversations
         .map((conversation) =>
             ConversationItem(conversation, {
-                active: (conversation.id?.Value ?? conversation.id) === (activeId?.Value ?? activeId),
+                active: (conversation.id) === (activeId),
             }),
         )
         .join("");

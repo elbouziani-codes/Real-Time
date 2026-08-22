@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-	"realTime/crypto"
 	"realTime/internal/domain"
 	"realTime/internal/repository/sqlite"
+	"uuid"
 )
 
 type commentRepo struct {
@@ -28,18 +28,18 @@ WHERE C.parent_id = ?
 func scanComment(row scanner) (*domain.CommentInfo, error) {
 	comment := domain.CommentInfo{}
 	err := row.Scan(
-		&comment.ID.Value,
+		&comment.ID,
 		&comment.Content,
 		&comment.CreatedAt,
-		&comment.ParentID.Value,
-		&comment.Author.ID.Value,
+		&comment.ParentID,
+		&comment.Author.ID,
 		&comment.Author.NickName,
 		&comment.Author.FirstName,
 		&comment.Author.LastName,
 		&comment.Author.Gender,
 		&comment.Author.Age,
 		&comment.Author.CreatedAt,
-		&comment.LikeInfo.ID.Value,
+		&comment.LikeInfo.ID,
 		&comment.LikeInfo.IsLike)
 	if err != nil {
 		return nil, sqlite.TranslateError(err)
@@ -50,7 +50,7 @@ func scanComment(row scanner) (*domain.CommentInfo, error) {
 const saveCommentQuery = `INSERT INTO comments (id, parent_id, author_id, content) VALUES(?, ?, ?, ?)`
 
 func (p *commentRepo) SaveComment(ctx context.Context, comment domain.Comment) error {
-	_, err := p.db.ExecContext(ctx, saveCommentQuery, comment.ID.Value, comment.ParentID.Value, comment.AuthorID.Value, comment.Content)
+	_, err := p.db.ExecContext(ctx, saveCommentQuery, comment.ID.String(), comment.ParentID.String(), comment.AuthorID.String(), comment.Content)
 	if err != nil {
 		return sqlite.TranslateError(err)
 	}
@@ -67,17 +67,13 @@ ON R.author_id = ? AND C.id = R.parent_id
 WHERE C.id = ?
 `
 
-func (p *commentRepo) GetComment(ctx context.Context, userID, commentID crypto.UUID) (*domain.CommentInfo, error) {
-	row := p.db.QueryRowContext(ctx, getCommentQuery, userID.Value, commentID.Value)
+func (p *commentRepo) GetComment(ctx context.Context, userID, commentID uuid.UUID) (*domain.CommentInfo, error) {
+	row := p.db.QueryRowContext(ctx, getCommentQuery, userID.String(), commentID.String())
 	return scanComment(row)
 }
 
-//const getCommentsQuery = `SELECT id, author_id, title, content, created_at, updated_at FROM comments
-//						ORDER BY created_at DESC
-//						LIMIT ? OFFSET ?; `
-
-func (p *commentRepo) GetComments(ctx context.Context, userID, parentID crypto.UUID) ([]*domain.CommentInfo, error) {
-	rows, err := p.db.QueryContext(ctx, getCommentsQuery, userID.Value, parentID.Value)
+func (p *commentRepo) GetComments(ctx context.Context, userID, parentID uuid.UUID) ([]*domain.CommentInfo, error) {
+	rows, err := p.db.QueryContext(ctx, getCommentsQuery, userID.String(), parentID.String())
 
 	if err != nil {
 		return nil, sqlite.TranslateError(err)
@@ -96,8 +92,8 @@ func (p *commentRepo) GetComments(ctx context.Context, userID, parentID crypto.U
 
 const deleteCommentQuery = `DELETE FROM comments WHERE id = ?`
 
-func (p *commentRepo) DeleteComment(ctx context.Context, commentID crypto.UUID) error {
-	_, err := p.db.ExecContext(ctx, deleteCommentQuery, commentID.Value)
+func (p *commentRepo) DeleteComment(ctx context.Context, commentID uuid.UUID) error {
+	_, err := p.db.ExecContext(ctx, deleteCommentQuery, commentID.String())
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,6 @@
 import { auth } from "./../pages/auth.js";
 import authListener from "./../listeners/auth.js";
 import {CreateMe, me} from "./../services/me.js";
-import {homeListenerUser} from "./../listeners/users.js"
 import chatListener from "./../listeners/chat.js"
 import {connectSocket} from "./../websocket/socket.js"
 import {initChatSocket} from "./../websocket/chat.js"
@@ -38,7 +37,6 @@ async function router() {
   const path = window.location.pathname;
   const page = routes[path];
   const app = document.getElementById("app");
- console.log("sssss")
   if (page) {
 
     await Fetching(path);
@@ -50,7 +48,6 @@ async function router() {
     await Listening(path);
 
   } else {
-    console.log("aaa")
     app.innerHTML = ErrorPage({})
   }
 }
@@ -63,10 +60,9 @@ function navigate(path) {
 
 async function Fetching(path) {
   await CreateMe(path);
-  // CreateMe redirects unauthenticated visitors to /login; never seed data (or
-  // open the socket) for a session that is about to be redirected.
+
   if (path == "/login" || path == "/register") return;
-  if (!me?.ID?.Value) return;
+  if (!me?.ID) return;
 
   switch (path) {
     case "/":
@@ -92,7 +88,6 @@ async function Listening(path) {
       break;
     case "/":
       navBarListener();
-      homeListenerUser()
       HomeListener();
       await HomeScrollListener()
       break;

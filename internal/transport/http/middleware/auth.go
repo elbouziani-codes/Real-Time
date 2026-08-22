@@ -3,33 +3,17 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"sync"
 
-	"realTime/crypto"
 	"realTime/internal/domain"
+	"uuid"
 )
 
-type userService interface{}
-
 type authService interface {
-	ValueidateSession(context.Context, crypto.UUID) (domain.Session, error)
+	ValueidateSession(context.Context, uuid.UUID) (domain.Session, error)
 }
 
 type middleWare struct {
-	authSvc          authService
-	routes           map[string]string
-	rateLimiterMap   map[string]client
-	rateLimiterMutex sync.RWMutex
-}
-
-/*type route  struct {
-	path string
-	method string
-}*/
-
-type client struct {
-	path      string
-	limitedAt int64
+	authSvc authService
 }
 
 func NewMiddleware(authSvc authService) *middleWare {
@@ -43,7 +27,7 @@ func (m *middleWare) Auth(next http.Handler) http.Handler {
 			http.Error(w, "missing session-id", http.StatusUnauthorized)
 			return
 		}
-		sessionUUID, err := crypto.ParseUUID(c.Value)
+		sessionUUID, err := uuid.Parse(c.Value)
 		if err != nil {
 			http.Error(w, "failed to validate session id", http.StatusUnauthorized)
 			return

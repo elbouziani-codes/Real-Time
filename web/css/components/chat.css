@@ -34,6 +34,8 @@
     padding: 10px 16px;
     position: relative;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .message-bubble:hover {

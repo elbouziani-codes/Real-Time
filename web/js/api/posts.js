@@ -41,7 +41,7 @@ export async function fetchPost(cursor = null, filters = {}) {
         }
         return {code: response.status, body: allResult, len: allResult.length}
     }catch(error){
-        console.log(error)
+        (error)
         return {code:500 , body:"Error in request"}
     }finally {
         loading = false;
@@ -111,7 +111,7 @@ export async function fetchPostDetails(postID) {
         }
         return {code: response.status, body: await response.json()}
     }catch(error){
-        console.log(error)
+        (error)
         return {code:500 , body:"Error in request"}
     }
 }

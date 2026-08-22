@@ -9,15 +9,14 @@ CREATE TABLE
 		last_name TEXT NOT NULL,
 		age INTEGER NOT NULL,
 		gender TEXT NOT NULL,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')), 
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')) 
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')) 
 	);
 
 CREATE TABLE
 	IF NOT EXISTS sessions (
 		id CHAR(36) PRIMARY KEY,
 		user_id CHAR(36) REFERENCES users (id) ON DELETE CASCADE,
-		expire_at TEXT DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+24 hours')),
+		expire_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+24 hours')),
 		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
 	);
 
@@ -29,8 +28,7 @@ CREATE TABLE
 		content TEXT NOT NULL,
 		likes_count INTEGER DEFAULT 0,
 		dislikes_count INTEGER DEFAULT 0,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
 	);
 CREATE TABLE
 	IF NOT EXISTS categories (
@@ -47,7 +45,6 @@ CREATE TABLE
 	IF NOT EXISTS post_categories (
 		post_id CHAR(36) NOT NULL REFERENCES posts (id) ON DELETE CASCADE,
 		category_id CHAR(36) NOT NULL REFERENCES categories (id) ON DELETE CASCADE,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
 		PRIMARY KEY (post_id, category_id)
 	);
 
@@ -57,10 +54,7 @@ CREATE TABLE
 		author_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 		parent_id CHAR(36) NOT NULL,
 		content TEXT NOT NULL,
-		likes_count INTEGER DEFAULT 0,
-		dislikes_count INTEGER DEFAULT 0,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
 	);
 
 
@@ -70,15 +64,12 @@ CREATE TABLE
 		author_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 		parent_id CHAR(36) NOT NULL,	
 		is_like BOOLEAN NOT NULL,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))	
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
 	);
 
 CREATE TABLE
 	IF NOT EXISTS conversations (
-		id CHAR(36) PRIMARY KEY,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
+		id CHAR(36) PRIMARY KEY
 	);
 
 CREATE TABLE
@@ -86,7 +77,6 @@ CREATE TABLE
 		id CHAR(36) PRIMARY KEY,
 		user_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 		conversation_id CHAR(36) NOT NULL REFERENCES conversations (id) ON DELETE CASCADE,
-		joined_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
 		UNIQUE(user_id, conversation_id)
 	);
 
@@ -96,8 +86,7 @@ CREATE TABLE
 		sender_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE, -- actuallt this must be reviewed if a user delete whta s the correct practice 
 		conversation_id CHAR(36) NOT NULL REFERENCES conversations (id) ON DELETE CASCADE,
 		content TEXT NOT NULL,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours')),
-		updated_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
+		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
 	);
 
 CREATE INDEX IF NOT EXISTS poster_idx ON posts (author_id);
@@ -140,14 +129,8 @@ END;
 CREATE TRIGGER IF NOT EXISTS likes_insert
 AFTER INSERT ON reactions 
 BEGIN
-	UPDATE comments  SET likes_count = likes_count+1 
-	WHERE id = NEW.parent_id AND NEW.is_like = TRUE; 
-
 	UPDATE posts  SET likes_count = likes_count+1 
 	WHERE id = NEW.parent_id AND NEW.is_like = TRUE;   
-
-	UPDATE comments  SET dislikes_count = dislikes_count+1 
-	WHERE id = NEW.parent_id AND NEW.is_like = FALSE;   
 
 	UPDATE posts  SET dislikes_count = dislikes_count+1 
 	WHERE id = NEW.parent_id AND NEW.is_like = FALSE;   
@@ -156,17 +139,9 @@ END;
 CREATE TRIGGER IF NOT EXISTS likes_update
 AFTER UPDATE ON reactions 
 BEGIN
-	UPDATE comments  SET likes_count = likes_count+1, 
-	dislikes_count = dislikes_count-1 
-	WHERE id = NEW.parent_id AND NEW.is_like = TRUE ;  
-
 	UPDATE posts  SET likes_count = likes_count+1, 
 	dislikes_count = dislikes_count-1 
 	WHERE id = NEW.parent_id AND NEW.is_like = TRUE ;  
-
-	UPDATE comments  SET dislikes_count = dislikes_count+1, 
-	likes_count = likes_count-1 
-	WHERE id = NEW.parent_id AND NEW.is_like = FALSE;   
 
 	UPDATE posts  SET dislikes_count = dislikes_count+1, 
 	likes_count = likes_count-1
@@ -175,14 +150,8 @@ END;
 CREATE TRIGGER IF NOT EXISTS likes_delete
 AFTER DELETE ON reactions 
 BEGIN
-	UPDATE comments  SET likes_count = likes_count-1 
-	WHERE id = OLD.parent_id AND OLD.is_like = TRUE ;  
-
 	UPDATE posts  SET likes_count = likes_count-1 
 	WHERE id = OLD.parent_id AND OLD.is_like = TRUE ;  
-
-	UPDATE comments  SET dislikes_count = dislikes_count-1 
-	WHERE id = OLD.parent_id AND OLD.is_like = FALSE;   
 
 	UPDATE posts  SET dislikes_count = dislikes_count-1 
 	WHERE id = OLD.parent_id AND OLD.is_like = FALSE;   	
@@ -200,16 +169,5 @@ AFTER DELETE ON comments
 BEGIN
 	DELETE FROM comments WHERE old.id = parent_id;	
 	DELETE FROM reactions WHERE old.id = parent_id;	
-
-END;
-
-CREATE TRIGGER IF NOT EXISTS update_date BEFORE
-UPDATE ON users FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at
-OR NEW.updated_at IS NULL BEGIN
-UPDATE users
-SET
-	updated_at = CURRENT_TIMESTAMP
-WHERE
-	NEW.id = id;
 
 END;

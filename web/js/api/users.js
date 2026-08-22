@@ -3,18 +3,14 @@ import { config } from "./../config/config.js";
 let usersLoading = false;
 let usersHasMore = true;
 
-function userCursor(user) {
-    const id = user?.ID ?? user?.id;
-    if (typeof id === "string") return id;
-    return id?.Value ?? id?.value ?? null;
-}
-
 export function resetUsersPaging() {
     usersLoading = false;
     usersHasMore = true;
     config.UsersCursor = null;
 }
 
+// One page of contacts, ordered by last message then nickname (server side).
+// Advances the cursor; returns [] when exhausted or on failure.
 export async function fetchAllUsers() {
     if (usersLoading || !usersHasMore) return [];
 
@@ -29,9 +25,6 @@ export async function fetchAllUsers() {
         });
 
         if (!response.ok) {
-            // A 401 (e.g. the session was just invalidated by a logout racing
-            // an in-flight navigation) is handled by the router's auth redirect;
-            // report the page as empty instead of crashing the console.
             console.warn(`Failed to fetch users: ${response.status}`);
             return [];
         }
@@ -42,21 +35,21 @@ export async function fetchAllUsers() {
             throw new Error("Invalid users response");
         }
 
-        if (users.length > 0) {
-            const nextCursor = userCursor(users[users.length - 1]);
-            if (!nextCursor || nextCursor === config.UsersCursor) {
-                usersHasMore = false;
-            } else {
-                config.UsersCursor = nextCursor;
-            }
-        }
+        const nextCursor = users.at(-1)?.ID;
+        if (!nextCursor || nextCursor === config.UsersCursor) usersHasMore = false;
+        else config.UsersCursor = nextCursor;
 
-        if (users.length < config.Userslimit) {
-            usersHasMore = false;
-        }
+        if (users.length < config.Userslimit) usersHasMore = false;
 
         return users;
     } finally {
         usersLoading = false;
     }
+}
+
+// One profile by id, used when a user nobody paged in yet comes online.
+export async function fetchUser(id) {
+    const response = await fetch(`/api/users/${id}`);
+    if (!response.ok) return null;
+    return response.json();
 }

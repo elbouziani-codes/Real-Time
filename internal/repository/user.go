@@ -5,16 +5,14 @@ import (
 	"database/sql"
 	"errors"
 
-	"realTime/crypto"
 	"realTime/internal/domain"
 	"realTime/internal/repository/sqlite"
+	"uuid"
 )
 
 type UserRepo struct {
 	db DBTX
 }
-
-
 
 func NewUserRepo(db DBTX) *UserRepo {
 	return &UserRepo{db: db}
@@ -23,7 +21,7 @@ func NewUserRepo(db DBTX) *UserRepo {
 func scanUser(row scanner) (domain.User, error) {
 	user := domain.User{}
 	err := row.Scan(
-		&user.ID.Value,
+		&user.ID,
 		&user.Email,
 		&user.Password,
 		&user.NickName,
@@ -31,8 +29,7 @@ func scanUser(row scanner) (domain.User, error) {
 		&user.FirstName,
 		&user.Age,
 		&user.Gender,
-		&user.CreatedAt,
-		&user.UpdatedAt)
+		&user.CreatedAt)
 	if err != nil {
 		return domain.User{}, sqlite.TranslateError(err)
 	}
@@ -42,7 +39,7 @@ func scanUser(row scanner) (domain.User, error) {
 func scanUserProfile(row scanner) (*domain.UserProfile, error) {
 	user := domain.UserProfile{}
 	err := row.Scan(
-		&user.ID.Value,
+		&user.ID,
 		&user.Email,
 		&user.NickName,
 		&user.LastName,
@@ -61,7 +58,7 @@ const CreateUserQuery = `INSERT INTO users
 
 func (u *UserRepo) CreateUser(ctx context.Context, user domain.User) error {
 	_, err := u.db.ExecContext(ctx, CreateUserQuery,
-		user.ID.Value,
+		user.ID.String(),
 		user.Email,
 		user.Password,
 		user.NickName,
@@ -75,23 +72,23 @@ func (u *UserRepo) CreateUser(ctx context.Context, user domain.User) error {
 	return nil
 }
 
-const GetByIdQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at, updated_at
+const GetByIdQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at
 FROM users WHERE id = ?`
 
-func (u *UserRepo) GetByID(ctx context.Context, userID crypto.UUID) (domain.User, error) {
-	row := u.db.QueryRowContext(ctx, GetByIdQuery, userID.Value)
+func (u *UserRepo) GetByID(ctx context.Context, userID uuid.UUID) (domain.User, error) {
+	row := u.db.QueryRowContext(ctx, GetByIdQuery, userID.String())
 	return scanUser(row)
 }
 
 const GetProfileQuery = `SELECT id, email, nick_name, last_name, first_name, age, gender 
 FROM users WHERE id = ?`
 
-func (u *UserRepo) GetUserProfile(ctx context.Context, requesterID, userID crypto.UUID) (*domain.UserProfile, error) {
-	row := u.db.QueryRowContext(ctx, GetProfileQuery, userID.Value)
+func (u *UserRepo) GetUserProfile(ctx context.Context, requesterID, userID uuid.UUID) (*domain.UserProfile, error) {
+	row := u.db.QueryRowContext(ctx, GetProfileQuery, userID.String())
 	return scanUserProfile(row)
 }
 
-const GetByEmailQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at, updated_at
+const GetByEmailQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at
 FROM users WHERE email = ?`
 
 func (u *UserRepo) GetByEmail(ctx context.Context, userEmail string) (domain.User, error) {
@@ -99,7 +96,7 @@ func (u *UserRepo) GetByEmail(ctx context.Context, userEmail string) (domain.Use
 	return scanUser(row)
 }
 
-const GetByNickNameQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at, updated_at
+const GetByNickNameQuery = `SELECT id, email, password_hash, nick_name, last_name, first_name, age, gender, created_at
 FROM users WHERE nick_name = ?`
 
 // Idont think we will need that
@@ -161,13 +158,13 @@ type userCursorKey struct {
 // resolveUserCursor reads the sort position of the cursor user. A cursor naming
 // a user that has since been deleted is reported rather than silently returning
 // an empty page, which a client could not tell apart from the end of the list.
-func (u *UserRepo) resolveUserCursor(ctx context.Context, requesterID, cursor crypto.UUID) (*userCursorKey, error) {
-	if cursor == crypto.Nil {
+func (u *UserRepo) resolveUserCursor(ctx context.Context, requesterID, cursor uuid.UUID) (*userCursorKey, error) {
+	if cursor == uuid.Nil() {
 		return nil, nil
 	}
 
 	key := userCursorKey{}
-	err := u.db.QueryRowContext(ctx, getUserCursorQuery, requesterID.Value, cursor.Value).Scan(&key.lastMessageAt, &key.nickName)
+	err := u.db.QueryRowContext(ctx, getUserCursorQuery, requesterID.String(), cursor.String()).Scan(&key.lastMessageAt, &key.nickName)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, domain.Error{Message: "unknown cursor", Code: domain.NotFoundCode}
 	}
@@ -180,7 +177,7 @@ func (u *UserRepo) resolveUserCursor(ctx context.Context, requesterID, cursor cr
 func scanUserContact(row scanner) (domain.UserContact, error) {
 	contact := domain.UserContact{}
 	err := row.Scan(
-		&contact.ID.Value,
+		&contact.ID,
 		&contact.Email,
 		&contact.NickName,
 		&contact.LastName,
@@ -197,7 +194,7 @@ func scanUserContact(row scanner) (domain.UserContact, error) {
 // GetUsers returns the people list for userID, ordered by the most recent
 // conversation. The requester's own id is bound twice: once to find the shared
 // conversations and once to leave themselves out of their own list.
-func (u *UserRepo) GetUsers(ctx context.Context, userID crypto.UUID, limit int, cursor crypto.UUID) ([]domain.UserContact, error) {
+func (u *UserRepo) GetUsers(ctx context.Context, userID uuid.UUID, limit int, cursor uuid.UUID) ([]domain.UserContact, error) {
 	cursorKey, err := u.resolveUserCursor(ctx, userID, cursor)
 	if err != nil {
 		return nil, err
@@ -207,7 +204,7 @@ func (u *UserRepo) GetUsers(ctx context.Context, userID crypto.UUID, limit int, 
 	// ORDER BY above. nick_name is unique, so it is a total tie-breaker and the
 	// cursor row itself is never repeated.
 	where := ""
-	args := []any{userID.Value, userID.Value}
+	args := []any{userID.String(), userID.String()}
 	if cursorKey != nil {
 		where = "WHERE last_message_at < ? OR (last_message_at = ? AND nick_name > ?)"
 		args = append(args, cursorKey.lastMessageAt, cursorKey.lastMessageAt, cursorKey.nickName)

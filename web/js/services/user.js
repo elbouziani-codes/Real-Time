@@ -1,144 +1,91 @@
 import createUser from "../models/User.js";
-import { fetchAllUsers, resetUsersPaging } from "../api/users.js";
+import { fetchAllUsers, fetchUser, resetUsersPaging } from "../api/users.js";
 import { isOnline } from "./online.js";
+import { me } from "./me.js";
 
+// The sidebar is two lists fed by the same pages:
+//   DEFAULT_RECENT_MESSAGES - people who share messages with me, newest first
+//   DEFAULT_USERS           - everyone else, alphabetical
 export const DEFAULT_USERS = [];
 export const DEFAULT_RECENT_MESSAGES = [];
 
-function normalizeUser(user = {}) {
-    // Reduce the backend's {Value: "<uuid>"} wrapper to the plain uuid string
-    // so it matches the keys used by the WebSocket presence set.
-    const id = user.ID?.Value ?? user.ID ?? user.id?.Value ?? user.id ?? 0;
+function byName(a, b) {
+    return String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, {
+        sensitivity: "base",
+        numeric: true,
+    });
+}
+
+function normalizeUser(raw = {}) {
     return createUser({
-        id,
-        name: user.NickName,
-        handle: "@"+user.NickName,
-        letter: user.Letter ?? user.letter ?? "",
-        avatarClass: user.AvatarClass ?? user.avatarClass ?? "avatar--mine",
-        // The HTTP list has no presence data; online status comes from the
-        // WebSocket presence events, so ask the tracked set.
-        onlineStatus: isOnline(id) ? "online" : "offline",
-        lastMessage: user.LastMessage ?? user.lastMessage ?? "",
-        unreadCount: user.UnreadCount ?? user.unreadCount ?? 0,
-        createdAt: user.CreatedAt ?? user.createdAt ?? "",
+        id: raw.ID,
+        name: raw.NickName,
+        handle: "@" + raw.NickName,
+        onlineStatus: isOnline(raw.ID) ? "online" : "offline",
+        lastMessage: raw.LastMessage ?? "",
+        // LastMessageAt doubles as the conversation recency (0 = never talked).
+        createdAt: Number(raw.LastMessageAt ?? 0),
     });
 }
 
-function formatLastMessageTime(lastMessageAt) {
-    if (!lastMessageAt) return "";
-    return Number(lastMessageAt);
+async function loadPage() {
+    for (const raw of await fetchAllUsers()) {
+        const user = normalizeUser(raw);
+        (user.createdAt ? DEFAULT_RECENT_MESSAGES : DEFAULT_USERS).push(user);
+    }
+    sortUsers();
 }
 
-function sortUsersAlphabetically(users = []) {
-    return [...users].sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, {
-        sensitivity: "base",
-        numeric: true,
-    }));
+function sortUsers() {
+    DEFAULT_RECENT_MESSAGES.sort((a, b) => b.createdAt - a.createdAt || byName(a, b));
+    DEFAULT_USERS.sort(byName);
 }
 
-function resortDefaultUsers() {
-    DEFAULT_USERS.sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, {
-        sensitivity: "base",
-        numeric: true,
-    }));
-}
+const findUser = (id) =>
+    [...DEFAULT_RECENT_MESSAGES, ...DEFAULT_USERS].find((user) => String(user.id) === String(id));
 
-function sortRecentMessagesByLatestMessage(messages = []) {
-    return [...messages].sort((a, b) => {
-        const timeA = Number(a.createdAt ?? 0);
-        const timeB = Number(b.createdAt ?? 0);
-        return timeB - timeA;
-    });
+function removeFrom(list, id) {
+    const index = list.findIndex((user) => String(user.id) === String(id));
+    return index >= 0 ? list.splice(index, 1)[0] : null;
 }
 
 export async function seedAllUsers() {
     resetUsersPaging();
     DEFAULT_USERS.length = 0;
     DEFAULT_RECENT_MESSAGES.length = 0;
-
-    const users = await fetchAllUsers();
-    const normalizedUsers = users.map(normalizeUser);
-    const { usersWithoutMessages, recentMessages } = filterUsers(normalizedUsers, users);
-    DEFAULT_USERS.push(...sortUsersAlphabetically(usersWithoutMessages));
-    resortDefaultUsers();
-    DEFAULT_RECENT_MESSAGES.push(...sortRecentMessagesByLatestMessage(recentMessages));
-
-    return {
-        users: DEFAULT_USERS,
-        recentMessages: DEFAULT_RECENT_MESSAGES,
-    };
+    await loadPage();
+    return { users: DEFAULT_USERS, recentMessages: DEFAULT_RECENT_MESSAGES };
 }
 
-export async function loadMoreUsers() {
-    const users = await fetchAllUsers();
-    if (!users.length) return false;
-
-    const normalizedUsers = users.map(normalizeUser);
-    const { usersWithoutMessages, recentMessages } = filterUsers(normalizedUsers, users);
-
-    DEFAULT_USERS.push(...sortUsersAlphabetically(usersWithoutMessages));
-    resortDefaultUsers();
-    DEFAULT_RECENT_MESSAGES.push(...sortRecentMessagesByLatestMessage(recentMessages));
-
-    return true;
-}
-
-export function filterUsers(defaultUsers = [], rawUsers = defaultUsers) {
-    const usersWithoutMessages = [];
-    const recentMessages = [];
-
-    for (let index = 0; index < defaultUsers.length; index += 1) {
-        const user = defaultUsers[index];
-        const rawUser = rawUsers[index] ?? user;
-        const lastMessageAt = rawUser.LastMessageAt ?? rawUser.lastMessageAt ?? 0;
-        const hasMessages = Number(lastMessageAt) > 0;
-
-        if (hasMessages) {
-            recentMessages.push({
-                ...user,
-                lastMessage: rawUser.lastMessage ?? rawUser.LastMessage ?? "",
-                createdAt: formatLastMessageTime(lastMessageAt),
-            });
-            continue;
-        }
-
-        usersWithoutMessages.push(user);
-    }
-
-    return { usersWithoutMessages, recentMessages };
-}
-
+// A message arrived from friendId: move them to the top of the conversations.
 export function updateRecentConversation(friendId, { lastMessage = "", createdAt = Date.now() } = {}) {
-    if (!friendId) return;
+    const key = String(friendId);
+    if (!key) return;
 
-    const existingIndex = DEFAULT_RECENT_MESSAGES.findIndex(
-        (conversation) => String(conversation.id?.Value ?? conversation.id) === String(friendId),
-    );
+    const user = removeFrom(DEFAULT_USERS, key)
+        ?? removeFrom(DEFAULT_RECENT_MESSAGES, key)
+        ?? createUser({ id: key });
 
-    const sourceUser = [...DEFAULT_RECENT_MESSAGES, ...DEFAULT_USERS].find(
-        (conversation) => String(conversation.id?.Value ?? conversation.id) === String(friendId),
-    );
-
-    const updatedConversation = {
-        ...(sourceUser ?? {}),
-        lastMessage,
-        createdAt: Number(createdAt),
-    };
-
-    if (existingIndex >= 0) {
-        DEFAULT_RECENT_MESSAGES[existingIndex] = updatedConversation;
-    } else {
-        DEFAULT_RECENT_MESSAGES.push(updatedConversation);
-    }
-
-    DEFAULT_RECENT_MESSAGES.sort((a, b) => Number(b.createdAt ?? 0) - Number(a.createdAt ?? 0));
+    user.lastMessage = lastMessage;
+    user.createdAt = Number(createdAt);
+    DEFAULT_RECENT_MESSAGES.unshift(user); // newest first, so the front is enough
 }
 
-export function getUnmessagedUsers() {
-    const recentIds = new Set(
-        DEFAULT_RECENT_MESSAGES.map((conversation) => String(conversation.id?.Value ?? conversation.id)),
-    );
-    return DEFAULT_USERS.filter(
-        (user) => !recentIds.has(String(user.id?.Value ?? user.id)),
-    );
+// A user came online: pin them to the front of the people list, fetching their
+// profile when no page has brought them in yet.
+export async function moveOnlineUserToFront(userId) {
+    const key = String(userId);
+    if (!key || key === String(me?.ID)) return;
+
+    let user = findUser(key);
+    if (!user) {
+        const raw = await fetchUser(key);
+        if (!raw) return;
+        user = normalizeUser({ ...raw, LastMessageAt: 0 });
+    }
+
+    removeFrom(DEFAULT_USERS, key);
+    removeFrom(DEFAULT_RECENT_MESSAGES, key);
+    user.onlineStatus = "online";
+    DEFAULT_USERS.unshift(user);
 }
