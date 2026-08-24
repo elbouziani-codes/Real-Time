@@ -52,11 +52,11 @@ func ValidatePostRequest(request CreatePostRequest) (Post, error) {
 		return post, Error{Message: "missing post content", Code: BadFormatCode}
 	}
 
-	if len(request.Title) < 1 || len(request.Title) > 25 {
-		return post, Error{Message: "post title length must be between 10 and 100 chars", Code: BadFormatCode}
+	if len(request.Title) < 1 || len(request.Title) > 100 {
+		return post, Error{Message: "post title length must be between 1 and 100 chars", Code: BadFormatCode}
 	}
 	if len(request.Content) < 1 || len(request.Content) > 4096 {
-		return post, Error{Message: "post content length must be between 10 and 4096 chars", Code: BadFormatCode}
+		return post, Error{Message: "post content length must be between 1 and 4096 chars", Code: BadFormatCode}
 	}
 	if len(request.Categories) == 0 {
 		return post, Error{Message: "missing post category", Code: BadFormatCode}

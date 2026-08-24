@@ -125,3 +125,8 @@ const UUID_RE = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-
 export function extractUserIds(content = "") {
     return String(content).match(UUID_RE) ?? [];
 }
+
+
+export function resetUsers(){
+    resetUsersPaging()
+}

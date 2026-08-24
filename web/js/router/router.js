@@ -14,12 +14,13 @@ import { HomeListener, HomeScrollListener } from "./../listeners/home.js";
 import { navBarListener } from "./../components/navbar.js";
 
 import { CreateMe, me } from "./../services/me.js";
-import { seedAllUsers } from "./../services/user.js";
+import { seedAllUsers, resetUsers } from "./../services/user.js";
 import { seedCategories } from "./../services/categories.js";
-import { sendAllPost } from "./../services/posts.js";
+import { sendAllPost, applyPostFilters } from "./../services/posts.js";
 
 import { connectSocket } from "./../websocket/socket.js";
 import { initChatSocket } from "./../websocket/chat.js";
+import { config } from "../config/config.js";
 
 const routes = {
     "/": HomePage,
@@ -35,6 +36,8 @@ async function router() {
     const page = routes[path];
     const app = document.getElementById("app");
     if (page) {
+        applyPostFilters(config.postsFilters);
+        resetUsers()
         await Fetching(path);
         if (window.location.pathname !== path) return;
         app.innerHTML = await page();
