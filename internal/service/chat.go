@@ -19,7 +19,7 @@ type chatService struct {
 type ChatRepo interface {
 	CreateConversationWithParticipants(context.Context, uuid.UUID, []uuid.UUID, []uuid.UUID) error
 	GetChat(context.Context, []uuid.UUID) (uuid.UUID, error)
-	GetMessages(context.Context, uuid.UUID, int, int) ([]domain.MessageOutput, error)
+	GetMessages(context.Context, uuid.UUID, int64, uuid.UUID, int) ([]domain.MessageOutput, error)
 	SendMessage(context.Context, domain.MessageOutput) (int64, error)
 }
 
@@ -69,8 +69,11 @@ func (c *chatService) SendMessageRoomChat(ctx context.Context, content string, S
 	return idMessage, createdAt, nil
 }
 
-func (c *chatService) GetMessages(ctx context.Context, chatID uuid.UUID, lengthAllRead int) ([]domain.MessageOutput, error) {
-	messages, err := c.ChatRepo.GetMessages(ctx, chatID, lengthAllRead, lengthAllRead+10)
+// pageSize is how many messages one history request returns.
+const pageSize = 10
+
+func (c *chatService) GetMessages(ctx context.Context, chatID uuid.UUID, beforeAt int64, beforeID uuid.UUID) ([]domain.MessageOutput, error) {
+	messages, err := c.ChatRepo.GetMessages(ctx, chatID, beforeAt, beforeID, pageSize)
 	if err != nil {
 		return nil, err
 	}

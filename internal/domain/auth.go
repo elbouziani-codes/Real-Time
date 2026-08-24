@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"regexp"
+	"strings"
 	"uuid"
 )
 
@@ -23,12 +23,10 @@ type Session struct {
 }
 
 /// to remove that shit later
-var (
-	usernameRegex = regexp.MustCompile(`^[\p{L}\p{N}_]+$`)
-	emailRegex    = regexp.MustCompile(`^[a-zA-Z0-9._%\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
-)
 
-func LoginValueidation(creds Credentials) (int, error) {
+
+func LoginValidation(creds *Credentials) (int, error) {
+	creds.Identifier = strings.ToLower(creds.Identifier)	
 	idType := UserNameType
 	if emailRegex.MatchString(creds.Identifier) {
 		idType = EmailType

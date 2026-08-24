@@ -1,13 +1,15 @@
 // The server finds the shared conversation from the authenticated user and
-// selected user, so the browser never needs to cache a room id.
-export async function fetchMessages({ friend, offset = 0 } = {}) {
+// selected user, so the browser never needs to cache a room id. Keyset paging:
+// before_at/before_id name the oldest message already held (both omitted for
+// the newest page), so live traffic can never shift a page under the cursor.
+export async function fetchMessages({ friend, before_at = 0, before_id = "" } = {}) {
     try {
         const response = await fetch("/api/getMessage", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ friend, offset }),
+            body: JSON.stringify({ friend, before_at, before_id }),
         });
 
         const text = await response.text();

@@ -11,7 +11,8 @@ import { moveOnlineUserToFront } from "./user.js";
 import { escapeHTML } from "../utils/helpers.js";
 import { showToast } from "../utils/toast.js";
 
-// The backend serves messages in pages (LIMIT offset+10 OFFSET offset).
+// The backend serves history in keyset pages of 10: each request names the
+// oldest message already loaded and receives the 10 before it.
 const PAGE_SIZE = 10;
 
 // Messages of the currently selected room, oldest -> newest.
@@ -20,7 +21,6 @@ export let currentChat = { UserA: "", UserB: "" };
 
 let loading = false;
 let hasMore = true;
-let offset = 0;
 // Bumped on every selectChat so a stale response of a previous room (or a
 // previous selection of the same room) can never overwrite the current one.
 let sessionId = 0;
@@ -39,12 +39,14 @@ function normalizeTimestamp(value) {
 // Maps the backend MessageOutput shape ({id, sender,
 // chat_id, content, created_at}) onto the frontend message model.
 function normalizeMessage(raw = {}) {
+    const createdAtSec = Number(raw.created_at ?? raw.CreatedAt ?? 0);
     return createMessage({
         id: raw.id ?? 0,
         roomId: raw.chat_id ?? 0,
         senderId: raw.sender ?? 0,
         content: raw.content ?? raw.Content ?? "",
-        createdAt: normalizeTimestamp(raw.created_at ?? raw.CreatedAt ?? 0),
+        createdAt: normalizeTimestamp(createdAtSec),
+        createdAtSec,
     });
 }
 
@@ -214,7 +216,6 @@ export function selectChat(next) {
         UserB: next?.UserB ?? "",
     };
     messages = [];
-    offset = 0;
     hasMore = true;
     knownIds.clear();
     hideTypingIndicator();
@@ -230,6 +231,21 @@ export function selectChat(next) {
     getMessages();
 }
 
+// The keyset cursor: the oldest settled (non-optimistic) message held, in the
+// backend's sort order (created_at DESC, id DESC). Null when nothing to page on.
+function oldestCursor() {
+    const settled = messages.filter((message) => !message.temp);
+    if (settled.length === 0) return null;
+    return settled.reduce((oldest, message) => {
+        const time = Number(message.createdAtSec ?? 0);
+        const oldestTime = Number(oldest.createdAtSec ?? 0);
+        if (time < oldestTime || (time === oldestTime && String(message.id) < String(oldest.id))) {
+            return message;
+        }
+        return oldest;
+    });
+}
+
 // Loads one page of messages for the selected user. With { older: true }, it
 // prepends the next page while keeping the scroll position.
 async function getMessages(options = {}) {
@@ -238,14 +254,17 @@ async function getMessages(options = {}) {
     if (loading) return;
     if (older && !hasMore) return;
 
+    const cursor = older ? oldestCursor() : null;
+    if (older && !cursor) return;
+
     loading = true;
     const sid = sessionId;
-    const requestOffset = older ? offset : 0;
 
     try {
         const response = await fetchMessages({
             friend: currentChat.UserB,
-            offset: requestOffset,
+            before_at: cursor ? Math.floor(Number(cursor.createdAtSec)) : 0,
+            before_id: cursor?.id ?? "",
         });
 
         // A newer selection (or a different room) superseded this request.
@@ -279,7 +298,6 @@ async function getMessages(options = {}) {
         }
 
         if (list.length < PAGE_SIZE) hasMore = false;
-        offset = messages.length;
 
         if (older) {
             const scroller = messagesScrollerEl();

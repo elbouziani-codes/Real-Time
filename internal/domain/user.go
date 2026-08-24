@@ -20,9 +20,10 @@ type User struct {
 	CreatedAt int
 }
 
+// UserProfile is a user as anyone may see them. It deliberately carries no
+// email: that is account data, not profile data.
 type UserProfile struct {
 	ID        uuid.UUID
-	Email     string
 	NickName  string
 	LastName  string
 	FirstName string
@@ -94,13 +95,16 @@ type RegisterRequest struct {
 	Age       int    `json:"age"`
 }
 
-var nameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]*$`) // would deleted later
-
-func ValueidateUserInfo(registerRequest RegisterRequest) (User, error) {
+var (
+	usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]*$`)
+	nameRegex = regexp.MustCompile(`^[a-zA-Z]*$`) 
+	emailRegex    = regexp.MustCompile(`^[a-zA-Z0-9._%\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+)
+func ValidateUserInfo(registerRequest RegisterRequest) (User, error) {
 	var user User
-	user.Email = strings.TrimSpace(registerRequest.Email)
+	user.Email = strings.TrimSpace(strings.ToLower(registerRequest.Email))
 	user.Password = registerRequest.Password
-	user.NickName = strings.TrimSpace(registerRequest.NickName)
+	user.NickName = strings.TrimSpace(strings.ToLower(registerRequest.NickName))
 	user.LastName = strings.TrimSpace(registerRequest.LastName)
 	user.FirstName = strings.TrimSpace(registerRequest.FirstName)
 	user.Gender = strings.TrimSpace(registerRequest.Gender)

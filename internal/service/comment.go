@@ -38,6 +38,6 @@ func (p *commentService) DeleteComment(ctx context.Context, commentID uuid.UUID)
 	return p.commentRepo.DeleteComment(ctx, commentID)
 }
 
-func (p *commentService) GetComments(ctx context.Context, userID, parentID uuid.UUID) ([]*domain.CommentInfo, error) {
-	return p.commentRepo.GetComments(ctx, userID, parentID)
+func (p *commentService) GetComments(ctx context.Context, userID, postID uuid.UUID) ([]*domain.CommentInfo, error) {
+	return p.commentRepo.GetComments(ctx, userID, postID)
 }

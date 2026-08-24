@@ -41,7 +41,7 @@ func (a *AuthService) CreateSession(ctx context.Context, userID uuid.UUID) (uuid
 	return id, nil
 }
 
-func (a *AuthService) ValueidateSession(ctx context.Context, sessionID uuid.UUID) (domain.Session, error) {
+func (a *AuthService) ValidateSession(ctx context.Context, sessionID uuid.UUID) (domain.Session, error) {
 	session, err := a.authRepo.GetByID(ctx, sessionID)
 	if err != nil {
 		return domain.Session{}, err

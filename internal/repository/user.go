@@ -40,7 +40,6 @@ func scanUserProfile(row scanner) (*domain.UserProfile, error) {
 	user := domain.UserProfile{}
 	err := row.Scan(
 		&user.ID,
-		&user.Email,
 		&user.NickName,
 		&user.LastName,
 		&user.FirstName,
@@ -80,7 +79,7 @@ func (u *UserRepo) GetByID(ctx context.Context, userID uuid.UUID) (domain.User, 
 	return scanUser(row)
 }
 
-const GetProfileQuery = `SELECT id, email, nick_name, last_name, first_name, age, gender 
+const GetProfileQuery = `SELECT id, nick_name, last_name, first_name, age, gender
 FROM users WHERE id = ?`
 
 func (u *UserRepo) GetUserProfile(ctx context.Context, requesterID, userID uuid.UUID) (*domain.UserProfile, error) {
@@ -127,9 +126,9 @@ COALESCE((
 // Users never messaged sort last on 0, then alphabetically so the tail of the
 // list is stable rather than arbitrary.
 const getAllUsersQueryHead = `
-SELECT id, email, nick_name, last_name, first_name, age, gender, last_message_at
+SELECT id, nick_name, last_name, first_name, age, gender, last_message_at
 FROM (
-	SELECT U.id, U.email, U.nick_name, U.last_name, U.first_name, U.age, U.gender,
+	SELECT U.id, U.nick_name, U.last_name, U.first_name, U.age, U.gender,
 	` + lastMessageAtColumn + ` AS last_message_at
 	FROM users U
 	WHERE U.id != ?
@@ -178,7 +177,6 @@ func scanUserContact(row scanner) (domain.UserContact, error) {
 	contact := domain.UserContact{}
 	err := row.Scan(
 		&contact.ID,
-		&contact.Email,
 		&contact.NickName,
 		&contact.LastName,
 		&contact.FirstName,

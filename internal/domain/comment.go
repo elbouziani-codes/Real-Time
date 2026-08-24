@@ -7,33 +7,30 @@ import (
 
 type Comment struct {
 	ID       uuid.UUID
-	ParentID uuid.UUID
+	PostID   uuid.UUID
 	AuthorID uuid.UUID
 	Content  string
 }
 
 type CommentInfo struct {
 	ID        uuid.UUID
-	ParentID  uuid.UUID
+	PostID    uuid.UUID
 	Author    UserProfile
-	Likes     int
-	DisLike   int
 	Content   string
-	LikeInfo  LikeInfo
 	CreatedAt int
 }
 
 type CreateCommentRequest struct {
-	ParentID string `json:"parent_id"`
-	Content  string `json:"content"`
+	PostID  string `json:"post_id"`
+	Content string `json:"content"`
 }
 
 func NewCommentRequest(request CreateCommentRequest) (Comment, error) {
 	comment := Comment{}
 	request.Content = strings.TrimSpace(request.Content)
 
-	if request.ParentID == "" {
-		return comment, Error{Message: "missing comment.Parent_id", Code: BadFormatCode}
+	if request.PostID == "" {
+		return comment, Error{Message: "missing comment.post_id", Code: BadFormatCode}
 	}
 	if request.Content == "" {
 		return comment, Error{Message: "missing comment content", Code: BadFormatCode}
@@ -43,9 +40,9 @@ func NewCommentRequest(request CreateCommentRequest) (Comment, error) {
 		return comment, Error{Message: "comment content length must be between 1 and 4096 chars", Code: BadFormatCode}
 	}
 	var err error
-	comment.ParentID, err = uuid.Parse(request.ParentID)
+	comment.PostID, err = uuid.Parse(request.PostID)
 	if err != nil {
-		return comment, Error{Message: "invalid parent_id", Code: BadFormatCode}
+		return comment, Error{Message: "invalid post_id", Code: BadFormatCode}
 	}
 
 	comment.Content = request.Content

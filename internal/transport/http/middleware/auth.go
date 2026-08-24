@@ -9,7 +9,7 @@ import (
 )
 
 type authService interface {
-	ValueidateSession(context.Context, uuid.UUID) (domain.Session, error)
+	ValidateSession(context.Context, uuid.UUID) (domain.Session, error)
 }
 
 type middleWare struct {
@@ -32,7 +32,7 @@ func (m *middleWare) Auth(next http.Handler) http.Handler {
 			http.Error(w, "failed to validate session id", http.StatusUnauthorized)
 			return
 		}
-		session, err := m.authSvc.ValueidateSession(r.Context(), sessionUUID)
+		session, err := m.authSvc.ValidateSession(r.Context(), sessionUUID)
 		if err != nil {
 			http.Error(w, "failed to validate session id ", http.StatusUnauthorized)
 			return

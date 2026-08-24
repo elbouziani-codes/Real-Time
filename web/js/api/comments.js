@@ -2,7 +2,7 @@
 
 // The backend serves the comments of a post under the post's own id:
 //  GET  /api/comments/{post_id} -> the post's comments, or null when it has none
-//  POST /api/comments           {parent_id, content} -> the new comment id
+//  POST /api/comments           {post_id, content} -> the new comment id
 export async function fetchComments(postID) {
 
     try{
@@ -27,7 +27,7 @@ export async function fetchCreateComment(postID, content) {
             headers:{
                 "Content-Type":"application/json",
             },
-            body: JSON.stringify({parent_id: postID, content: content}),
+            body: JSON.stringify({post_id: postID, content: content}),
         })
         if (response.status != 200){
             return {code: response.status, body: await response.text()}

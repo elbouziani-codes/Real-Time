@@ -2,9 +2,13 @@ package domain
 
 import "uuid"
 
+// ChatRoomInput pages a conversation history. BeforeAt/BeforeID name the
+// oldest message the client already holds (keyset paging); both zero mean
+// "the newest page", so an opening request carries no cursor.
 type ChatRoomInput struct {
-	Friend string `json:"friend"`
-	Offset int    `json:"offset"`
+	Friend   string `json:"friend"`
+	BeforeAt int64  `json:"before_at"`
+	BeforeID string `json:"before_id"`
 }
 type MessageOutput struct {
 	ID         uuid.UUID `json:"id"`

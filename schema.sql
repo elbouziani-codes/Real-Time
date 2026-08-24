@@ -52,7 +52,7 @@ CREATE TABLE
 	IF NOT EXISTS comments (
 		id CHAR(36) PRIMARY KEY,
 		author_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-		parent_id CHAR(36) NOT NULL,
+		post_id CHAR(36) NOT NULL REFERENCES posts (id) ON DELETE CASCADE,
 		content TEXT NOT NULL,
 		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
 	);
@@ -99,7 +99,7 @@ CREATE INDEX IF NOT EXISTS sender_idx ON messages (sender_id);
 
 CREATE INDEX IF NOT EXISTS conversation_idx ON messages (conversation_id);
 
-CREATE INDEX IF NOT EXISTS post_idx ON comments (parent_id);
+CREATE INDEX IF NOT EXISTS post_idx ON comments (post_id);
 
 CREATE INDEX IF NOT EXISTS post_categories_category_idx ON post_categories (category_id);
 
@@ -108,23 +108,13 @@ CREATE INDEX IF NOT EXISTS post_categories_category_idx ON post_categories (cate
 CREATE INDEX IF NOT EXISTS posts_feed_idx ON posts (created_at DESC, id DESC);
 
 
-CREATE TRIGGER IF NOT EXISTS comment_satisfy
-BEFORE INSERT ON comments 
+CREATE TRIGGER IF NOT EXISTS likes_satisfy
+BEFORE INSERT ON reactions
 BEGIN
-	SELECT CASE	
-		WHEN NOT EXISTS(SELECT * FROM comments WHERE id = NEW.parent_id)
-		AND NOT EXISTS(SELECT * FROM posts WHERE id = NEW.parent_id) 
+	SELECT CASE
+		WHEN NOT EXISTS(SELECT * FROM posts WHERE id = NEW.parent_id)
 		THEN RAISE(ABORT, "parent not exists")
 	END;
-END;
-CREATE TRIGGER IF NOT EXISTS likes_satisfy
-BEFORE INSERT ON reactions 
-BEGIN
-	SELECT CASE	
-		WHEN NOT EXISTS(SELECT * FROM comments WHERE id = NEW.parent_id)
-		AND NOT EXISTS(SELECT * FROM posts WHERE id = NEW.parent_id) 
-		THEN RAISE(ABORT, "parent not exists")
-	END; 
 END;
 CREATE TRIGGER IF NOT EXISTS likes_insert
 AFTER INSERT ON reactions 
@@ -157,17 +147,10 @@ BEGIN
 	WHERE id = OLD.parent_id AND OLD.is_like = FALSE;   	
 END;
 
+-- Comments are removed by their own foreign key; reactions have no FK on
+-- parent_id (it is shared with nothing else), so they are deleted by hand.
 CREATE TRIGGER IF NOT EXISTS cascade_delete_poosts
 AFTER DELETE ON posts
 BEGIN
-	DELETE FROM comments WHERE old.id = parent_id;
 	DELETE FROM reactions WHERE old.id = parent_id;
-END;
-
-CREATE TRIGGER IF NOT EXISTS cascade_delete_comments 
-AFTER DELETE ON comments 
-BEGIN
-	DELETE FROM comments WHERE old.id = parent_id;	
-	DELETE FROM reactions WHERE old.id = parent_id;	
-
 END;

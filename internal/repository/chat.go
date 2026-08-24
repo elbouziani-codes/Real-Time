@@ -9,9 +9,6 @@ import (
 	"uuid"
 )
 
-// / this would migrated to sqlite package
-// DBTX is the query surface shared by *sql.DB and *sql.Tx, so a repo method
-// written against it runs standalone or inside a caller's transaction.
 type DBTX interface {
 	ExecContext(context.Context, string, ...any) (sql.Result, error)
 	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
@@ -31,8 +28,6 @@ type DB interface {
 	Beginner
 }
 
-// scanner covers both *sql.Row and *sql.Rows so the scan helpers serve the
-// single-row and multi-row queries alike.
 type scanner interface {
 	Scan(...any) error
 }
@@ -95,15 +90,16 @@ func (q *ChatRepo) GetChat(ctx context.Context, usersID []uuid.UUID) (uuid.UUID,
 }
 
 const getMessagesQuery = `
-	SELECT id, sender_id, conversation_id, content , created_at FROM messages
-	WHERE conversation_id  = ?
-	ORDER BY created_at DESC
-	LIMIT  ?
-	OFFSET ?
+	SELECT id, sender_id, conversation_id, content, created_at FROM messages
+	WHERE conversation_id = ?
+	AND (? = 0 OR created_at < ? OR (created_at = ? AND id < ?))
+	ORDER BY created_at DESC, id DESC
+	LIMIT ?
 `
 
-func (q *ChatRepo) GetMessages(ctx context.Context, chatID uuid.UUID, offset, limit int) ([]domain.MessageOutput, error) {
-	rows, err := q.db.QueryContext(ctx, getMessagesQuery, chatID.String(), limit, offset) // must be updated later
+func (q *ChatRepo) GetMessages(ctx context.Context, chatID uuid.UUID, beforeAt int64, beforeID uuid.UUID, limit int) ([]domain.MessageOutput, error) {
+	rows, err := q.db.QueryContext(ctx, getMessagesQuery,
+		chatID.String(), beforeAt, beforeAt, beforeAt, beforeID.String(), limit)
 	if err != nil {
 		return nil, sqlite.TranslateError(err)
 	}

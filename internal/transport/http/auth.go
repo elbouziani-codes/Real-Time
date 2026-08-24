@@ -53,7 +53,8 @@ func (a *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 // most recently comes first and people they have never messaged come last.
 // GetUser serves one profile by id. It answers the WebSocket presence flow:
 // when a user nobody has paged in yet comes online, the sidebar needs their
-// row. The password never leaves the repository; UserProfile omits it.
+// row. The password and email never leave the repository; UserProfile omits
+// both, so one user's account data is never served to another.
 func (a *AuthHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	userID, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
@@ -69,7 +70,6 @@ func (a *AuthHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(domain.UserProfile{
 		ID:        user.ID,
-		Email:     user.Email,
 		NickName:  user.NickName,
 		LastName:  user.LastName,
 		FirstName: user.FirstName,
@@ -110,7 +110,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := domain.ValueidateUserInfo(registerRequest)
+	user, err := domain.ValidateUserInfo(registerRequest)
 	if err != nil {
 		Error(err, w)
 		return
@@ -162,7 +162,7 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Error(domain.Error{Message: "invalid json", Code: domain.BadFormatCode}, w) // must beh
 		return
 	}
-	idType, err := domain.LoginValueidation(creds)
+	idType, err := domain.LoginValidation(&creds)
 	if err != nil {
 		Error(err, w)
 		//instead of repeating code I will add helper for that
