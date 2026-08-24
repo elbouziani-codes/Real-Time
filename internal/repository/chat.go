@@ -95,15 +95,15 @@ func (q *ChatRepo) GetChat(ctx context.Context, usersID []uuid.UUID) (uuid.UUID,
 }
 
 const getMessagesQuery = `
-	SELECT id, sender_id, conversation_id, content , created_at FROM messages
-	WHERE conversation_id  = ?
-	ORDER BY created_at DESC
-	LIMIT  ?
+	SELECT id, sender_id, conversation_id, content, created_at FROM messages
+	WHERE conversation_id = ?
+	ORDER BY created_at DESC, id DESC
+	LIMIT ?
 	OFFSET ?
 `
 
 func (q *ChatRepo) GetMessages(ctx context.Context, chatID uuid.UUID, offset, limit int) ([]domain.MessageOutput, error) {
-	rows, err := q.db.QueryContext(ctx, getMessagesQuery, chatID.String(), limit, offset) // must be updated later
+	rows, err := q.db.QueryContext(ctx, getMessagesQuery, chatID.String(), limit, offset)
 	if err != nil {
 		return nil, sqlite.TranslateError(err)
 	}
@@ -123,7 +123,7 @@ func (q *ChatRepo) GetMessages(ctx context.Context, chatID uuid.UUID, offset, li
 	return messages, nil
 }
 
-const sendMessageQuery = `INSERT INTO messages (id, sender_id, content, conversation_id) VALUES (?, ?, ?, ?) RETURNING created_at`
+const sendMessageQuery = `INSERT INTO messages (id, sender_id, content, conversation_id, created_at) VALUES (?, ?, ?, ?, CAST((julianday('now') - 2440587.5) * 86400000 AS INTEGER)) RETURNING created_at`
 
 func (q *ChatRepo) SendMessage(ctx context.Context, message domain.MessageOutput) (int64, error) {
 	var createdAt int64

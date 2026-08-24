@@ -2,13 +2,12 @@ import UserAvatar from '../UserAvatar.js';
 import { escapeHTML } from '../../utils/helpers.js';
 import formatDateTime from '../../utils/time.js';
 
-
 export default function ConversationItem(conversation = {}, { active = false } = {}) {
-    const { name = '', lastMessage = '', createdAt = '' } = conversation;
+    const { name = '', lastMessage = '', lastMessageAt = 0 } = conversation;
     const userId = conversation.id ?? '';
-    const timeLabel = Number.isFinite(Number(createdAt)) && Number(createdAt) > 0
-        ? formatDateTime(createdAt)
-        : createdAt;
+    const timeLabel = Number(lastMessageAt) > 0
+        ? formatDateTime(lastMessageAt)
+        : '';
 
     return `
         <div class="conversation-item${active ? ' active' : ''}" data-user-id="${userId}">

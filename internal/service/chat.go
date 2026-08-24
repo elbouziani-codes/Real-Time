@@ -1,7 +1,6 @@
 package service
 
 import (
-	//	"fmt"
 	"context"
 	"database/sql"
 	"errors"
@@ -9,7 +8,6 @@ import (
 
 	"realTime/internal/domain"
 	"uuid"
-	// "realTime/database"
 )
 
 type chatService struct {
@@ -69,8 +67,8 @@ func (c *chatService) SendMessageRoomChat(ctx context.Context, content string, S
 	return idMessage, createdAt, nil
 }
 
-func (c *chatService) GetMessages(ctx context.Context, chatID uuid.UUID, lengthAllRead int) ([]domain.MessageOutput, error) {
-	messages, err := c.ChatRepo.GetMessages(ctx, chatID, lengthAllRead, lengthAllRead+10)
+func (c *chatService) GetMessages(ctx context.Context, chatID uuid.UUID, offset int) ([]domain.MessageOutput, error) {
+	messages, err := c.ChatRepo.GetMessages(ctx, chatID, offset, 10)
 	if err != nil {
 		return nil, err
 	}

@@ -14,9 +14,7 @@ export function connectSocket() {
     shouldReconnect = true;
     socket = new WebSocket(wsUrl());
 
-    socket.onopen = () => {
-        ("WebSocket connected");
-    };
+    socket.onopen = () => {};
 
     socket.onmessage = (event) => {
         let data;
@@ -34,10 +32,8 @@ export function connectSocket() {
     };
 
     socket.onclose = () => {
-        ("WebSocket closed");
         socket = null;
         if (shouldReconnect) {
-            ("WebSocket reconnecting in 3s...");
             reconnectTimer = setTimeout(connectSocket, 3000);
         }
     };
