@@ -1,14 +1,12 @@
-
 export default function createUser({
     id = 0,
     name = '',
     handle = '',
     letter = '',
     avatarClass = 'avatar--mine',
-    onlineStatus = '',
+    online = false,
     lastMessage = '',
-    unreadCount = 0,
-    createdAt = '',
+    lastMessageAt = 0,
 } = {}) {
     return {
         id,
@@ -16,9 +14,8 @@ export default function createUser({
         handle,
         letter: letter || (name ? name.charAt(0).toUpperCase() : ''),
         avatarClass,
-        onlineStatus,
+        online,
         lastMessage,
-        unreadCount,
-        createdAt,
+        lastMessageAt: Number(lastMessageAt),
     };
 }

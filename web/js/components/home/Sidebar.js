@@ -5,7 +5,7 @@ export default function Sidebar({ categories = DEFAULT_CATEGORIES } = {}) {
     return `
         <aside class="sidebar">
             <h3 class="sidebar-title">Filter</h3>
-            ${Categories({ categories })}
+            ${Categories(categories)}
             ${LikedFilter()}
         </aside>
     `;

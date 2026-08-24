@@ -4,27 +4,37 @@ import ChatMessage from "../components/chat/ChatMessage.js";
 import ConversationItem from "../components/chat/ConversationItem.js";
 import ChatHeader from "../components/chat/ChatHeader.js";
 import { me } from "./me.js";
-import { DEFAULT_USERS, DEFAULT_RECENT_MESSAGES, updateRecentConversation } from "./user.js";
+import { getUser, getSortedConversations, updateLastMessage } from "./user.js";
 import { disconnectSocket, sendWsRequest } from "../websocket/socket.js";
-import { applyPresenceEvent, extractUserIds } from "./online.js";
-import { moveOnlineUserToFront } from "./user.js";
+import { applyPresenceEvent } from "./online.js";
 import { escapeHTML } from "../utils/helpers.js";
 import { showToast } from "../utils/toast.js";
 
+<<<<<<< HEAD
 // The backend serves history in keyset pages of 10: each request names the
 // oldest message already loaded and receives the 10 before it.
+=======
+// ─── Constants ──────────────────────────────────────────────────────────────
+>>>>>>> melbouzi
 const PAGE_SIZE = 10;
 
-// Messages of the currently selected room, oldest -> newest.
+// ─── Message state (per conversation) ───────────────────────────────────────
 let messages = [];
-export let currentChat = { UserA: "", UserB: "" };
-
 let loading = false;
 let hasMore = true;
+<<<<<<< HEAD
 // Bumped on every selectChat so a stale response of a previous room (or a
 // previous selection of the same room) can never overwrite the current one.
+=======
+let offset = 0;
+>>>>>>> melbouzi
 let sessionId = 0;
 const knownIds = new Set();
+
+// ─── Currently selected conversation ────────────────────────────────────────
+export let currentChat = { UserA: "", UserB: "" };
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
 function uuidString(value) {
     return String(value ?? "");
@@ -36,8 +46,6 @@ function normalizeTimestamp(value) {
     return numeric < 1e12 ? numeric * 1000 : numeric;
 }
 
-// Maps the backend MessageOutput shape ({id, sender,
-// chat_id, content, created_at}) onto the frontend message model.
 function normalizeMessage(raw = {}) {
     const createdAtSec = Number(raw.created_at ?? raw.CreatedAt ?? 0);
     return createMessage({
@@ -58,13 +66,6 @@ function sortMessages(list = []) {
     });
 }
 
-function findFriend(userId) {
-    if (!userId) return null;
-    return [...DEFAULT_RECENT_MESSAGES, ...DEFAULT_USERS].find(
-        (user) => String(user.id) === String(userId),
-    ) ?? null;
-}
-
 function formatTime(createdAt) {
     if (!createdAt) return "";
     const date = new Date(Number(createdAt));
@@ -72,12 +73,26 @@ function formatTime(createdAt) {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-// The ChatMessage component renders {mine, letter, avatarClass, name, content,
-// time}. mine is decided by the authenticated user id (currentChat.UserA),
-// never by a DOM class. All user content is escaped here, once.
+// ─── DOM helpers ────────────────────────────────────────────────────────────
+
+function messagesListEl() {
+    return document.querySelector(".messages-list");
+}
+
+function messagesScrollerEl() {
+    return document.querySelector(".messages-container");
+}
+
+function scrollToBottom() {
+    const scroller = messagesScrollerEl();
+    if (scroller) scroller.scrollTop = scroller.scrollHeight;
+}
+
+// ─── Message rendering ──────────────────────────────────────────────────────
+
 function toView(message) {
     const mine = String(message.senderId) === String(currentChat?.UserA);
-    const friend = findFriend(currentChat?.UserB);
+    const friend = getUser(currentChat?.UserB);
     const letter = mine
         ? (me?.NickName?.[0] ?? "").toUpperCase()
         : (friend?.letter ?? "");
@@ -94,35 +109,27 @@ function toView(message) {
     };
 }
 
-function messagesListEl() {
-    return document.querySelector(".messages-list");
-}
-
-function messagesScrollerEl() {
-    return document.querySelector(".messages-container");
-}
-
-function scrollToBottom() {
-    const scroller = messagesScrollerEl();
-    if (scroller) scroller.scrollTop = scroller.scrollHeight;
-}
-
 function renderAllMessages() {
     const list = messagesListEl();
     if (!list) return;
-    list.innerHTML = sortMessages(messages).map((message) => ChatMessage(toView(message))).join("");
+    list.innerHTML = sortMessages(messages)
+        .map((message) => ChatMessage(toView(message)))
+        .join("");
 }
 
 function renderHeader() {
     const header = document.querySelector(".chat-header");
     if (!header) return;
-    header.innerHTML = ChatHeader(findFriend(currentChat?.UserB) ?? {});
+    header.innerHTML = ChatHeader(getUser(currentChat?.UserB) ?? {});
 }
 
 function renderActiveConversation() {
     document.querySelectorAll(".conversation-item").forEach((item) => {
         const friendId = item.dataset.userId;
-        item.classList.toggle("active", friendId && String(friendId) === String(currentChat?.UserB));
+        item.classList.toggle(
+            "active",
+            friendId && String(friendId) === String(currentChat?.UserB),
+        );
     });
 }
 
@@ -150,6 +157,25 @@ function renderError(message) {
     list.innerHTML = `<div class="empty-state">${escapeHTML(message)}</div>`;
 }
 
+// ─── Conversation sidebar ───────────────────────────────────────────────────
+
+function renderConversationSidebar() {
+    const list = document.querySelector(".conversations-list");
+    if (!list || window.location.pathname !== "/chat") return;
+
+    const conversations = getSortedConversations();
+    const activeId = currentChat?.UserB ?? null;
+    list.innerHTML = conversations
+        .map((conversation) =>
+            ConversationItem(conversation, {
+                active: String(conversation.id) === String(activeId),
+            }),
+        )
+        .join("");
+}
+
+// ─── New messages button ────────────────────────────────────────────────────
+
 function showNewMessagesButton() {
     const container = messagesScrollerEl();
     if (!container) return;
@@ -169,7 +195,7 @@ function showNewMessagesButton() {
     container.appendChild(button);
 }
 
-// --- Typing indicator -----------------------------------------------------
+// ─── Typing indicator ───────────────────────────────────────────────────────
 
 let typingHideTimer = null;
 
@@ -190,8 +216,6 @@ function showTypingIndicator() {
     typingHideTimer = setTimeout(hideTypingIndicator, 4000);
 }
 
-// Sends the "typing" request over the existing WebSocket protocol so the other
-// participant can show a typing indicator. Callers throttle it.
 export function sendTyping() {
     const friend = currentChat?.UserB;
     if (!friend) return;
@@ -204,10 +228,8 @@ export function sendTyping() {
     });
 }
 
-// --- Conversation selection & history -------------------------------------
+// ─── Conversation selection & history loading ────────────────────────────────
 
-// The server resolves the shared room from the two participants, so history
-// loads even after a refresh.
 export function selectChat(next) {
     sessionId += 1;
     loading = false;
@@ -228,9 +250,10 @@ export function selectChat(next) {
         return;
     }
     renderLoading();
-    getMessages();
+    loadMessages();
 }
 
+<<<<<<< HEAD
 // The keyset cursor: the oldest settled (non-optimistic) message held, in the
 // backend's sort order (created_at DESC, id DESC). Null when nothing to page on.
 function oldestCursor() {
@@ -249,6 +272,9 @@ function oldestCursor() {
 // Loads one page of messages for the selected user. With { older: true }, it
 // prepends the next page while keeping the scroll position.
 async function getMessages(options = {}) {
+=======
+async function loadMessages(options = {}) {
+>>>>>>> melbouzi
     const { older = false } = options;
     if (!currentChat?.UserB) return;
     if (loading) return;
@@ -267,7 +293,6 @@ async function getMessages(options = {}) {
             before_id: cursor?.id ?? "",
         });
 
-        // A newer selection (or a different room) superseded this request.
         if (sid !== sessionId || !currentChat?.UserB) return;
 
         if (response.code != 200) {
@@ -286,15 +311,9 @@ async function getMessages(options = {}) {
         }
 
         if (older) {
-            // The backend returns the page newest-first; flip it so prepending
-            // keeps the whole list oldest -> newest. Optimistic (temp) copies
-            // of the user's own sends are dropped: their authoritative versions
-            // ride inside the fetched page (they are the newest rows), so
-            // keeping both would duplicate them.
-            messages = sortMessages([...fresh, ...messages.filter((message) => !message.temp)]);
+            messages = sortMessages([...fresh, ...messages.filter((m) => !m.temp)]);
         } else {
-            // Optimistic (unsent-confirmed) messages are superseded by history.
-            messages = sortMessages([...messages.filter((message) => !message.temp), ...fresh]);
+            messages = sortMessages([...messages.filter((m) => !m.temp), ...fresh]);
         }
 
         if (list.length < PAGE_SIZE) hasMore = false;
@@ -319,28 +338,25 @@ async function getMessages(options = {}) {
     }
 }
 
-// Infinite scroll entry point: fetch the next older page while preserving the
-// scroll position. Guards against duplicate requests for the same page.
 export function loadOlderMessages() {
     if (!currentChat?.UserB || loading || !hasMore) return;
     if (messages.length === 0) return;
-    getMessages({ older: true });
+    loadMessages({ older: true });
 }
 
-// Appends one new message (WebSocket delivery or optimistic own send) without
-// reloading the whole history. Skips duplicates and only scrolls when the user
-// is already near the bottom, otherwise a "New messages" pill is offered.
+// ─── Message append (WebSocket + optimistic) ────────────────────────────────
+
 function appendMessage(message) {
     if (knownIds.has(message.id)) return;
     knownIds.add(message.id);
     messages = sortMessages([...messages, message]);
     hideTypingIndicator();
 
-    const list = messagesListEl();
     const scroller = messagesScrollerEl();
-    if (!list || !scroller) return;
+    if (!scroller) return;
 
-    const nearBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 80;
+    const nearBottom =
+        scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 80;
     renderAllMessages();
     if (nearBottom) {
         scrollToBottom();
@@ -349,9 +365,8 @@ function appendMessage(message) {
     }
 }
 
-// Sends a message over the existing WebSocket protocol. The backend never
-// echoes a message back to its sender, so the sender's copy is appended
-// optimistically with a temp id (dropped on the next history reload).
+// ─── Send message ───────────────────────────────────────────────────────────
+
 export function sendMessage(content) {
     const friend = currentChat?.UserB;
     if (!friend || !content?.trim()) return false;
@@ -377,7 +392,8 @@ export function sendMessage(content) {
         createdAt: Date.now(),
     });
     Object.assign(temp, { temp: true });
-    updateRecentConversation(friend, {
+
+    updateLastMessage(friend, {
         lastMessage: content.trim(),
         createdAt: temp.createdAt,
     });
@@ -386,39 +402,29 @@ export function sendMessage(content) {
     return true;
 }
 
-// Handles a WebSocket frame. code 200 is a new message for whoever receives
-// it; code 2 is a typing frame; codes 3/4 are presence events; 404 is an error.
+// ─── WebSocket event router ─────────────────────────────────────────────────
+
 export async function handleWsMessage(data) {
     if (!data || typeof data !== "object") return;
 
     const code = data.code;
+
+    // New message (code 200)
     if (code == 200 && data.chat_id) {
-        const senderId = uuidString(data.sender);
-        const roomId = uuidString(data.chat_id);
-        if (senderId && roomId) {
-            updateRecentConversation(senderId, {
-                lastMessage: data.content ?? "",
-                createdAt: normalizeTimestamp(data.created_at ?? data.CreatedAt ?? Date.now()),
-            });
-            renderConversationSidebar();
-            // A message for the currently open conversation.
-            if (currentChat?.UserB && String(currentChat.UserB) === senderId) {
-                appendMessage(normalizeMessage(data));
-            } else {
-                notifyNewMessage(senderId, data.content ?? "");
-            }
-        }
+        handleIncomingMessage(data);
         return;
     }
 
+    // Connection replaced by another tab (code 1)
     if (code == 1) {
-        ("WebSocket replaced by another connection:", data.content);
+        console.warn("WebSocket replaced by another connection:", data.content);
         disconnectSocket();
         const { navigate } = await import("../router/router.js");
         navigate("/end");
         return;
     }
 
+    // Typing indicator (code 2)
     if (code == 2) {
         if (currentChat?.UserB && String(currentChat.UserB) === uuidString(data.sender)) {
             showTypingIndicator();
@@ -426,26 +432,42 @@ export async function handleWsMessage(data) {
         return;
     }
 
+    // Presence events: user online (3) / offline (4)
     if (code == 3 || code == 4) {
         applyPresenceEvent(code, data.content);
-        // Online users surface at the top of the people list; fetch anyone
-        // no page has brought in yet.
-        for (const id of code == 3 ? extractUserIds(data.content) : []) {
-            await moveOnlineUserToFront(id);
-            renderConversationSidebar();
-        }
+        renderConversationSidebar();
         return;
     }
 
+    // Error (code 404)
     if (code == 404) {
         console.error("WebSocket request failed:", data.content);
     }
 }
 
-// The recipient is connected but looking somewhere else: raise a clickable
-// toast that jumps straight into the conversation.
+function handleIncomingMessage(data) {
+    const senderId = uuidString(data.sender);
+    const roomId = uuidString(data.chat_id);
+    if (!senderId || !roomId) return;
+
+    // Update conversation ordering (moves sender to top)
+    updateLastMessage(senderId, {
+        lastMessage: data.content ?? "",
+        createdAt: normalizeTimestamp(data.created_at ?? data.CreatedAt ?? Date.now()),
+    });
+    renderConversationSidebar();
+
+    // If the message belongs to the currently open conversation, append it.
+    // Otherwise, show a toast notification.
+    if (currentChat?.UserB && String(currentChat.UserB) === senderId) {
+        appendMessage(normalizeMessage(data));
+    } else {
+        notifyNewMessage(senderId, data.content ?? "");
+    }
+}
+
 function notifyNewMessage(senderId, content) {
-    const friend = findFriend(senderId);
+    const friend = getUser(senderId);
     showToast({
         title: friend?.name ?? "New message",
         message: content,
@@ -458,27 +480,10 @@ async function openConversation(senderId) {
         selectChat({ UserA: me.ID, UserB: senderId });
         return;
     }
-    // Another page: stage the chat so the /chat listener selects it on mount.
     const [{ navigate }, { setChat }] = await Promise.all([
         import("../router/router.js"),
         import("../listeners/users.js"),
     ]);
     setChat({ UserA: me.ID, UserB: senderId });
     navigate("/chat");
-}
-
-function renderConversationSidebar() {
-    const list = document.querySelector(".conversations-list");
-    const currentPath = window.location.pathname;
-    if (!list || currentPath !== "/chat") return;
-
-    const conversations = [...DEFAULT_RECENT_MESSAGES, ...DEFAULT_USERS];
-    const activeId = currentChat?.UserB ?? null;
-    list.innerHTML = conversations
-        .map((conversation) =>
-            ConversationItem(conversation, {
-                active: (conversation.id) === (activeId),
-            }),
-        )
-        .join("");
 }

@@ -1,9 +1,8 @@
-import {fetchPost, fetchPostDetails, resetFetchPost, stopFetchPost} from "./../api/posts.js"
-import {fetchReact, fetchUpdateReact} from "./../api/like.js"
-import {config, ZERO_UUID} from "./../config/config.js"
-import PostCard  from "./../components/home/post.js"
-import { navigate } from "./../router/router.js"
-
+import { fetchPost, fetchPostDetails, resetFetchPost, stopFetchPost } from "./../api/posts.js";
+import { fetchReact, fetchUpdateReact } from "./../api/like.js";
+import { config, ZERO_UUID } from "./../config/config.js";
+import PostCard from "./../components/home/post.js";
+import { navigate } from "./../router/router.js";
 
 export let DEFAULT_POST = [];
 
@@ -16,39 +15,38 @@ export async function sendAllPost(Scroll = false) {
     let response = await fetchPost(config.postsCursor, config.postsFilters);
     if (requestId != feedRequestId) return;
 
-    if (response.code == 200){
+    if (response.code == 200) {
         if (!Array.isArray(response.body)) {
             if (DEFAULT_POST.length === 0) {
                 DEFAULT_POST = ["not found post"];
             }
-            return ;
+            return;
         }
         const fresh = appendPosts(response.body);
         if (DEFAULT_POST.length === 0) {
             DEFAULT_POST = ["no posts found"];
-            if (Scroll){
-                document.querySelector(".feed").innerHTML += PostCard(DEFAULT_POST[0])
+            if (Scroll) {
+                document.querySelector(".feed").innerHTML += PostCard(DEFAULT_POST[0]);
             }
-            return ;
+            return;
         }
-        if (Scroll){
-            const postsHtml = fresh.map((e) => {return PostCard(e) }).join('');
-            document.querySelector(".feed").innerHTML += postsHtml
+        if (Scroll) {
+            const postsHtml = fresh.map((e) => PostCard(e)).join("");
+            document.querySelector(".feed").innerHTML += postsHtml;
         }
-    }else if (response.code == 401){
+    } else if (response.code == 401) {
         resetPosts();
         navigate("/login");
-    }else if (response.code != 1000){
+    } else if (response.code != 1000) {
         if (DEFAULT_POST.length === 0) {
-            DEFAULT_POST = ["error in fetch Posts"]
+            DEFAULT_POST = ["error in fetch Posts"];
         }
         stopFetchPost();
     }
 }
 
-
 function appendPosts(newPosts) {
-    const known = new Set(DEFAULT_POST.map((e) => {return typeof e == "object" && e ? e.ID : null }));
+    const known = new Set(DEFAULT_POST.map((e) => (typeof e == "object" && e ? e.ID : null)));
     const fresh = [];
     for (const post of newPosts) {
         if (post && !known.has(post.ID)) {
@@ -64,7 +62,6 @@ function appendPosts(newPosts) {
     return fresh;
 }
 
-
 export function resetPosts() {
     DEFAULT_POST = [];
     config.postsCursor = null;
@@ -77,7 +74,6 @@ export function applyPostFilters(filters) {
     resetPosts();
 }
 
-
 export async function reactToPost(postID, isLike) {
     const post = findPost(postID);
     if (!post || reacting.has(postID)) return null;
@@ -88,7 +84,7 @@ export async function reactToPost(postID, isLike) {
         if (reactionID == ZERO_UUID) {
             const response = await fetchReact(postID, isLike);
             if (response.code != 200) return failedReaction(response);
-            post.LikeInfo = {ID: response.body, IsLike: isLike};
+            post.LikeInfo = { ID: response.body, IsLike: isLike };
             countReaction(post, isLike, 1);
             return post;
         }
@@ -96,7 +92,7 @@ export async function reactToPost(postID, isLike) {
         const response = await fetchUpdateReact(reactionID, isLike);
         if (response.code != 200) return failedReaction(response);
         if (post.LikeInfo.IsLike == isLike) {
-            post.LikeInfo = {ID: ZERO_UUID, IsLike: false};
+            post.LikeInfo = { ID: ZERO_UUID, IsLike: false };
             countReaction(post, isLike, -1);
         } else {
             post.LikeInfo.IsLike = isLike;
@@ -113,7 +109,7 @@ function countReaction(post, isLike, delta) {
     if (isLike) {
         post.Likes = post.Likes + delta;
     } else {
-        post.DisLikes = post.DisLikes + delta
+        post.DisLikes = post.DisLikes + delta;
     }
 }
 
@@ -124,7 +120,6 @@ function failedReaction(response) {
     return null;
 }
 
-
 export let CURRENT_POST = null;
 
 function findPost(postID) {
@@ -134,23 +129,21 @@ function findPost(postID) {
     return null;
 }
 
-
 export async function sendPostDetails(postID) {
     CURRENT_POST = null;
-    if (!postID) return {error: "This post link is missing a post id."};
+    if (!postID) return { error: "This post link is missing a post id." };
 
     const response = await fetchPostDetails(postID);
     if (response.code == 200 && response.body && typeof response.body == "object") {
         CURRENT_POST = response.body;
-        return {post: CURRENT_POST};
+        return { post: CURRENT_POST };
     }
 
     if (response.code == 401) {
         navigate("/login");
-        return {error: "You need to sign in to read this post."};
+        return { error: "You need to sign in to read this post." };
     }
-    if (response.code == 400) return {error: "This post id is not valid."};
-    if (response.code == 404) return {error: "This post does not exist."};
-    (response.body);
-    return {error: "Could not load this post. Please try again."};
+    if (response.code == 400) return { error: "This post id is not valid." };
+    if (response.code == 404) return { error: "This post does not exist." };
+    return { error: "Could not load this post. Please try again." };
 }

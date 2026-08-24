@@ -1,14 +1,16 @@
 import createUser from "../models/User.js";
-import { fetchAllUsers, fetchUser, resetUsersPaging } from "../api/users.js";
-import { isOnline } from "./online.js";
-import { me } from "./me.js";
+import { fetchAllUsers, resetUsersPaging } from "../api/users.js";
 
-// The sidebar is two lists fed by the same pages:
-//   DEFAULT_RECENT_MESSAGES - people who share messages with me, newest first
-//   DEFAULT_USERS           - everyone else, alphabetical
-export const DEFAULT_USERS = [];
-export const DEFAULT_RECENT_MESSAGES = [];
+// ─── Single source of truth ─────────────────────────────────────────────────
+// Every user lives here. The `online` property controls ONLY the status dot.
+// The `lastMessageAt` property controls ONLY conversation ordering.
+const users = new Map();
 
+// Derived, sorted list for the conversation sidebar. Rebuilt by
+// getSortedConversations() and consumed by rendering code.
+let sortedConversations = [];
+
+// ─── Sorting (one place, never uses online) ─────────────────────────────────
 function byName(a, b) {
     return String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, {
         sensitivity: "base",
@@ -16,76 +18,110 @@ function byName(a, b) {
     });
 }
 
+function sortConversationList() {
+    const all = [...users.values()];
+    all.sort((a, b) => {
+        const aHas = a.lastMessageAt > 0;
+        const bHas = b.lastMessageAt > 0;
+
+        // Both have conversations → newest first
+        if (aHas && bHas) {
+            if (a.lastMessageAt !== b.lastMessageAt) return b.lastMessageAt - a.lastMessageAt;
+            return byName(a, b);
+        }
+
+        // One has conversations → goes above
+        if (aHas) return -1;
+        if (bHas) return 1;
+
+        // Neither has conversations → alphabetical
+        return byName(a, b);
+    });
+    sortedConversations = all;
+}
+
+// ─── Normalization ──────────────────────────────────────────────────────────
 function normalizeUser(raw = {}) {
     return createUser({
         id: raw.ID,
         name: raw.NickName,
         handle: "@" + raw.NickName,
-        onlineStatus: isOnline(raw.ID) ? "online" : "offline",
+        online: false,
         lastMessage: raw.LastMessage ?? "",
-        // LastMessageAt doubles as the conversation recency (0 = never talked).
-        createdAt: Number(raw.LastMessageAt ?? 0),
+        lastMessageAt: Number(raw.LastMessageAt ?? 0),
     });
 }
 
-async function loadPage() {
-    for (const raw of await fetchAllUsers()) {
-        const user = normalizeUser(raw);
-        (user.createdAt ? DEFAULT_RECENT_MESSAGES : DEFAULT_USERS).push(user);
-    }
-    sortUsers();
+// ─── Public API ─────────────────────────────────────────────────────────────
+
+export function getUser(userId) {
+    return users.get(String(userId)) ?? null;
 }
 
-function sortUsers() {
-    DEFAULT_RECENT_MESSAGES.sort((a, b) => b.createdAt - a.createdAt || byName(a, b));
-    DEFAULT_USERS.sort(byName);
+export function getSortedConversations() {
+    return sortedConversations;
 }
 
-const findUser = (id) =>
-    [...DEFAULT_RECENT_MESSAGES, ...DEFAULT_USERS].find((user) => String(user.id) === String(id));
-
-function removeFrom(list, id) {
-    const index = list.findIndex((user) => String(user.id) === String(id));
-    return index >= 0 ? list.splice(index, 1)[0] : null;
+export function getAllUsers() {
+    return [...users.values()];
 }
 
+// Initial load: fetch all users from the backend (already ordered by
+// lastMessageAt DESC, nick_name ASC). Populates the users Map and builds
+// the sorted conversations list.
 export async function seedAllUsers() {
     resetUsersPaging();
-    DEFAULT_USERS.length = 0;
-    DEFAULT_RECENT_MESSAGES.length = 0;
-    await loadPage();
-    return { users: DEFAULT_USERS, recentMessages: DEFAULT_RECENT_MESSAGES };
+    users.clear();
+    for (const raw of await fetchAllUsers()) {
+        const user = normalizeUser(raw);
+        users.set(String(user.id), user);
+    }
+    sortConversationList();
+    return { users: getAllUsers(), conversations: sortedConversations };
 }
 
-// A message arrived from friendId: move them to the top of the conversations.
-export function updateRecentConversation(friendId, { lastMessage = "", createdAt = Date.now() } = {}) {
+// A new message arrived from or to friendId: update their lastMessageAt and
+// re-sort so the conversation moves to the top.
+export function updateLastMessage(friendId, { lastMessage = "", createdAt = Date.now() } = {}) {
     const key = String(friendId);
     if (!key) return;
 
-    const user = removeFrom(DEFAULT_USERS, key)
-        ?? removeFrom(DEFAULT_RECENT_MESSAGES, key)
-        ?? createUser({ id: key });
-
+    let user = users.get(key);
+    if (!user) {
+        user = createUser({ id: key });
+        users.set(key, user);
+    }
     user.lastMessage = lastMessage;
-    user.createdAt = Number(createdAt);
-    DEFAULT_RECENT_MESSAGES.unshift(user); // newest first, so the front is enough
+    user.lastMessageAt = Number(createdAt);
+    sortConversationList();
 }
 
-// A user came online: pin them to the front of the people list, fetching their
-// profile when no page has brought them in yet.
-export async function moveOnlineUserToFront(userId) {
-    const key = String(userId);
-    if (!key || key === String(me?.ID)) return;
+// ─── Presence (online / offline) ────────────────────────────────────────────
+// Updates ONLY the online flag and the DOM indicator. NEVER sorts.
 
-    let user = findUser(key);
-    if (!user) {
-        const raw = await fetchUser(key);
-        if (!raw) return;
-        user = normalizeUser({ ...raw, LastMessageAt: 0 });
-    }
+export function updateUserStatus(userId, online) {
+    const user = users.get(String(userId));
+    if (!user) return;
+    user.online = online;
+    updatePresenceDom(String(userId), online);
+}
 
-    removeFrom(DEFAULT_USERS, key);
-    removeFrom(DEFAULT_RECENT_MESSAGES, key);
-    user.onlineStatus = "online";
-    DEFAULT_USERS.unshift(user);
+function updatePresenceDom(userId, online) {
+    const selector = `[data-user-id="${CSS.escape(userId)}"]`;
+    document.querySelectorAll(selector + " .user-avatar__status").forEach((dot) => {
+        dot.classList.toggle("online", online);
+        dot.classList.toggle("offline", !online);
+    });
+    document.querySelectorAll(selector + " .chat-status").forEach((label) => {
+        label.classList.toggle("online", online);
+        label.classList.toggle("offline", !online);
+        label.textContent = online ? "Online" : "Offline";
+    });
+}
+
+// ─── UUID extraction (backend protocol) ─────────────────────────────────────
+const UUID_RE = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g;
+
+export function extractUserIds(content = "") {
+    return String(content).match(UUID_RE) ?? [];
 }

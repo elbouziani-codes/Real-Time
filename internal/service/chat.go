@@ -1,7 +1,6 @@
 package service
 
 import (
-	//	"fmt"
 	"context"
 	"database/sql"
 	"errors"
@@ -9,7 +8,6 @@ import (
 
 	"realTime/internal/domain"
 	"uuid"
-	// "realTime/database"
 )
 
 type chatService struct {
@@ -69,11 +67,16 @@ func (c *chatService) SendMessageRoomChat(ctx context.Context, content string, S
 	return idMessage, createdAt, nil
 }
 
+<<<<<<< HEAD
 // pageSize is how many messages one history request returns.
 const pageSize = 10
 
 func (c *chatService) GetMessages(ctx context.Context, chatID uuid.UUID, beforeAt int64, beforeID uuid.UUID) ([]domain.MessageOutput, error) {
 	messages, err := c.ChatRepo.GetMessages(ctx, chatID, beforeAt, beforeID, pageSize)
+=======
+func (c *chatService) GetMessages(ctx context.Context, chatID uuid.UUID, offset int) ([]domain.MessageOutput, error) {
+	messages, err := c.ChatRepo.GetMessages(ctx, chatID, offset, 10)
+>>>>>>> melbouzi
 	if err != nil {
 		return nil, err
 	}
