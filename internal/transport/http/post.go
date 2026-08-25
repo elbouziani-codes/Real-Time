@@ -56,16 +56,14 @@ func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 	userID := userIDAny.(uuid.UUID)
 	query := r.URL.Query()
 
-	// Paging is keyed on the last post the client already received:
-	// ?cursor=<post id>, omitted for the first page.
+	
 	cursor, err := domain.ValidatePostCursor(query.Get("cursor"))
 	if err != nil {
 		Error(err, w)
 		return
 	}
 
-	// Repeated ?category= is what the multi-select filter sends; ?liked=true
-	// narrows to posts this user has liked.
+	
 	filter, err := domain.ValidatePostFilter(query["category"], query.Get("liked"))
 	if err != nil {
 		Error(err, w)
@@ -77,7 +75,9 @@ func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 		Error(err, w)
 		return
 	}
-
+	if posts == nil {
+		posts = []*domain.PostInfo{};
+	}
 	if err := json.NewEncoder(w).Encode(posts); err != nil {
 		http.Error(w, "uknown error", http.StatusInternalServerError)
 		return

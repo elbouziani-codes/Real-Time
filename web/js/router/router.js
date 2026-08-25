@@ -36,8 +36,6 @@ async function router() {
     const page = routes[path];
     const app = document.getElementById("app");
     if (page) {
-        applyPostFilters(config.postsFilters);
-        resetUsers()
         await Fetching(path);
         if (window.location.pathname !== path) return;
         app.innerHTML = await page();
@@ -61,7 +59,6 @@ async function Fetching(path) {
 
     switch (path) {
         case "/":
-            await seedAllUsers();
             await sendAllPost();
             await seedCategories();
             break;

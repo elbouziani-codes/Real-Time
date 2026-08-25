@@ -7,46 +7,39 @@ import { navigate } from "./../router/router.js";
 export let DEFAULT_POST = [];
 
 const reacting = new Set();
+//let known = new Set()
 
 let feedRequestId = 0;
 
-export async function sendAllPost(Scroll = false) {
+export async function sendAllPost() {
     const requestId = feedRequestId;
-    let response = await fetchPost(config.postsCursor, config.postsFilters);
+    let posts = await fetchPost(config.postsCursor, config.postsFilters);
+
     if (requestId != feedRequestId) return;
 
-    if (response.code == 200) {
-        if (!Array.isArray(response.body)) {
-            if (DEFAULT_POST.length === 0) {
-                DEFAULT_POST = ["not found post"];
-            }
-            return;
+    if (posts.length > 0) {
+        
+        if (DEFAULT_POST.length === 1 && typeof DEFAULT_POST[0] == "string") {
+            DEFAULT_POST = []
         }
-        const fresh = appendPosts(response.body);
-        if (DEFAULT_POST.length === 0) {
-            DEFAULT_POST = ["no posts found"];
-            if (Scroll) {
-                document.querySelector(".feed").innerHTML += PostCard(DEFAULT_POST[0]);
-            }
-            return;
-        }
-        if (Scroll) {
+        const fresh = appendPosts(posts);
             const postsHtml = fresh.map((e) => PostCard(e)).join("");
-            document.querySelector(".feed").innerHTML += postsHtml;
-        }
-    } else if (response.code == 401) {
-        resetPosts();
-        navigate("/login");
-    } else if (response.code != 1000) {
+            if (document.querySelector(".feed")) {
+                document.querySelector(".feed").innerHTML += postsHtml;
+            }
+    } else {
         if (DEFAULT_POST.length === 0) {
-            DEFAULT_POST = ["error in fetch Posts"];
+            DEFAULT_POST[0]= "no more posts"
+            if (document.querySelector(".feed")) {
+                document.querySelector(".feed").innerHTML = PostCard("no more posts");
+            }
         }
         stopFetchPost();
     }
 }
 
 function appendPosts(newPosts) {
-    const known = new Set(DEFAULT_POST.map((e) => (typeof e == "object" && e ? e.ID : null)));
+    const known = new Set(DEFAULT_POST.map((e) => (e.ID)));
     const fresh = [];
     for (const post of newPosts) {
         if (post && !known.has(post.ID)) {
@@ -71,6 +64,7 @@ export function resetPosts() {
 
 export function applyPostFilters(filters) {
     config.postsFilters = filters;
+    document.querySelector(".feed").innerHTML = "";
     resetPosts();
 }
 
@@ -80,7 +74,7 @@ export async function reactToPost(postID, isLike) {
 
     reacting.add(postID);
     try {
-        const reactionID = post.LikeInfo?.ID;
+        const reactionID = post.LikeInfo ?.ID;
         if (reactionID == ZERO_UUID) {
             const response = await fetchReact(postID, isLike);
             if (response.code != 200) return failedReaction(response);
@@ -147,5 +141,3 @@ export async function sendPostDetails(postID) {
     if (response.code == 404) return { error: "This post does not exist." };
     return { error: "Could not load this post. Please try again." };
 }
-
-

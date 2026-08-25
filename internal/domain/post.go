@@ -65,8 +65,7 @@ func ValidatePostRequest(request CreatePostRequest) (Post, error) {
 		return post, Error{Message: fmt.Sprintf("a post accepts at most %d categories", MaxPostCategories), Code: BadFormatCode}
 	}
 
-	// Reject duplicates here so a repeated id is a 400 rather than a primary
-	// key violation surfacing from post_categories.
+	
 	seen := make(map[uuid.UUID]struct{}, len(request.Categories))
 	for _, rawID := range request.Categories {
 		categoryID, err := uuid.Parse(rawID)
@@ -85,20 +84,14 @@ func ValidatePostRequest(request CreatePostRequest) (Post, error) {
 	return post, nil
 }
 
-// MaxFilterCategories bounds the IN clause the category filter expands into, so
-// a caller cannot force an arbitrarily large query by repeating the parameter.
-const MaxFilterCategories = 20
 
-// PostFilter narrows a post listing. A zero value means "no filtering", so the
-// unfiltered listing keeps working unchanged.
+
 type PostFilter struct {
 	Categories []uuid.UUID
 	LikedOnly  bool
 }
 
-// ValidatePostFilter turns the raw query parameters into a PostFilter. Unknown
-// category ids are not an error: they simply match no post, which keeps a
-// stale bookmark from turning into a 404.
+
 func ValidatePostFilter(rawCategories []string, rawLiked string) (PostFilter, error) {
 	filter := PostFilter{}
 
@@ -110,12 +103,8 @@ func ValidatePostFilter(rawCategories []string, rawLiked string) (PostFilter, er
 		return filter, Error{Message: "liked must be true or false", Code: BadFormatCode}
 	}
 
-	if len(rawCategories) > MaxFilterCategories {
-		return filter, Error{Message: fmt.Sprintf("a listing accepts at most %d category filters", MaxFilterCategories), Code: BadFormatCode}
-	}
 
-	// Duplicates would only repeat a placeholder without changing the result,
-	// so drop them rather than reject the request.
+	
 	seen := make(map[uuid.UUID]struct{}, len(rawCategories))
 	for _, rawID := range rawCategories {
 		categoryID, err := uuid.Parse(rawID)
@@ -132,10 +121,7 @@ func ValidatePostFilter(rawCategories []string, rawLiked string) (PostFilter, er
 	return filter, nil
 }
 
-// ValidatePostCursor parses the id of the last post the client already holds.
-// Paging on that post's sort position rather than a row count keeps a page from
-// skipping or repeating posts when others are published mid-scroll. An empty
-// value asks for the first page, so an opening request carries no cursor.
+
 func ValidatePostCursor(rawCursor string) (uuid.UUID, error) {
 	rawCursor = strings.TrimSpace(rawCursor)
 	if rawCursor == "" {

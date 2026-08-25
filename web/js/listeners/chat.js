@@ -26,6 +26,8 @@ export default function chatListener() {
     scroller?.addEventListener("scroll", throttle(onMessagesScroll, 200));
 }
 
+
+
 function onConversationClick(event) {
     const item = event.target.closest(".conversation-item");
     const friendId = item?.dataset.userId;

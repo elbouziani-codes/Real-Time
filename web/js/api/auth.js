@@ -8,7 +8,6 @@ export async function fetchMe() {
         }
         return { code: response.status, body: "errors" };
     } catch (error) {
-        console.error("Failed to get profile:", error);
         return { code: 0, body: "Network error" };
     }
 }

@@ -7,6 +7,7 @@ import { navigate } from "./../router/router.js";
 
 let windowScrollHandler = null;
 
+
 export function HomeListener() {
     const createPost = document.querySelector(".createPost");
     const cancelCreatePost = document.getElementById("cancelCreatePost");
@@ -35,9 +36,8 @@ async function filterListener(e) {
 
     applyPostFilters({ categories, liked });
 
-    const dispatchedKey = currentStateKey();
-    await renderFeedFirstPage();
-    lastScrollKey = dispatchedKey;
+    await sendAllPost();
+    
 }
 
 async function reactListener(e) {
@@ -64,25 +64,21 @@ async function reactListener(e) {
     disLikeBtn.classList.toggle("active", disliked);
 }
 
-// Renders the feed from the first page. The feed element is cleared first so a
-// reload never duplicates posts already on screen.
-async function renderFeedFirstPage() {
-    const feed = document.querySelector(".feed");
-    if (feed) feed.innerHTML = `<h2>📰 Latest Posts</h2>`;
-    await sendAllPost(true);
-}
+
+
 
 
 function currentStateKey() {
+    console.log(config.postsCursor + "|" + JSON.stringify(config.postsFilters))
     return config.postsCursor + "|" + JSON.stringify(config.postsFilters);
 }
 
 export async function HomeScrollListener() {
-    let lastScrollKey = currentStateKey();
+    let lastScrollKey = null;
 
     const throttledLoadPosts = throttle(() => {
         lastScrollKey = currentStateKey();
-        sendAllPost(true);
+        sendAllPost();
     }, 1500);
 
     // The window listener persists across SPA mounts: detach the previous one
@@ -149,7 +145,7 @@ async function submitPost(e) {
 
         // The new post is at the top of the next page: reload from the start.
         applyPostFilters(config.postsFilters);
-        await renderFeedFirstPage();
+        await sendAllPost();
     } finally {
         if (submit) submit.disabled = false;
     }

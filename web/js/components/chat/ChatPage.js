@@ -7,9 +7,7 @@ export default function ChatPage({
     messages = [],
     activeId = null,
 } = {}) {
-    const active = conversations.find(
-        (conversation) => String(conversation.id) === String(activeId),
-    ) || conversations[0] || {};
+    const active = conversations.find((conversation) => String(conversation.id) === String(activeId)) || conversations[0] || {};
 
     return `
         <section class="chat-page">

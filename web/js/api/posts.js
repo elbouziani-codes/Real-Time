@@ -1,17 +1,20 @@
+import { navigate } from "./../router/router.js";
+
 const POST_PAGE_SIZE = 20;
 
 let loading = false;
 let hasMore = true;
 
 export async function fetchPost(cursor = null, filters = {}) {
-    if (loading || !hasMore) return { code: 1000, body: [], len: 0 };
+    if (loading || !hasMore) return [];
 
     loading = true;
 
     try {
+
         const params = new URLSearchParams();
         if (cursor) params.append("cursor", cursor);
-        for (const categoryID of (filters.categories || [])) {
+        for (const categoryID of(filters.categories || [])) {
             params.append("category", categoryID);
         }
         if (filters.liked) params.append("liked", "true");
@@ -20,25 +23,29 @@ export async function fetchPost(cursor = null, filters = {}) {
         const response = await fetch("/api/posts" + (query ? "?" + query : ""), {
             method: "GET",
         });
-        let allResult = await response.json();
 
-        if (!Array.isArray(allResult)) {
-            hasMore = false;
-            return { code: response.status, body: [], len: 0 };
+
+        if (!response.ok) {
+            if (response.code == 401) {
+                navigate("/login");
+                return
+            }
+            // I could add a towst warning that geteting psost failed
+            return [];
         }
-        if (allResult.length < POST_PAGE_SIZE) {
-            hasMore = false;
-        }
-        return { code: response.status, body: allResult, len: allResult.length };
+
+        let posts = await response.json();
+
+        return posts;
     } catch (error) {
-        console.error(error);
-        return { code: 500, body: "Error in request" };
+        return [];
     } finally {
         loading = false;
     }
 }
 
 export function resetFetchPost() {
+    
     loading = false;
     hasMore = true;
 }

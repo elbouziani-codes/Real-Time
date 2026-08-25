@@ -8,7 +8,7 @@ export let me = {};
 export async function CreateMe(path) {
     let response = await fetchMe();
     if (!response) response = { code: 0, body: "Network error" };
-
+    
     if (response.code == 200) {
         me = { ...response.body };
         if (path == "/login" || path == "/register") {
