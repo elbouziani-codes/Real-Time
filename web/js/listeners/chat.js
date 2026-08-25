@@ -2,10 +2,13 @@ import { me } from "../services/me.js";
 import { selectChat, loadOlderMessages, sendMessage, sendTyping } from "../services/messages.js";
 import { getChat, setChat } from "./users.js";
 import throttle from "../utils/helpers.js";
+import { seedAllUsers } from "../services/user.js";
+import {renderConversationSidebar } from "./../services/messages.js"
 
 // Wires the /chat page: selects the conversation chosen on the home page, then
 // handles in-page conversation switching, sending, and older-message paging.
-export default function chatListener() {
+export function chatListener() {
+   
     selectChat(getChat());
 
     const conversationsList = document.querySelector(".conversations-list");
@@ -24,6 +27,7 @@ export default function chatListener() {
 
     const scroller = document.querySelector(".messages-container");
     scroller?.addEventListener("scroll", throttle(onMessagesScroll, 200));
+
 }
 
 
@@ -38,6 +42,36 @@ function onConversationClick(event) {
         UserB: friendId,
     });
     selectChat(getChat());
+}
+
+let windowScrollHandler = null;
+
+export  async function onSideBareScroll() {
+    console.log(1)
+    const obj = document.querySelector(".conversations-list");
+    const throttledLoadUsers = throttle(() => {
+        seedAllUsers();
+        renderConversationSidebar();
+    }, 1500);
+
+    // The window listener persists across SPA mounts: detach the previous one
+    // so revisiting the home page never stacks duplicate scroll handlers.
+    if (windowScrollHandler) {
+        obj.removeEventListener("scroll", windowScrollHandler);
+    }
+        console.log(2)
+
+    windowScrollHandler = () => {
+            console.log(3)
+
+        const scrollTop = obj.scrollTop;       
+        const windowHeight = obj.clientHeight;
+        const documentHeight = obj.scrollHeight; 
+        if (scrollTop + windowHeight >= documentHeight -50) {
+            throttledLoadUsers();
+        }
+    };
+    obj.addEventListener("scroll", windowScrollHandler);
 }
 
 function onSend() {

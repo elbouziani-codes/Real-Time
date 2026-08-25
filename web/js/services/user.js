@@ -70,8 +70,8 @@ export function getAllUsers() {
 // lastMessageAt DESC, nick_name ASC). Populates the users Map and builds
 // the sorted conversations list.
 export async function seedAllUsers() {
-    resetUsersPaging();
-    users.clear();
+    //resetUsersPaging();
+    //users.clear();
     for (const raw of await fetchAllUsers()) {
         const user = normalizeUser(raw);
         users.set(String(user.id), user);

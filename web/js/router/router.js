@@ -6,7 +6,7 @@ import pagePost from "../pages/postDetails.js";
 import HomePage from "../pages/home.js";
 
 import endListener from "../listeners/end.js";
-import chatListener from "./../listeners/chat.js";
+import {chatListener ,onSideBareScroll}  from "./../listeners/chat.js";
 import authListener from "./../listeners/auth.js";
 import PostDetailsListener from "./../listeners/postDetails.js";
 import { HomeListener, HomeScrollListener } from "./../listeners/home.js";
@@ -86,6 +86,7 @@ async function Listening(path) {
         case "/chat":
             navBarListener();
             chatListener();
+            await onSideBareScroll();
             break;
         case "/end":
             endListener();

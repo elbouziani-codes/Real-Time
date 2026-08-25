@@ -147,7 +147,7 @@ function renderError(message) {
 
 // ─── Conversation sidebar ───────────────────────────────────────────────────
 
-function renderConversationSidebar() {
+export function renderConversationSidebar() {
     const list = document.querySelector(".conversations-list");
     if (!list || window.location.pathname !== "/chat") return;
 

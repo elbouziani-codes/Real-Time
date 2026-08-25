@@ -105,12 +105,8 @@ func (u *UserRepo) GetByNickName(ctx context.Context, NickName string) (domain.U
 	return scanUser(row)
 }
 
-// lastMessageAtColumn computes the newest message shared between the requester
-// and one user. It is a correlated subquery rather than a join so a
-// conversation holding many messages cannot multiply a user's row, and it reads
-// only conversations the requester is a participant of — joining messages on the
-// other user's conversation alone would expose activity from chats the requester
-// is not in.
+
+
 const lastMessageAtColumn = `
 COALESCE((
 	SELECT MAX(M.created_at)
@@ -121,11 +117,7 @@ COALESCE((
 	ON THEIRS.conversation_id = M.conversation_id AND THEIRS.user_id = U.id
 ), 0)`
 
-// getAllUsersQueryHead and getAllUsersQueryTail sandwich the optional cursor
-// condition. The listing is wrapped in a derived table so the cursor condition
-// can reference the last_message_at alias, which a bare WHERE clause cannot.
-// Users never messaged sort last on 0, then alphabetically so the tail of the
-// list is stable rather than arbitrary.
+
 const getAllUsersQueryHead = `
 SELECT id, email, nick_name, last_name, first_name, age, gender, last_message_at
 FROM (
