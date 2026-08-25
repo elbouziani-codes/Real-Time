@@ -9,6 +9,8 @@ import { disconnectSocket, sendWsRequest } from "../websocket/socket.js";
 import { applyPresenceEvent } from "./online.js";
 import { escapeHTML } from "../utils/helpers.js";
 import { showToast } from "../utils/toast.js";
+import { navigate } from "../router/router.js";
+import { setChat } from "../listeners/users.js";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const PAGE_SIZE = 10;
@@ -26,9 +28,6 @@ export let currentChat = { UserA: "", UserB: "" };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function uuidString(value) {
-    return String(value ?? "");
-}
 
 function normalizeTimestamp(value) {
     const numeric = Number(value);
@@ -392,7 +391,7 @@ export async function handleWsMessage(data) {
 
     // Typing indicator (code 2)
     if (code == 2) {
-        if (currentChat?.UserB && String(currentChat.UserB) === uuidString(data.sender)) {
+        if(currentChat?.UserB && String(currentChat.UserB) === data.sender) {
             showTypingIndicator();
         }
         return;
@@ -412,8 +411,8 @@ export async function handleWsMessage(data) {
 }
 
 function handleIncomingMessage(data) {
-    const senderId = uuidString(data.sender);
-    const roomId = uuidString(data.chat_id);
+    const senderId = data.sender;
+    const roomId = data.chat_id;
     if (!senderId || !roomId) return;
 
     // Update conversation ordering (moves sender to top)
@@ -441,15 +440,14 @@ function notifyNewMessage(senderId, content) {
     });
 }
 
-async function openConversation(senderId) {
-    if (window.location.pathname === "/chat") {
-        selectChat({ UserA: me.ID, UserB: senderId });
+function openConversation(senderId) {
+    const chat = { UserA: me.ID, UserB: senderId };
+
+    if (location.pathname === "/chat") {
+        selectChat(chat);
         return;
     }
-    const [{ navigate }, { setChat }] = await Promise.all([
-        import("../router/router.js"),
-        import("../listeners/users.js"),
-    ]);
-    setChat({ UserA: me.ID, UserB: senderId });
+
+    setChat(chat);
     navigate("/chat");
 }

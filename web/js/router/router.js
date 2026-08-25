@@ -19,7 +19,6 @@ import { seedCategories } from "./../services/categories.js";
 import { sendAllPost} from "./../services/posts.js";
 
 import { connectSocket } from "./../websocket/socket.js";
-import { initChatSocket } from "./../websocket/chat.js";
 
 
 const routes = {
@@ -69,7 +68,6 @@ async function Fetching(path) {
             return null;
     }
     connectSocket();
-    initChatSocket();
 }
 
 async function Listening(path) {

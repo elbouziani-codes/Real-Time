@@ -47,22 +47,19 @@ function onConversationClick(event) {
 let windowScrollHandler = null;
 
 export  async function onSideBareScroll() {
-    console.log(1)
     const obj = document.querySelector(".conversations-list");
     const throttledLoadUsers = throttle(() => {
         seedAllUsers();
         renderConversationSidebar();
-    }, 1500);
+    }, 1000);
 
     // The window listener persists across SPA mounts: detach the previous one
     // so revisiting the home page never stacks duplicate scroll handlers.
     if (windowScrollHandler) {
         obj.removeEventListener("scroll", windowScrollHandler);
     }
-        console.log(2)
 
     windowScrollHandler = () => {
-            console.log(3)
 
         const scrollTop = obj.scrollTop;       
         const windowHeight = obj.clientHeight;
