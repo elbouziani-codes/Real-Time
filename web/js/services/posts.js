@@ -7,7 +7,6 @@ import { navigate } from "./../router/router.js";
 export let DEFAULT_POST = [];
 
 const reacting = new Set();
-//let known = new Set()
 
 let feedRequestId = 0;
 
@@ -29,7 +28,7 @@ export async function sendAllPost() {
             }
     } else {
         if (DEFAULT_POST.length === 0) {
-            DEFAULT_POST[0]= "no more posts"
+            DEFAULT_POST[0] = "no more posts"
             if (document.querySelector(".feed")) {
                 document.querySelector(".feed").innerHTML = PostCard("no more posts");
             }
@@ -117,7 +116,7 @@ function failedReaction(response) {
 export let CURRENT_POST = null;
 
 function findPost(postID) {
-    const post = DEFAULT_POST.find((e) => typeof e != "string" && e.ID == postID);
+    const post = DEFAULT_POST.find((e) => e.ID == postID);
     if (post) return post;
     if (CURRENT_POST && CURRENT_POST.ID == postID) return CURRENT_POST;
     return null;
