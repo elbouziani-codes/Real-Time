@@ -1,5 +1,5 @@
 import createUser from "../models/User.js";
-import { fetchAllUsers, resetUsersPaging } from "../api/users.js";
+import { fetchAllUsers, resetUsersPaging, fetchUser } from "../api/users.js";
 
 // ─── Single source of truth ─────────────────────────────────────────────────
 // Every user lives here. The `online` property controls ONLY the status dot.
@@ -76,8 +76,45 @@ export async function seedAllUsers() {
         const user = normalizeUser(raw);
         users.set(String(user.id), user);
     }
+    // Apply buffered presence statuses; keep entries whose user hasn't been
+    // paged in yet so a later scroll-seeded page still gets their status.
+    for (const [key, online] of pendingStatus) {
+        const user = users.get(key);
+        if (!user) continue;
+        user.online = online;
+        pendingStatus.delete(key);
+    }
     sortConversationList();
     return { users: getAllUsers(), conversations: sortedConversations };
+}
+
+// Fills in the profile of a user that exists in the Map but has no name yet
+// (created as a fallback from a message/presence before being paged in).
+async function hydrateProfile(userId) {
+    const raw = await fetchUser(userId);
+    const user = users.get(String(userId));
+    if (!raw || !user || user.name) return;
+    Object.assign(user, normalizeUser(raw), {
+        online: user.online,
+        lastMessage: user.lastMessage,
+        lastMessageAt: user.lastMessageAt,
+    });
+    sortConversationList();
+    try {
+        const { renderConversationSidebar } = await import("./messages.js");
+        renderConversationSidebar();
+    } catch {}
+}
+
+// Applies a buffered presence status to a user that has just been created
+// as a fallback (before any page-in had their profile).
+function applyPendingStatus(userId) {
+    if (!pendingStatus.has(userId)) return;
+    const user = users.get(userId);
+    if (!user) return;
+    user.online = pendingStatus.get(userId);
+    pendingStatus.delete(userId);
+    updatePresenceDom(userId, user.online);
 }
 
 // A new message arrived from or to friendId: update their lastMessageAt and
@@ -90,6 +127,8 @@ export function updateLastMessage(friendId, { lastMessage = "", createdAt = Date
     if (!user) {
         user = createUser({ id: key });
         users.set(key, user);
+        applyPendingStatus(key);
+        hydrateProfile(key);
     }
     user.lastMessage = lastMessage;
     user.lastMessageAt = Number(createdAt);
@@ -99,11 +138,20 @@ export function updateLastMessage(friendId, { lastMessage = "", createdAt = Date
 // ─── Presence (online / offline) ────────────────────────────────────────────
 // Updates ONLY the online flag and the DOM indicator. NEVER sorts.
 
+// Presence frames can arrive before seedAllUsers() has run (e.g. refresh on
+// "/"), so statuses seen for unknown users are buffered here and applied
+// during seeding.
+const pendingStatus = new Map();
+
 export function updateUserStatus(userId, online) {
-    const user = users.get(String(userId));
-    if (!user) return;
+    const key = String(userId);
+    const user = users.get(key);
+    if (!user) {
+        pendingStatus.set(key, online);
+        return;
+    }
     user.online = online;
-    updatePresenceDom(String(userId), online);
+    updatePresenceDom(key, online);
 }
 
 function updatePresenceDom(userId, online) {

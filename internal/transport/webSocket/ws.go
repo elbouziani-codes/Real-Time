@@ -3,12 +3,13 @@ package ws
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
+	"uuid"
 
 	"realTime/internal/domain"
-	"uuid"
 
 	"github.com/gorilla/websocket"
 )
@@ -69,20 +70,14 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		origin := r.Header.Get("Origin")
-		return origin == "http://localhost:8081"
-	},
-}
+var upgrader = websocket.Upgrader{}
 
 func (wss *HandlerWs) ChatWs(w http.ResponseWriter, r *http.Request) {
 	client, err := wss.AddClient(w, r)
 	if err != nil {
 		return
 	}
-	
-	
+
 	go wss.engineMessages(context.Background(), client)
 }
 
@@ -138,7 +133,6 @@ func (wss *HandlerWs) sendTypingReceiver(receiverID uuid.UUID, senderID uuid.UUI
 }
 
 func (wss *HandlerWs) readInputMessage(ctx context.Context, client *Client) (error, *domain.WsParsedRequest) {
-
 	var wsRequest domain.WsRequest
 	err := client.conn.ReadJSON(&wsRequest)
 	if err != nil {
@@ -153,7 +147,6 @@ func (wss *HandlerWs) readInputMessage(ctx context.Context, client *Client) (err
 	}
 
 	_, err = wss.svcUser.GetByID(ctx, wsRequestParse.Destination)
-
 	if err != nil {
 		wss.responseWrite(uuid.Nil(), 404, err.Error(), client.userId, client, uuid.Nil(), 0)
 		return err, &domain.WsParsedRequest{}
@@ -207,7 +200,6 @@ func (wss *HandlerWs) DeleteClient(client *Client) {
 }
 
 func (wss *HandlerWs) AddClient(w http.ResponseWriter, r *http.Request) (*Client, error) {
-
 	userIDAny := r.Context().Value("user_id")
 	userID := userIDAny.(uuid.UUID)
 
@@ -228,6 +220,7 @@ func (wss *HandlerWs) AddClient(w http.ResponseWriter, r *http.Request) (*Client
 	wss.hub.mu.Unlock()
 
 	if oldClient != nil {
+		
 		oldClient.WriteJSON(&domain.MessageOutput{ID: uuid.Nil(), Code: 1, Content: "Close WebSocket Connection and Disable Chat Page", Sender: oldClient.userId, ChatID: uuid.Nil(), Created_at: 0})
 		oldClient.Close()
 		wss.seedAllClient(oldClient, false)
@@ -254,7 +247,7 @@ func (wss *HandlerWs) seedAllClient(Me *Client, addNewClient bool) {
 		if Me.userId == id {
 			continue
 		}
-
+	
 		if addNewClient {
 			allClient = append(allClient, id.String())
 			wss.responseWrite(uuid.Nil(), 3, "add client "+Me.userId.String(), Me.userId, client, uuid.Nil(), 0)
@@ -264,6 +257,7 @@ func (wss *HandlerWs) seedAllClient(Me *Client, addNewClient bool) {
 	}
 
 	if addNewClient {
+		fmt.Println("add client "+strings.Join(allClient, " || "))
 		wss.responseWrite(uuid.Nil(), 3, "add client "+strings.Join(allClient, " || "), Me.userId, Me, uuid.Nil(), 0)
 	}
 }

@@ -4,7 +4,7 @@ import endPage from "../pages/end.js";
 import ErrorPage from "../pages/notFound.js";
 import pagePost from "../pages/postDetails.js";
 import HomePage from "../pages/home.js";
-
+import { renderConversationSidebar } from "../services/messages.js";
 import endListener from "../listeners/end.js";
 import {chatListener ,onSideBareScroll}  from "./../listeners/chat.js";
 import authListener from "./../listeners/auth.js";
@@ -38,6 +38,9 @@ async function router() {
         await Fetching(path);
         if (window.location.pathname !== path) return;
         app.innerHTML = await page();
+     
+           // renderConversationSidebar();
+        
         await Listening(path);
     } else {
         app.innerHTML = ErrorPage({});
