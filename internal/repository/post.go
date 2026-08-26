@@ -20,9 +20,8 @@ func NewPostRepo(db DB) *postRepo {
 	return &postRepo{db: db}
 }
 
-// postCategoriesColumn aggregates a post's categories into one JSON array. It
-// is a correlated subquery rather than a join so it cannot multiply post rows
-// against the reactions join below.
+
+
 const postCategoriesColumn = `
 COALESCE((
 	SELECT json_group_array(json_object('id', C.id, 'title', C.title, 'icon', C.icon, 'created_at', C.created_at))
@@ -31,9 +30,7 @@ COALESCE((
 	WHERE PC.post_id = P.id
 ), '[]')`
 
-// getPostsQueryHead and getPostsQueryTail sandwich the optional filter clauses
-// built by buildPostFilter. Keeping them apart lets the filters be composed
-// without string-formatting any caller-supplied value into the SQL.
+
 const getPostsQueryHead = `
 SELECT P.id, P.title, P.content, likes_count, dislikes_count, P.created_at, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at, COALESCE(R.id, '00000000-0000-0000-0000-000000000000'), COALESCE(R.is_like, FALSE),` + postCategoriesColumn + `
 FROM posts P
@@ -43,10 +40,7 @@ LEFT JOIN reactions R
 ON P.id = R.parent_id AND R.author_id = ?
 `
 
-// getPostsQueryTail closes the listing. The id breaks ties on created_at, which
-// only has one-second resolution: without a total order, two posts written in
-// the same second could come back in either order on different pages, and the
-// cursor would then skip or repeat them.
+
 const getPostsQueryTail = `
 ORDER BY P.created_at DESC, P.id DESC
 LIMIT ?
@@ -54,16 +48,13 @@ LIMIT ?
 
 const getPostCursorQuery = `SELECT created_at FROM posts WHERE id = ?`
 
-// postCursorKey is the sort position of the post a client last received. The id
-// belongs to it because created_at alone does not identify a single row.
+
 type postCursorKey struct {
 	createdAt int
 	id        uuid.UUID
 }
 
-// resolvePostCursor reads the sort position of the cursor post. A cursor naming
-// a post that has since been deleted is reported rather than silently returning
-// an empty page, which a client could not tell apart from the end of the feed.
+
 func (p *postRepo) resolvePostCursor(ctx context.Context, cursor uuid.UUID) (*postCursorKey, error) {
 	if cursor == uuid.Nil() {
 		return nil, nil
@@ -80,9 +71,7 @@ func (p *postRepo) resolvePostCursor(ctx context.Context, cursor uuid.UUID) (*po
 	return &key, nil
 }
 
-// buildPostFilter renders the filter and the cursor as SQL conditions plus their
-// arguments. The category clause uses EXISTS rather than a join so a post in
-// several of the requested categories is still returned once.
+
 func buildPostFilter(filter domain.PostFilter, cursor *postCursorKey) (string, []any) {
 	conditions := make([]string, 0, 3)
 	args := make([]any, 0, len(filter.Categories)+3)
@@ -98,15 +87,12 @@ func buildPostFilter(filter domain.PostFilter, cursor *postCursorKey) (string, [
 		}
 	}
 
-	// R is already joined on this user, but it also matches dislikes; the
-	// is_like test is what makes this "liked" rather than "reacted to".
+	
 	if filter.LikedOnly {
 		conditions = append(conditions, "R.id IS NOT NULL AND R.is_like = TRUE")
 	}
 
-	// Keyset paging: keep the rows that fall strictly after the cursor under the
-	// ORDER BY above. This condition comes last because its placeholders have to
-	// follow the category ones in the argument list.
+	
 	if cursor != nil {
 		conditions = append(conditions, "(P.created_at < ? OR (P.created_at = ? AND P.id < ?))")
 		args = append(args, cursor.createdAt, cursor.createdAt, cursor.id.String())
@@ -118,8 +104,7 @@ func buildPostFilter(filter domain.PostFilter, cursor *postCursorKey) (string, [
 	return "WHERE " + strings.Join(conditions, " AND "), args
 }
 
-// categoryRow mirrors the json_object keys above. Decoding through it keeps the
-// SQL free of any knowledge of how uuid.UUID is laid out in Go.
+
 type categoryRow struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
@@ -182,9 +167,8 @@ const savePostQuery = `INSERT INTO posts (id, author_id, title, content) VALUES(
 
 const savePostCategoryQuery = `INSERT INTO post_categories (post_id, category_id) VALUES(?, ?)`
 
-// SavePost writes the post and its categories in one transaction. An unknown
-// category id trips the post_categories foreign key, which rolls the whole
-// insert back instead of leaving a post with no categories behind.
+
+
 func (p *postRepo) SavePost(ctx context.Context, post domain.Post) error {
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -229,8 +213,7 @@ func (p *postRepo) GetPosts(ctx context.Context, userID uuid.UUID, filter domain
 		return nil, err
 	}
 
-	// Argument order has to track the query text: the reactions join owns the
-	// first placeholder, then the filter's and the cursor's, then the limit.
+	
 	where, filterArgs := buildPostFilter(filter, cursorKey)
 	query := getPostsQueryHead + where + getPostsQueryTail
 
