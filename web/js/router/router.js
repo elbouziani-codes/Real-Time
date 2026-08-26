@@ -38,9 +38,6 @@ async function router() {
         await Fetching(path);
         if (window.location.pathname !== path) return;
         app.innerHTML = await page();
-     
-           // renderConversationSidebar();
-        
         await Listening(path);
     } else {
         app.innerHTML = ErrorPage({});
