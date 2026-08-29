@@ -1,15 +1,30 @@
-import { fetchLogin, fetchRegister } from "./../api/auth.js";
+import {login, register} from "./../js/components/auth/auth.js";
+import { auth } from "./../js/pages/auth.js";
+import { fetchLogin, fetchRegister } from "./../js/api/auth.js";
 
-export default function authListener() {
+
+
+
+export function handleAuth()  {	
+	const app = document.getElementById("app")
+	app.innerHTML = auth(login);
+	authListener(app);
+};
+
+
+export default function authListener(app) {
     const loginTab = document.getElementById("loginTab");
     const registerTab = document.getElementById("registerTab");
 
     loginTab?.addEventListener("click", () => {
-        navigate("/login");
+		console.log("called? ");
+        app.innerHTML = auth(login);
+		authListener(app);
     });
 
-    registerTab?.addEventListener("click", () => {
-        navigate("/register");
+    registerTab?.addEventListener("click", () => {	
+        app.innerHTML = auth(register);
+		authListener(app);
     });
 
     const loginForm = document.getElementById("loginForm");
@@ -46,7 +61,8 @@ async function loginSubmit(e) {
     try {
         const response = await fetchLogin(data);
         if (response.ok) {
-            navigate("/");
+           // try get in home again 
+			console.log("good job")
             return;
         }
         status.textContent = errorText(response.body);
@@ -82,7 +98,8 @@ async function registerSubmit(e) {
     try {
         const response = await fetchRegister(data);
         if (response.ok) {
-            navigate("/");
+           	// ok ??  
+			console.log("good jbob")
             return;
         }
         status.textContent = errorText(response.body);

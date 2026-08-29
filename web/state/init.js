@@ -1,67 +1,58 @@
-
+import {fetchMe, fetchCategories, fetchPosts } from "./../fetcher.js"
 
 
 export class State {
 		constructor() {
-			this.user = new User();		
-			this.postsCursor = null;
-			this.messagesCursor = null;
+			this.user = null;	
+			this.socket = null;
+			this.app = document.getElementById("app")
+			this.feed = null;
+			this.postsCollections = new PostsCollections;
+			this.commentsCollections = null;
+			this.messagesCollections = null;
 		};
 
-		render() {
-				
+		async getUser() {
+			const user = await fetchMe();		
+			if (!user) return null
+			this.user = new User(user, true)
+		};
+
+		async getCategories() {
+			this.categories = await fetchCategories();	
 		}
+
+		async Ws() {
+			 	
+		}
+		
 }
 
 
-export class PaginatedCollection {
-		constructor(fetchPage) {
-				this.fetchPage = fetchPage; 		
+export class PaginatedCollections {
+		constructor() {
 				this.items = []; 
-				this.cursor = [];
+				this.cursor = null;
 				this.hasMore = true;	
 		};	
-		await fetchMore() {
-			if (!this.hasMore) return;
-			{items, nextCursor}	 = await this.fetchPage(this.cursor);
-			this.items = this.items.push(...items); 
-			if (nextCursor == null) {
-				this.hasMore = false;	
-				return;
-			};
-			this.cursor = nextCursor;
-		};
+		get() {
+			return this.items;	
+		}
+		
 } 
 
 
-export class ChatState {
-		constructor() {
-			this.users = await fetchUsers();	
-			this.queue = [];
-			this.cursor = null;
-			if (this.users.length > 0 ) {
-				this.cursor = this.users[this.users.length-1]; 		
-			}	
-			this.SelectedChat = null;
-		};
-		MoreUsers() {
-			if (this.cursor == null) {
-				return;	
-			}	
-			const users = await fetchUsers(this.cursor);
-			this.users.push(users);	
-		};
-}
+
 
 export class MessagesCollections extends PaginatedCollections {
 		constructor(user) {
 				this.user = user;
 				super()	
 		};
-		moreMessages() {
+		async moreMessages() {
 			if (!this.hasMore) return;
-			{items, nextCursor}	 = await fetchUsers(this.cursor, this.user);
-			this.items = this.items.push(...items); 
+			const {items, nextCursor }= await fetchUsers(this.cursor, this.user);
+			this.items.push(...items); 
 			if (nextCursor == null) {
 				this.hasMore = false;	
 				return;
@@ -71,18 +62,27 @@ export class MessagesCollections extends PaginatedCollections {
 }
 
 export class PostsCollections extends PaginatedCollections {
-		constructor() {	
-				super()	
+		constructor(categories , liked = false) {		
+				super();
+				this.filters = null;
 		};
-		morePosts() {
+
+		updateFilters(categories, liked) {
+			this.items = [];
+			this.cursor = null;
+			this.hasMore = true;
+			this.filters = {categories: categories, liked: liked};
+		};
+
+		async morePosts() {
 			if (!this.hasMore) return;
-			{items, nextCursor}	 = await fetchPosts(this.cursor);
-			this.items = this.items.push(...items); 
+			const {items, nextCursor} = await fetchPosts(this.cursor, this.filters);
+			this.items.push(...items); 
 			if (nextCursor == null) {
 				this.hasMore = false;	
 				return;
 			};
-			this.cursor = nextCursor;	
+			this.cursor = nextCursor;
 		};
 };
 
@@ -91,16 +91,16 @@ export class UsersCollections extends PaginatedCollections {
 				super()	
 				this.queue = [];
 		};
-		moreUsers() {
+		async moreUsers() {
 			if (!this.hasMore) return;
-			{items, nextCursor}	 = await fetchUsers(this.cursor);
-			this.items = this.items.push(...items); 
+			const {items, nextCursor}	 = await fetchUsers(this.cursor);
+			this.items.push(...items);
 			// here I must update online queue// 
 			if (nextCursor == null) {
 				this.hasMore = false;	
 				return;
 			};
-			this.cursor = nextCursor;	
+			this.cursor = nextCursor;
 		};
 }
 
@@ -109,25 +109,24 @@ export class CommentsCollections extends PaginatedCollections {
 				this.postID = postID;
 				super()	
 		};
-		moreComments() {
+		async moreComments() {
 			if (!this.hasMore) return;
-			{items, nextCursor}	 = await fetchComments(this.cursor, this.postID);
-			this.items = this.items.push(...items); 
+			const {items, nextCursor}	 = await fetchComments(this.postID, this.cursor);
+			this.items.push(...items);
 			if (nextCursor == null) {
 				this.hasMore = false;	
 				return;
 			};
-			this.cursor = nextCursor;	
+			this.cursor = nextCursor;
 		};
 };
 
 export class User {
-	constructor(me = false) {
-		let user = await fetchUser(me);  	
-		this.id = user.id
-		this.nickName = user.nickName;
-		this.lastName = user.lastName;
-		this.firstName = user.firstName;
-		this.online = me;
+	constructor(user, me = false) {
+		this.ID = user.ID;
+		this.NickName = user.NickName;
+		this.LastName = user.LastName;
+		this.FirstName = user.FirstName;
+		this.Online = me;
 	};	
 }

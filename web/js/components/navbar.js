@@ -25,7 +25,7 @@ export function Navbar(user) {
                 ${NavItems()}
                 <div class="user">
                     ${UserAvatar(user)}
-                    <span class="user-name">${escapeHTML(NickName)}</span>
+                    <span class="user-name">${escapeHTML(user.NickName)}</span>
                     <button class="logout-btn" aria-label="Logout" title="Logout">
                         ${LOGOUT_SVG}<span class="logout-label">Logout</span>
                     </button>

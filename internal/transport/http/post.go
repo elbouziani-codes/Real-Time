@@ -42,12 +42,12 @@ func (p *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		Error(err, w)
 		return
-	}
+	};
 
 	if err := json.NewEncoder(w).Encode(post.ID); err != nil {
 		http.Error(w, "uknown error", http.StatusInternalServerError)
 		return
-	}
+	};
 
 }
 
@@ -69,12 +69,13 @@ func (p *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 		Error(err, w)
 		return
 	}
-
+	
 	posts, err := p.postSvc.GetPosts(r.Context(), userID, filter, 20, cursor)
 	if err != nil {
 		Error(err, w)
 		return
 	}
+
 	if posts == nil {
 		posts = []*domain.PostInfo{};
 	}

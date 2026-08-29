@@ -1,17 +1,7 @@
-import { login, register } from "../components/auth/auth.js";
 import { navigate } from "./../router/router.js";
 
-function loginAndRegister() {
-    if (window.location.pathname == "/register") {
-        return register();
-    } else if (window.location.pathname == "/login") {
-        return login();
-    } else {
-        navigate("/");
-    }
-}
 
-export function auth() {
+export function auth(fn) {
     return `
         <section class="auth">
 
@@ -23,7 +13,7 @@ export function auth() {
         <div class="auth-right">
 
             <div class="card">
-                ${loginAndRegister()}
+                ${fn()}
             </div>
 
         </div>

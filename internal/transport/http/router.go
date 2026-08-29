@@ -23,17 +23,14 @@ func NewRouter(authHandler *AuthHandler, postHandler *PostHandler, commentHandle
 	router.Handle("GET /api/ws", middleware.Auth(http.HandlerFunc(wsHander.ChatWs)))
 	router.Handle("POST /api/posts", middleware.Auth(http.HandlerFunc(postHandler.CreatePost)))
 	router.Handle("POST /api/comments", middleware.Auth(http.HandlerFunc(commentHandler.CreateComment)))
-	router.Handle("DELETE /api/comments/{id}", middleware.Auth(http.HandlerFunc(commentHandler.DeleteComment)))
-
+	// router.Handle("DELETE /api/comments/{id}", middleware.Auth(http.HandlerFunc(commentHandler.DeleteComment)))
 	router.Handle("GET /api/posts/{id}", middleware.Auth(http.HandlerFunc(postHandler.GetPost)))
 	router.Handle("GET /api/me", middleware.Auth(http.HandlerFunc(authHandler.Me)))
 	router.Handle("GET /api/users", middleware.Auth(http.HandlerFunc(authHandler.GetUsers)))
 	router.Handle("GET /api/users/{id}", middleware.Auth(http.HandlerFunc(authHandler.GetUser)))
-
 	router.Handle("GET /api/comments/{id}", middleware.Auth(http.HandlerFunc(commentHandler.GetComments)))
 	router.Handle("GET /api/reactions/{parent_id}", middleware.Auth(http.HandlerFunc(reactionHandler.GetReactions)))
 	router.Handle("POST /api/reactions", middleware.Auth(http.HandlerFunc(reactionHandler.React)))
 	router.Handle("PATCH /api/reactions/{id}", middleware.Auth(http.HandlerFunc(reactionHandler.UpdateReaction)))
-
 	return router
 }

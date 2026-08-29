@@ -294,7 +294,7 @@
    FEED
 ================================= */
 
-.feed{
+#feed{
 
     display:flex;
 
@@ -305,7 +305,7 @@
 }
 
 
-.feed h2{
+#feed h2{
 
     margin-bottom:10px;
 

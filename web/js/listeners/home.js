@@ -1,12 +1,19 @@
 import { fetchCreatePost } from "./../api/posts.js";
-import { sendAllPost, reactToPost, applyPostFilters } from "./../services/posts.js";
 import { reactionState } from "./../components/home/post.js";
 import throttle from "./../utils/helpers.js";
 import { config } from "./../config/config.js";
 import { navigate } from "./../router/router.js";
+import {state } from "/main.js"
+import { refreshFeed } from "/handlers/feed.js"
+import { reactToPost } from "/fetcher.js"
+
+
 
 let windowScrollHandler = null;
 
+export function initFeedListeners() {
+		HomeListener();
+};
 
 export function HomeListener() {
     const createPost = document.querySelector(".createPost");
@@ -21,7 +28,7 @@ export function HomeListener() {
         modalOverlay.className = "modal-overlay hidden";
     });
     modalForm?.addEventListener("submit", submitPost);
-    document.querySelector(".feed")?.addEventListener("click", reactListener);
+    document.getElementById("feed")?.addEventListener("click", reactListener);
     document.querySelector(".sidebar")?.addEventListener("change", filterListener);
 }
 
@@ -34,11 +41,11 @@ async function filterListener(e) {
         .map((input) => input.id);
     const liked = document.getElementById("likedFilter")?.checked || false;
 
-    applyPostFilters({ categories, liked });
-
-    await sendAllPost();
-    
-}
+    state.postsCollections.updateFilters(categories, liked);
+		
+    await state.postsCollections.morePosts(); 
+	refreshFeed();
+};
 
 async function reactListener(e) {
     const card = e.target.closest(".post-card");
@@ -47,12 +54,16 @@ async function reactListener(e) {
 
     const button = e.target.closest(".like-btn, .comment-btn");
     if (!button) {
-        navigate("/postDetails?id=" + postID);
+		// to do later
+        //navigate("/postDetails?id=" + postID);
         return;
     }
 
     const isLike = button.classList.contains("like-btn");
+
     const post = await reactToPost(postID, isLike);
+	console.log(post)
+
     if (!post) return;
 
     const likeBtn = card.querySelector(".like-btn");
