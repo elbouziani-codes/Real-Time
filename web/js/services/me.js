@@ -2,6 +2,9 @@ import { fetchMe, fetchLogout } from "./../api/auth.js";
 import { navigate } from "../router/router.js";
 import { resetPosts } from "./posts.js";
 import { disconnectSocket } from "../websocket/socket.js";
+import { resetUsers } from "./user.js";
+import { resetMessages } from "./messages.js";
+import { resetChat } from "../listeners/users.js";
 
 export let me = {};
 
@@ -29,6 +32,9 @@ export async function logoutMe() {
     }
     me = {};
     resetPosts();
+    resetUsers();
+    resetMessages();
+    resetChat();
     disconnectSocket();
     return true;
 }

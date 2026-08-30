@@ -9,3 +9,7 @@ export function setChat(next) {
 export function getChat() {
     return chat;
 }
+
+export function resetChat() {
+    chat = { UserA: "", UserB: "" };
+}

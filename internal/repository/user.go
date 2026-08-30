@@ -105,8 +105,6 @@ func (u *UserRepo) GetByNickName(ctx context.Context, NickName string) (domain.U
 	return scanUser(row)
 }
 
-
-
 const lastMessageAtColumn = `
 COALESCE((
 	SELECT MAX(M.created_at)
@@ -117,11 +115,23 @@ COALESCE((
 	ON THEIRS.conversation_id = M.conversation_id AND THEIRS.user_id = U.id
 ), 0)`
 
+const lastMessageColumn = `
+COALESCE((
+	SELECT M.content
+	FROM messages M
+	JOIN conversation_participants MINE
+	ON MINE.conversation_id = M.conversation_id AND MINE.user_id = ?
+	JOIN conversation_participants THEIRS
+	ON THEIRS.conversation_id = M.conversation_id AND THEIRS.user_id = U.id
+	ORDER BY M.created_at DESC, M.id DESC
+	LIMIT 1
+), '')`
 
 const getAllUsersQueryHead = `
-SELECT id, email, nick_name, last_name, first_name, age, gender, last_message_at
+SELECT id, email, nick_name, last_name, first_name, age, gender, last_message, last_message_at
 FROM (
 	SELECT U.id, U.email, U.nick_name, U.last_name, U.first_name, U.age, U.gender,
+	` + lastMessageColumn + ` AS last_message,
 	` + lastMessageAtColumn + ` AS last_message_at
 	FROM users U
 	WHERE U.id != ?
@@ -176,6 +186,7 @@ func scanUserContact(row scanner) (domain.UserContact, error) {
 		&contact.FirstName,
 		&contact.Age,
 		&contact.Gender,
+		&contact.LastMessage,
 		&contact.LastMessageAt)
 	if err != nil {
 		return domain.UserContact{}, sqlite.TranslateError(err)
@@ -184,8 +195,8 @@ func scanUserContact(row scanner) (domain.UserContact, error) {
 }
 
 // GetUsers returns the people list for userID, ordered by the most recent
-// conversation. The requester's own id is bound twice: once to find the shared
-// conversations and once to leave themselves out of their own list.
+// conversation. The requester's id is bound for the last-message content,
+// last-message timestamp, and to leave themselves out of their own list.
 func (u *UserRepo) GetUsers(ctx context.Context, userID uuid.UUID, limit int, cursor uuid.UUID) ([]domain.UserContact, error) {
 	cursorKey, err := u.resolveUserCursor(ctx, userID, cursor)
 	if err != nil {
@@ -196,7 +207,7 @@ func (u *UserRepo) GetUsers(ctx context.Context, userID uuid.UUID, limit int, cu
 	// ORDER BY above. nick_name is unique, so it is a total tie-breaker and the
 	// cursor row itself is never repeated.
 	where := ""
-	args := []any{userID.String(), userID.String()}
+	args := []any{userID.String(), userID.String(), userID.String()}
 	if cursorKey != nil {
 		where = "WHERE last_message_at < ? OR (last_message_at = ? AND nick_name > ?)"
 		args = append(args, cursorKey.lastMessageAt, cursorKey.lastMessageAt, cursorKey.nickName)

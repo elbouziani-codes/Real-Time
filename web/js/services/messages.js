@@ -229,6 +229,7 @@ export function selectChat(next) {
     offset = 0;
     hasMore = true;
     knownIds.clear();
+    clearTimeout(typingHideTimer);
     hideTypingIndicator();
 
     renderHeader();
@@ -240,6 +241,18 @@ export function selectChat(next) {
     }
     renderLoading();
     loadMessages();
+}
+
+export function resetMessages() {
+    sessionId += 1;
+    messages = [];
+    loading = false;
+    hasMore = true;
+    offset = 0;
+    currentChat = { UserA: "", UserB: "" };
+    knownIds.clear();
+    clearTimeout(typingHideTimer);
+    hideTypingIndicator();
 }
 
 async function loadMessages(options = {}) {
@@ -400,7 +413,7 @@ export async function handleWsMessage(data) {
 
     // Presence events: user online (3) / offline (4)
     if (code == 3 || code == 4) {
-        applyPresenceEvent(code, data.content);
+        await applyPresenceEvent(code, data.content);
         renderConversationSidebar();
         return;
     }
@@ -416,8 +429,10 @@ function handleIncomingMessage(data) {
     const roomId = uuidString(data.chat_id);
     if (!senderId || !roomId) return;
 
-    // Update conversation ordering (moves sender to top)
-    updateLastMessage(senderId, {
+    const partnerId = senderId === uuidString(me?.ID) ? uuidString(currentChat?.UserB) : senderId;
+    if (!partnerId) return;
+
+    updateLastMessage(partnerId, {
         lastMessage: data.content ?? "",
         createdAt: normalizeTimestamp(data.created_at ?? data.CreatedAt ?? Date.now()),
     });
@@ -425,10 +440,10 @@ function handleIncomingMessage(data) {
 
     // If the message belongs to the currently open conversation, append it.
     // Otherwise, show a toast notification.
-    if (currentChat?.UserB && String(currentChat.UserB) === senderId) {
+    if (window.location.pathname === "/chat" && String(currentChat?.UserB) === partnerId) {
         appendMessage(normalizeMessage(data));
     } else {
-        notifyNewMessage(senderId, data.content ?? "");
+        notifyNewMessage(partnerId, data.content ?? "");
     }
 }
 

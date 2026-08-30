@@ -1,5 +1,5 @@
 import createUser from "../models/User.js";
-import { fetchAllUsers, resetUsersPaging } from "../api/users.js";
+import { fetchAllUsers, fetchUser, resetUsersPaging } from "../api/users.js";
 
 // ─── Single source of truth ─────────────────────────────────────────────────
 // Every user lives here. The `online` property controls ONLY the status dot.
@@ -41,15 +41,28 @@ function sortConversationList() {
 }
 
 // ─── Normalization ──────────────────────────────────────────────────────────
-function normalizeUser(raw = {}) {
+function normalizeUser(raw = {}, existing = {}) {
+    const nickName = raw.NickName ?? raw.name ?? existing.name ?? "";
     return createUser({
-        id: raw.ID,
-        name: raw.NickName,
-        handle: "@" + raw.NickName,
-        online: false,
-        lastMessage: raw.LastMessage ?? "",
-        lastMessageAt: Number(raw.LastMessageAt ?? 0),
+        id: raw.ID ?? raw.id ?? existing.id,
+        name: nickName,
+        handle: nickName ? "@" + nickName : existing.handle,
+        letter: existing.letter,
+        avatarClass: existing.avatarClass,
+        online: existing.online ?? false,
+        lastMessage: raw.LastMessage ?? raw.lastMessage ?? existing.lastMessage ?? "",
+        lastMessageAt: Number(raw.LastMessageAt ?? raw.lastMessageAt ?? existing.lastMessageAt ?? 0),
     });
+}
+
+export function upsertUser(raw = {}) {
+    const id = String(raw.ID ?? raw.id ?? "");
+    if (!id) return null;
+
+    const user = normalizeUser(raw, users.get(id));
+    users.set(id, user);
+    sortConversationList();
+    return user;
 }
 
 // ─── Public API ─────────────────────────────────────────────────────────────
@@ -73,8 +86,7 @@ export async function seedAllUsers() {
     //resetUsersPaging();
     //users.clear();
     for (const raw of await fetchAllUsers()) {
-        const user = normalizeUser(raw);
-        users.set(String(user.id), user);
+        upsertUser(raw);
     }
     sortConversationList();
     return { users: getAllUsers(), conversations: sortedConversations };
@@ -101,9 +113,19 @@ export function updateLastMessage(friendId, { lastMessage = "", createdAt = Date
 
 export function updateUserStatus(userId, online) {
     const user = users.get(String(userId));
-    if (!user) return;
+    if (!user) return false;
     user.online = online;
     updatePresenceDom(String(userId), online);
+    return true;
+}
+
+export async function ensureUser(userId) {
+    const key = String(userId);
+    if (!key) return null;
+    if (users.has(key)) return users.get(key);
+
+    const raw = await fetchUser(key);
+    return raw ? upsertUser(raw) : null;
 }
 
 function updatePresenceDom(userId, online) {
@@ -127,6 +149,8 @@ export function extractUserIds(content = "") {
 }
 
 
-export function resetUsers(){
-    resetUsersPaging()
+export function resetUsers() {
+    users.clear();
+    sortedConversations = [];
+    resetUsersPaging();
 }

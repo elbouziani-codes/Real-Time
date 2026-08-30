@@ -69,12 +69,7 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		origin := r.Header.Get("Origin")
-		return origin == "http://localhost:8081"
-	},
-}
+var upgrader = websocket.Upgrader{}
 
 func (wss *HandlerWs) ChatWs(w http.ResponseWriter, r *http.Request) {
 	client, err := wss.AddClient(w, r)

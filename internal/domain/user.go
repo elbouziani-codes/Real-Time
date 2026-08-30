@@ -37,6 +37,7 @@ type UserProfile struct {
 // travels with the profile rather than staying hidden in the query.
 type UserContact struct {
 	UserProfile
+	LastMessage   string
 	LastMessageAt int
 }
 
