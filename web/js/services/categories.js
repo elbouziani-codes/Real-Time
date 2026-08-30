@@ -5,7 +5,7 @@ export let DEFAULT_CATEGORIES = [];
 export async function seedCategories() {
     const response = await fetchCategories();
 
-    if (response.code == true && Array.isArray(response.body)) {
+    if (response.code == 200 && Array.isArray(response.body)) {
         DEFAULT_CATEGORIES = response.body;
         return;
     }

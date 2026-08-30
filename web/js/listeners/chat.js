@@ -3,12 +3,11 @@ import { selectChat, loadOlderMessages, sendMessage, sendTyping } from "../servi
 import { getChat, setChat } from "./users.js";
 import throttle from "../utils/helpers.js";
 import { seedAllUsers } from "../services/user.js";
-import {renderConversationSidebar } from "./../services/messages.js"
+import { renderConversationSidebar } from "./../services/messages.js";
 
 // Wires the /chat page: selects the conversation chosen on the home page, then
 // handles in-page conversation switching, sending, and older-message paging.
 export function chatListener() {
-   
     selectChat(getChat());
 
     const conversationsList = document.querySelector(".conversations-list");
@@ -27,7 +26,6 @@ export function chatListener() {
 
     const scroller = document.querySelector(".messages-container");
     scroller?.addEventListener("scroll", throttle(onMessagesScroll, 200));
-
 }
 
 
@@ -46,9 +44,10 @@ function onConversationClick(event) {
 
 let windowScrollHandler = null;
 
-export  async function onSideBareScroll() {
-    console.log(1)
+export function onSideBareScroll() {
     const obj = document.querySelector(".conversations-list");
+    if (!obj) return;
+
     const throttledLoadUsers = throttle(() => {
         seedAllUsers();
         renderConversationSidebar();
@@ -59,11 +58,8 @@ export  async function onSideBareScroll() {
     if (windowScrollHandler) {
         obj.removeEventListener("scroll", windowScrollHandler);
     }
-        console.log(2)
 
     windowScrollHandler = () => {
-            console.log(3)
-
         const scrollTop = obj.scrollTop;       
         const windowHeight = obj.clientHeight;
         const documentHeight = obj.scrollHeight; 

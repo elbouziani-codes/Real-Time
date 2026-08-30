@@ -1,7 +1,5 @@
 import { navigate } from "./../router/router.js";
 
-const POST_PAGE_SIZE = 20;
-
 let loading = false;
 let hasMore = true;
 
@@ -26,9 +24,9 @@ export async function fetchPost(cursor = null, filters = {}) {
 
 
         if (!response.ok) {
-            if (response.code == 401) {
+            if (response.status == 401) {
                 navigate("/login");
-                return
+                return [];
             }
             // I could add a towst warning that geteting psost failed
             return [];

@@ -55,7 +55,7 @@ function normalizeUser(raw = {}, existing = {}) {
     });
 }
 
-export function upsertUser(raw = {}) {
+function upsertUser(raw = {}) {
     const id = String(raw.ID ?? raw.id ?? "");
     if (!id) return null;
 
@@ -75,7 +75,7 @@ export function getSortedConversations() {
     return sortedConversations;
 }
 
-export function getAllUsers() {
+function getAllUsers() {
     return [...users.values()];
 }
 

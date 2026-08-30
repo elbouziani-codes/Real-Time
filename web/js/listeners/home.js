@@ -69,7 +69,6 @@ async function reactListener(e) {
 
 
 function currentStateKey() {
-    console.log(config.postsCursor + "|" + JSON.stringify(config.postsFilters))
     return config.postsCursor + "|" + JSON.stringify(config.postsFilters);
 }
 

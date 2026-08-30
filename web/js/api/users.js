@@ -33,7 +33,6 @@ export async function fetchAllUsers() {
         if (!Array.isArray(users)) {
             throw new Error("Invalid users response");
         }
-        console.log(users)
         const nextCursor = users.at(-1)?.ID;
         if (!nextCursor || nextCursor === config.UsersCursor) usersHasMore = false;
         else config.UsersCursor = nextCursor;

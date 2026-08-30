@@ -1,17 +1,17 @@
 
 
 export default async function fetchCategories() {
-
-    try{
+    try {
         const response = await fetch("/api/categories", {
             method: "GET",
         });
 
-        const categories = await response.json();
-        const code = response.ok
-        return {code:code , body:categories}
-    }catch(error){
-        (error)
-        return {code:500 , body:"Error in request"}
+        if (!response.ok) {
+            return { code: response.status, body: await response.text() };
+        }
+        return { code: response.status, body: await response.json() };
+    } catch (error) {
+        console.error("Categories request failed:", error);
+        return { code: 500, body: "Error in request" };
     }
 }
