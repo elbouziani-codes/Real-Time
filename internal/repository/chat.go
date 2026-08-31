@@ -18,8 +18,7 @@ type DBTX interface {
 	QueryRowContext(context.Context, string, ...any) *sql.Row
 }
 
-// Beginner is kept separate because *sql.Tx cannot start a transaction; only
-// repos that own a transaction boundary need it.
+
 type Beginner interface {
 	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
 }

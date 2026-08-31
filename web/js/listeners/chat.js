@@ -51,7 +51,7 @@ export function onSideBareScroll() {
     const throttledLoadUsers = throttle(() => {
         seedAllUsers();
         renderConversationSidebar();
-    }, 1500);
+    }, 1000);
 
     // The window listener persists across SPA mounts: detach the previous one
     // so revisiting the home page never stacks duplicate scroll handlers.
@@ -60,6 +60,7 @@ export function onSideBareScroll() {
     }
 
     windowScrollHandler = () => {
+
         const scrollTop = obj.scrollTop;       
         const windowHeight = obj.clientHeight;
         const documentHeight = obj.scrollHeight; 

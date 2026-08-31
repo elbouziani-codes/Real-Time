@@ -17,11 +17,7 @@ func NewAuthRepo(db DBTX) *AuthRepo {
 
 func scanSession(row scanner) (domain.Session, error) {
 	session := domain.Session{}
-	//	session.ID = &uuid.Nil()
-	//	session.UserID = &uuid.Nil()
-
-	//	var sessionID any
-	//	var userID any
+	
 	err := row.Scan(
 		&session.ID,
 		&session.UserID,
@@ -30,18 +26,7 @@ func scanSession(row scanner) (domain.Session, error) {
 	if err != nil {
 		return domain.Session{}, sqlite.TranslateError(err)
 	}
-	/*
-		err = session.ID.Scan(sessionID)
-		if err != nil {
-			return session, err
-
-		}
-
-		err = session.UserID.Scan(userID)
-		if err != nil {
-			return session, err
-
-		}*/
+	
 	return session, nil
 }
 
@@ -61,8 +46,7 @@ const DeleteSessionQuery = `
 	DELETE FROM sessions WHERE user_id = ?  
 `
 
-// DeleteSession reports NotFound when the user had no session, so callers can
-// tell "nothing to clear" apart from a genuine failure.
+
 func (a *AuthRepo) DeleteSession(ctx context.Context, userID uuid.UUID) error {
 	result, err := a.db.ExecContext(ctx, DeleteSessionQuery, userID.String())
 	if err != nil {

@@ -12,8 +12,8 @@ type commentService struct {
 
 type CommentRepo interface {
 	SaveComment(context.Context, domain.Comment) error
-	GetComment(context.Context, uuid.UUID, uuid.UUID) (*domain.CommentInfo, error)
-	DeleteComment(context.Context, uuid.UUID) error
+	// GetComment(context.Context, uuid.UUID, uuid.UUID) (*domain.CommentInfo, error)
+	// DeleteComment(context.Context, uuid.UUID) error
 	GetComments(context.Context, uuid.UUID, uuid.UUID) ([]*domain.CommentInfo, error)
 }
 
@@ -30,13 +30,13 @@ func (p *commentService) CreateComment(ctx context.Context, comment *domain.Comm
 	return nil
 }
 
-func (p *commentService) GetComment(ctx context.Context, userID, commentID uuid.UUID) (*domain.CommentInfo, error) {
-	return p.commentRepo.GetComment(ctx, userID, commentID)
-}
-
-func (p *commentService) DeleteComment(ctx context.Context, commentID uuid.UUID) error {
-	return p.commentRepo.DeleteComment(ctx, commentID)
-}
+// func (p *commentService) GetComment(ctx context.Context, userID, commentID uuid.UUID) (*domain.CommentInfo, error) {
+// 	return p.commentRepo.GetComment(ctx, userID, commentID)
+// }
+//
+// func (p *commentService) DeleteComment(ctx context.Context, commentID uuid.UUID) error {
+// 	return p.commentRepo.DeleteComment(ctx, commentID)
+// }
 
 func (p *commentService) GetComments(ctx context.Context, userID, parentID uuid.UUID) ([]*domain.CommentInfo, error) {
 	return p.commentRepo.GetComments(ctx, userID, parentID)

@@ -57,20 +57,20 @@ func (p *commentRepo) SaveComment(ctx context.Context, comment domain.Comment) e
 	return nil
 }
 
-const getCommentQuery = `
-SELECT C.id,  C.content, C.created_at, C.parent_id, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at, COALESCE(R.id, '00000000-0000-0000-0000-000000000000'), COALESCE(R.is_like, FALSE)
-FROM comments C  
-JOIN users U 
-ON C.author_id = U.id
-LEFT JOIN  reactions R  
-ON R.author_id = ? AND C.id = R.parent_id  
-WHERE C.id = ?
-`
-
-func (p *commentRepo) GetComment(ctx context.Context, userID, commentID uuid.UUID) (*domain.CommentInfo, error) {
-	row := p.db.QueryRowContext(ctx, getCommentQuery, userID.String(), commentID.String())
-	return scanComment(row)
-}
+// const getCommentQuery = `
+// SELECT C.id,  C.content, C.created_at, C.parent_id, U.id, U.nick_name, U.first_name, U.last_name, U.gender, U.age, U.created_at, COALESCE(R.id, '00000000-0000-0000-0000-000000000000'), COALESCE(R.is_like, FALSE)
+// FROM comments C
+// JOIN users U
+// ON C.author_id = U.id
+// LEFT JOIN  reactions R
+// ON R.author_id = ? AND C.id = R.parent_id
+// WHERE C.id = ?
+// `
+//
+// func (p *commentRepo) GetComment(ctx context.Context, userID, commentID uuid.UUID) (*domain.CommentInfo, error) {
+// 	row := p.db.QueryRowContext(ctx, getCommentQuery, userID.String(), commentID.String())
+// 	return scanComment(row)
+// }
 
 func (p *commentRepo) GetComments(ctx context.Context, userID, parentID uuid.UUID) ([]*domain.CommentInfo, error) {
 	rows, err := p.db.QueryContext(ctx, getCommentsQuery, userID.String(), parentID.String())
@@ -90,12 +90,12 @@ func (p *commentRepo) GetComments(ctx context.Context, userID, parentID uuid.UUI
 	return comments, nil
 }
 
-const deleteCommentQuery = `DELETE FROM comments WHERE id = ?`
-
-func (p *commentRepo) DeleteComment(ctx context.Context, commentID uuid.UUID) error {
-	_, err := p.db.ExecContext(ctx, deleteCommentQuery, commentID.String())
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// const deleteCommentQuery = `DELETE FROM comments WHERE id = ?`
+//
+// func (p *commentRepo) DeleteComment(ctx context.Context, commentID uuid.UUID) error {
+// 	_, err := p.db.ExecContext(ctx, deleteCommentQuery, commentID.String())
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }

@@ -2,8 +2,7 @@ package sqlite
 
 import "database/sql"
 
-// seedCategory is one default category row. IDs are fixed so seeding stays
-// idempotent and posts keep pointing at the same category across restarts.
+
 type seedCategory struct {
 	id    string
 	title string
@@ -35,8 +34,7 @@ var defaultCategories = []seedCategory{
 
 const seedCategoryQuery = `INSERT OR IGNORE INTO categories (id, title, icon) VALUES(?, ?, ?)`
 
-// seedCategories inserts the default categories. Existing rows are left as they
-// are, so it is safe to run on every start.
+
 func seedCategories(db *sql.DB) error {
 	tx, err := db.Begin()
 	if err != nil {

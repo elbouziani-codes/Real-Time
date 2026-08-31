@@ -98,7 +98,7 @@
     top:95px;
 
     height:calc(100vh - 120px);
-    max-height:calc(100vh - 120px);
+    max-height:calc(100vh - 170px);
 
     background:var(--surface);
 

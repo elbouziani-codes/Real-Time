@@ -4,7 +4,7 @@ import endPage from "../pages/end.js";
 import ErrorPage from "../pages/notFound.js";
 import pagePost from "../pages/postDetails.js";
 import HomePage from "../pages/home.js";
-
+import { renderConversationSidebar } from "../services/messages.js";
 import endListener from "../listeners/end.js";
 import {chatListener ,onSideBareScroll}  from "./../listeners/chat.js";
 import authListener from "./../listeners/auth.js";
@@ -19,7 +19,6 @@ import { seedCategories } from "./../services/categories.js";
 import { sendAllPost} from "./../services/posts.js";
 
 import { connectSocket } from "./../websocket/socket.js";
-import { initChatSocket } from "./../websocket/chat.js";
 
 
 const routes = {
@@ -69,7 +68,6 @@ async function Fetching(path) {
             return null;
     }
     connectSocket();
-    initChatSocket();
 }
 
 async function Listening(path) {
