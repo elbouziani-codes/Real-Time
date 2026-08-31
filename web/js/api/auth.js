@@ -33,7 +33,6 @@ export async function fetchLogin(credentials) {
         }
         return { ok: response.ok, body: data, code: response.status };
     } catch (error) {
-        console.error("login request failed:", error);
         return { ok: false, body: "Network error", code: 0 };
     }
 }
@@ -60,7 +59,6 @@ export async function fetchRegister(credentials) {
 
         return { ok: response.ok, body: data, code: response.status };
     } catch (error) {
-        console.error("Register request failed:", error);
         return { ok: false, body: "Network error", code: 0 };
     }
 }
@@ -73,7 +71,6 @@ export async function fetchLogout() {
         });
         return { code: response.status, body: await response.text() };
     } catch (error) {
-        console.error("Logout request failed:", error);
         return { code: 500, body: "Error in request" };
     }
 }

@@ -19,16 +19,13 @@ export function connectSocket() {
         try {
             data = JSON.parse(event.data);
         } catch (error) {
-            console.error("Invalid WebSocket message:", error);
             return;
         }
         handleWsMessage(data)
 
     };
 
-    socket.onerror = (error) => {
-        console.error("WebSocket error:", error);
-    };
+    socket.onerror = () => {};
 
     socket.onclose = () => {
         socket = null;
@@ -48,7 +45,6 @@ export function disconnectSocket() {
 // Returns false when the socket is not open so callers can react.
 export function sendWsRequest(request) {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
-        console.warn("WebSocket is not connected; request not sent");
         return false;
     }
     socket.send(JSON.stringify(request));

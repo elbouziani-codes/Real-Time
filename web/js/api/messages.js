@@ -21,7 +21,6 @@ export async function fetchMessages({ friend, offset = 0 } = {}) {
 
         return { code: response.status, body };
     } catch (error) {
-        console.error("Failed to fetch messages:", error);
         return { code: 500, body: "Error in request" };
     }
 }

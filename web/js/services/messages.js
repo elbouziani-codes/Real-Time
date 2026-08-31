@@ -273,7 +273,6 @@ async function loadMessages(options = {}) {
         if (sid !== sessionId || !currentChat?.UserB) return;
 
         if (response.code != 200) {
-            console.error("Failed to load messages:", response.code, response.body);
             renderError("Could not load messages. Please try again.");
             return;
         }
@@ -309,7 +308,6 @@ async function loadMessages(options = {}) {
             scrollToBottom();
         }
     } catch (error) {
-        console.error("Failed to load messages:", error);
         renderError("Could not load messages. Please try again.");
     } finally {
         loading = false;
@@ -345,6 +343,8 @@ function appendMessage(message) {
 
 // ─── Send message ───────────────────────────────────────────────────────────
 
+let lastTempId = null;
+
 export function sendMessage(content) {
     const friend = currentChat?.UserB;
     if (!friend || !content?.trim()) return false;
@@ -358,7 +358,6 @@ export function sendMessage(content) {
     });
 
     if (!ok) {
-        console.error("Message not sent: WebSocket is not connected");
         return false;
     }
 
@@ -370,6 +369,7 @@ export function sendMessage(content) {
         createdAt: Date.now(),
     });
     Object.assign(temp, { temp: true });
+    lastTempId = temp.id;
 
     updateLastMessage(friend, {
         lastMessage: content.trim(),
@@ -395,7 +395,6 @@ export async function handleWsMessage(data) {
 
     // Connection replaced by another tab (code 1)
     if (code == 1) {
-        console.warn("WebSocket replaced by another connection:", data.content);
         disconnectSocket();
         const { navigate } = await import("../router/router.js");
         navigate("/end");
@@ -417,10 +416,17 @@ export async function handleWsMessage(data) {
         return;
     }
 
-    // Error (code 404)
     if (code == 404) {
-        console.error("WebSocket request failed:", data.content);
+        if (lastTempId) {
+            messages = messages.filter((m) => m.id !== lastTempId);
+            knownIds.delete(lastTempId);
+            lastTempId = null;
+            renderAllMessages();
+        }
+        return;
     }
+
+
 }
 
 function handleIncomingMessage(data) {

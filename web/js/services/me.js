@@ -27,7 +27,6 @@ export async function CreateMe(path) {
 export async function logoutMe() {
     const response = await fetchLogout();
     if (response.code != 200 && response.code != 401) {
-        console.warn("logout failed:", response.body);
         return false;
     }
     me = {};

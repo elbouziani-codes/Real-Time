@@ -71,7 +71,6 @@ export async function fetchCreatePost(data) {
         }
         return { code: response.status, body };
     } catch (error) {
-        console.error(error);
         return { code: 500, body: "Error in request" };
     }
 }
@@ -86,7 +85,6 @@ export async function fetchPostDetails(postID) {
         }
         return { code: response.status, body: await response.json() };
     } catch (error) {
-        console.error(error);
         return { code: 500, body: "Error in request" };
     }
 }

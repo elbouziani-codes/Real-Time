@@ -11,7 +11,6 @@ export default async function fetchCategories() {
         }
         return { code: response.status, body: await response.json() };
     } catch (error) {
-        console.error("Categories request failed:", error);
         return { code: 500, body: "Error in request" };
     }
 }

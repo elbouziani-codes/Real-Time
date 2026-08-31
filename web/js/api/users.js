@@ -25,7 +25,6 @@ export async function fetchAllUsers() {
         });
 
         if (!response.ok) {
-            console.warn(`Failed to fetch users: ${response.status}`);
             return [];
         }
 
