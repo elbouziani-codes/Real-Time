@@ -428,7 +428,7 @@ function handleIncomingMessage(data) {
     const roomId = data.chat_id;
     if (!senderId || !roomId) return;
 
-    const partnerId = senderId === uuidString(me?.ID) ? uuidString(currentChat?.UserB) : senderId;
+    const partnerId = senderId === String(me?.ID) ? String(currentChat?.UserB) : senderId;
     if (!partnerId) return;
 
     updateLastMessage(partnerId, {
@@ -437,8 +437,6 @@ function handleIncomingMessage(data) {
     });
     renderConversationSidebar();
 
-    // If the message belongs to the currently open conversation, append it.
-    // Otherwise, show a toast notification.
     if (window.location.pathname === "/chat" && String(currentChat?.UserB) === partnerId) {
         appendMessage(normalizeMessage(data));
     } else {

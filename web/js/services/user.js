@@ -143,7 +143,7 @@ export function updateLastMessage(friendId, { lastMessage = "", createdAt = Date
         hydrateProfile(key);
     }
     user.lastMessage = lastMessage;
-    user.lastMessageAt = Number(createdAt);
+    user.lastMessageAt = Math.max(user.lastMessageAt || 0, Number(createdAt));
     sortConversationList();
 }
 
