@@ -190,17 +190,20 @@ function hideTypingIndicator() {
     messagesListEl()?.querySelector(".typing-indicator")?.remove();
 }
 
+
 function showTypingIndicator() {
     const list = messagesListEl();
     if (!list || list.querySelector(".typing-indicator")) return;
+    const friend = getUser(currentChat?.UserB);
+    const name = friend?.name ? escapeHTML(friend.name) : "Someone";
     list.insertAdjacentHTML(
         "beforeend",
-        `<div class="typing-indicator" role="status" aria-label="The other person is typing"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`,
+        `<div class="typing-indicator" role="status" aria-label="${name} is typing"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-name">${name} is typing…</span></div>`,
     );
     const scroller = messagesScrollerEl();
     if (scroller) scroller.scrollTop = scroller.scrollHeight;
     clearTimeout(typingHideTimer);
-    typingHideTimer = setTimeout(hideTypingIndicator, 4000);
+    typingHideTimer = setTimeout(hideTypingIndicator, 1000);
 }
 
 export function sendTyping() {
