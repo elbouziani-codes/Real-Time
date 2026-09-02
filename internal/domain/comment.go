@@ -6,10 +6,11 @@ import (
 )
 
 type Comment struct {
-	ID       uuid.UUID
-	ParentID uuid.UUID
-	AuthorID uuid.UUID
-	Content  string
+	ID        uuid.UUID
+	ParentID  uuid.UUID
+	AuthorID  uuid.UUID
+	Content   string
+	CreatedAt int
 }
 
 type CommentInfo struct {

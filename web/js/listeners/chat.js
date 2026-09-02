@@ -22,10 +22,10 @@ export function chatListener() {
             onSend();
         }
     });
-    chatInput?.addEventListener("input", throttle(sendTyping, 500, true));
+    chatInput?.addEventListener("input", throttle(sendTyping, 500));
 
     const scroller = document.querySelector(".messages-container");
-    scroller?.addEventListener("scroll", throttle(onMessagesScroll, 200));
+    scroller?.addEventListener("scroll", throttle(onMessagesScroll, 200, true));
 }
 
 

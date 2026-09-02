@@ -36,10 +36,10 @@ func scanReaction(row scanner) (*domain.ReactionInfo, error) {
 	return &reaction, nil
 }
 
-const saveReactionQuery = `INSERT INTO reactions (id, parent_id, author_id, is_like) VALUES(?, ?, ?, ?)`
+const saveReactionQuery = `INSERT INTO reactions (id, parent_id, author_id, is_like, created_at) VALUES(?, ?, ?, ?, ?)`
 
 func (p *reactionRepo) SaveReaction(ctx context.Context, reaction domain.Reaction) error {
-	_, err := p.db.ExecContext(ctx, saveReactionQuery, reaction.ID.String(), reaction.ParentID.String(), reaction.AuthorID.String(), reaction.IsLike)
+	_, err := p.db.ExecContext(ctx, saveReactionQuery, reaction.ID.String(), reaction.ParentID.String(), reaction.AuthorID.String(), reaction.IsLike, reaction.CreatedAt)
 	if err != nil {
 		return sqlite.TranslateError(err)
 	}

@@ -47,10 +47,10 @@ func scanComment(row scanner) (*domain.CommentInfo, error) {
 	return &comment, nil
 }
 
-const saveCommentQuery = `INSERT INTO comments (id, parent_id, author_id, content) VALUES(?, ?, ?, ?)`
+const saveCommentQuery = `INSERT INTO comments (id, parent_id, author_id, content, created_at) VALUES(?, ?, ?, ?, ?)`
 
 func (p *commentRepo) SaveComment(ctx context.Context, comment domain.Comment) error {
-	_, err := p.db.ExecContext(ctx, saveCommentQuery, comment.ID.String(), comment.ParentID.String(), comment.AuthorID.String(), comment.Content)
+	_, err := p.db.ExecContext(ctx, saveCommentQuery, comment.ID.String(), comment.ParentID.String(), comment.AuthorID.String(), comment.Content, comment.CreatedAt)
 	if err != nil {
 		return sqlite.TranslateError(err)
 	}

@@ -5,10 +5,11 @@ import (
 )
 
 type Reaction struct {
-	ID       uuid.UUID
-	ParentID uuid.UUID
-	AuthorID uuid.UUID
-	IsLike   bool
+	ID        uuid.UUID
+	ParentID  uuid.UUID
+	AuthorID  uuid.UUID
+	IsLike    bool
+	CreatedAt int
 }
 
 type ReactionInfo struct {

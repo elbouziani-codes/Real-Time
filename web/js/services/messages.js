@@ -196,8 +196,6 @@ function showTypingIndicator() {
     );
     const scroller = messagesScrollerEl();
     if (scroller) scroller.scrollTop = scroller.scrollHeight;
-    hider();
-
 }
 
 export function sendTyping() {

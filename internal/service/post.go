@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"time"
+
 	"realTime/internal/domain"
 	"uuid"
 )
@@ -22,6 +24,7 @@ func NewPostService(repo PostRepo) *postService {
 
 func (p *postService) CreatePost(ctx context.Context, post *domain.Post) error {
 	post.ID = uuid.NewV4()
+	post.CreatedAt = int(time.Now().UnixMilli())
 	err := p.postRepo.SavePost(ctx, *post)
 	if err != nil {
 		return err

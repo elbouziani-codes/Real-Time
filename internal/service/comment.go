@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"time"
+
 	"realTime/internal/domain"
 	"uuid"
 )
@@ -23,6 +25,7 @@ func NewCommentService(repo CommentRepo) *commentService {
 
 func (p *commentService) CreateComment(ctx context.Context, comment *domain.Comment) error {
 	comment.ID = uuid.NewV4()
+	comment.CreatedAt = int(time.Now().UnixMilli())
 	err := p.commentRepo.SaveComment(ctx, *comment)
 	if err != nil {
 		return err

@@ -163,7 +163,7 @@ func scanPost(row scanner) (*domain.PostInfo, error) {
 	return &post, nil
 }
 
-const savePostQuery = `INSERT INTO posts (id, author_id, title, content) VALUES(?, ?, ?, ?)`
+const savePostQuery = `INSERT INTO posts (id, author_id, title, content, created_at) VALUES(?, ?, ?, ?, ?)`
 
 const savePostCategoryQuery = `INSERT INTO post_categories (post_id, category_id) VALUES(?, ?)`
 
@@ -176,7 +176,7 @@ func (p *postRepo) SavePost(ctx context.Context, post domain.Post) error {
 	}
 	defer tx.Rollback()
 
-	if _, err := tx.ExecContext(ctx, savePostQuery, post.ID.String(), post.AuthorID.String(), post.Title, post.Content); err != nil {
+	if _, err := tx.ExecContext(ctx, savePostQuery, post.ID.String(), post.AuthorID.String(), post.Title, post.Content, post.CreatedAt); err != nil {
 		return sqlite.TranslateError(err)
 	}
 

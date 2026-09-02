@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"time"
+
 	"realTime/internal/domain"
 	"uuid"
 )
@@ -30,6 +32,7 @@ func (p *reactionService) CreateReaction(ctx context.Context, reaction *domain.R
 		return domain.Error{Message: "You already raected", Code: domain.ConflictCode}
 	}
 	reaction.ID = uuid.NewV4()
+	reaction.CreatedAt = int(time.Now().UnixMilli())
 	err = p.reactionRepo.SaveReaction(ctx, *reaction)
 	if err != nil {
 		return err
