@@ -33,3 +33,12 @@ export default function throttle(fn, wait) {
   };
 }
 
+export  function debounce(fn, delay) {
+	let timeOut;
+	return function (...args) {
+    console.log("")
+		clearTimeout(timeOut)
+		timeOut = setTimeout(()=> fn(...args), delay )
+	}
+}
+

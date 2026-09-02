@@ -1,22 +1,10 @@
 
-function normalizeTimestamp(timestamp) {
-    const value = Number(timestamp);
-    if (!Number.isFinite(value) || value <= 0) {
-        return 0;
-    }
 
-    // Backend timestamps in this app are usually Unix seconds, but some
-    // client-side models already carry millisecond or nanosecond values.
-    // Normalize all of them to milliseconds.
-    if (value > 1e15) {
-        return Math.floor(value / 1e6);
-    }
-    return value < 1e12 ? value * 1000 : value;
-}
 
 export default function formatDateTime(timestamp) {
     const now = Date.now();
-    const createdAt = normalizeTimestamp(timestamp);
+    const createdAt = timestamp;
+    console.log(createdAt, now)
     const diff = now - createdAt;
 
     const seconds = Math.floor(diff / 1000);

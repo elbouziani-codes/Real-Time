@@ -122,14 +122,13 @@ func (q *ChatRepo) GetMessages(ctx context.Context, chatID uuid.UUID, offset, li
 	return messages, nil
 }
 
-const sendMessageQuery = `INSERT INTO messages (id, sender_id, content, conversation_id, created_at) VALUES (?, ?, ?, ?, CAST((julianday('now') - 2440587.5) * 86400000 AS INTEGER)) RETURNING created_at`
+const sendMessageQuery = `INSERT INTO messages (id, sender_id, content, conversation_id, created_at) VALUES (?, ?, ?, ?, ?)`
 
-func (q *ChatRepo) SendMessage(ctx context.Context, message domain.MessageOutput) (int64, error) {
-	var createdAt int64
+func (q *ChatRepo) SendMessage(ctx context.Context, message domain.MessageOutput) (error) {
 
-	err := q.db.QueryRowContext(ctx, sendMessageQuery, message.ID.String(), message.Sender.String(), message.Content, message.ChatID.String()).Scan(&createdAt)
+	_, err := q.db.ExecContext(ctx, sendMessageQuery, message.ID.String(), message.Sender.String(), message.Content, message.ChatID.String(), message.Created_at)
 	if err != nil {
-		return -1, sqlite.TranslateError(err)
+		return  sqlite.TranslateError(err)
 	}
-	return createdAt, nil
+	return  nil
 }

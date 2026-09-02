@@ -149,17 +149,12 @@ FROM users U
 WHERE U.id = ?
 `
 
-// userCursorKey is the sort position of the user a client last received. The
-// nick_name belongs to it because last_message_at alone does not identify a
-// single row.
 type userCursorKey struct {
 	lastMessageAt int
 	nickName      string
 }
 
-// resolveUserCursor reads the sort position of the cursor user. A cursor naming
-// a user that has since been deleted is reported rather than silently returning
-// an empty page, which a client could not tell apart from the end of the list.
+
 func (u *UserRepo) resolveUserCursor(ctx context.Context, requesterID, cursor uuid.UUID) (*userCursorKey, error) {
 	if cursor == uuid.Nil() {
 		return nil, nil
@@ -194,18 +189,14 @@ func scanUserContact(row scanner) (domain.UserContact, error) {
 	return contact, nil
 }
 
-// GetUsers returns the people list for userID, ordered by the most recent
-// conversation. The requester's id is bound for the last-message content,
-// last-message timestamp, and to leave themselves out of their own list.
+
 func (u *UserRepo) GetUsers(ctx context.Context, userID uuid.UUID, limit int, cursor uuid.UUID) ([]domain.UserContact, error) {
 	cursorKey, err := u.resolveUserCursor(ctx, userID, cursor)
 	if err != nil {
 		return nil, err
 	}
 
-	// Keyset paging: keep the rows that fall strictly after the cursor under the
-	// ORDER BY above. nick_name is unique, so it is a total tie-breaker and the
-	// cursor row itself is never repeated.
+
 	where := ""
 	args := []any{userID.String(), userID.String(), userID.String()}
 	if cursorKey != nil {

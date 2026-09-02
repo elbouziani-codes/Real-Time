@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"realTime/internal/domain"
 	"uuid"
@@ -18,7 +19,7 @@ type ChatRepo interface {
 	CreateConversationWithParticipants(context.Context, uuid.UUID, []uuid.UUID, []uuid.UUID) error
 	GetChat(context.Context, []uuid.UUID) (uuid.UUID, error)
 	GetMessages(context.Context, uuid.UUID, int, int) ([]domain.MessageOutput, error)
-	SendMessage(context.Context, domain.MessageOutput) (int64, error)
+	SendMessage(context.Context, domain.MessageOutput) ( error)
 }
 
 func NewChatService(ChatRepo ChatRepo, UserRepo UserRepo) *chatService {
@@ -56,15 +57,16 @@ func (c *chatService) CreateRoomChat(ctx context.Context, userIDs []uuid.UUID) (
 
 func (c *chatService) SendMessageRoomChat(ctx context.Context, content string, SenderID, ChatID uuid.UUID) (uuid.UUID, int64, error) {
 	idMessage := uuid.NewV4()
+	now := time.Now().UnixMilli()
+	
+	msg := domain.MessageOutput{ID: idMessage, Content: content, Sender: SenderID, ChatID: ChatID, Created_at: now}
 
-	msg := domain.MessageOutput{ID: idMessage, Content: content, Sender: SenderID, ChatID: ChatID}
-
-	createdAt, err := c.ChatRepo.SendMessage(ctx, msg)
+	 err := c.ChatRepo.SendMessage(ctx, msg)
 	if err != nil {
 		return uuid.Nil(), 0, err
 	}
 
-	return idMessage, createdAt, nil
+	return idMessage, now, nil
 }
 
 func (c *chatService) GetMessages(ctx context.Context, chatID uuid.UUID, offset int) ([]domain.MessageOutput, error) {

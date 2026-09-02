@@ -7,11 +7,10 @@ import { me } from "./me.js";
 import { getUser, getSortedConversations, updateLastMessage } from "./user.js";
 import { disconnectSocket, sendWsRequest } from "../websocket/socket.js";
 import { applyPresenceEvent } from "./online.js";
-import { escapeHTML } from "../utils/helpers.js";
+import { escapeHTML, debounce } from "../utils/helpers.js";
 import { showToast } from "../utils/toast.js";
 import { navigate } from "../router/router.js";
 import { setChat } from "../listeners/users.js";
-
 // ─── Constants ──────────────────────────────────────────────────────────────
 const PAGE_SIZE = 10;
 
@@ -28,12 +27,7 @@ export let currentChat = { UserA: "", UserB: "" };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-
-function normalizeTimestamp(value) {
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric) || numeric <= 0) return 0;
-    return numeric < 1e12 ? numeric * 1000 : numeric;
-}
+const hider = debounce(hideTypingIndicator, 1500);
 
 function normalizeMessage(raw = {}) {
     return createMessage({
@@ -41,7 +35,7 @@ function normalizeMessage(raw = {}) {
         roomId: raw.chat_id ?? 0,
         senderId: raw.sender ?? 0,
         content: raw.content ?? raw.Content ?? "",
-        createdAt: normalizeTimestamp(raw.created_at ?? raw.CreatedAt ?? 0),
+        createdAt: raw.created_at ?? raw.CreatedAt ?? 0,
     });
 }
 
@@ -184,7 +178,6 @@ function showNewMessagesButton() {
 
 // ─── Typing indicator ───────────────────────────────────────────────────────
 
-let typingHideTimer = null;
 
 function hideTypingIndicator() {
     messagesListEl()?.querySelector(".typing-indicator")?.remove();
@@ -193,6 +186,7 @@ function hideTypingIndicator() {
 
 function showTypingIndicator() {
     const list = messagesListEl();
+    hider();
     if (!list || list.querySelector(".typing-indicator")) return;
     const friend = getUser(currentChat?.UserB);
     const name = friend?.name ? escapeHTML(friend.name) : "Someone";
@@ -202,8 +196,8 @@ function showTypingIndicator() {
     );
     const scroller = messagesScrollerEl();
     if (scroller) scroller.scrollTop = scroller.scrollHeight;
-    clearTimeout(typingHideTimer);
-    typingHideTimer = setTimeout(hideTypingIndicator, 1000);
+    hider();
+
 }
 
 export function sendTyping() {
@@ -231,7 +225,6 @@ export function selectChat(next) {
     offset = 0;
     hasMore = true;
     knownIds.clear();
-    clearTimeout(typingHideTimer);
     hideTypingIndicator();
 
     renderHeader();
@@ -253,7 +246,6 @@ export function resetMessages() {
     offset = 0;
     currentChat = { UserA: "", UserB: "" };
     knownIds.clear();
-    clearTimeout(typingHideTimer);
     hideTypingIndicator();
 }
 
@@ -442,7 +434,7 @@ function handleIncomingMessage(data) {
 
     updateLastMessage(partnerId, {
         lastMessage: data.content ?? "",
-        createdAt: normalizeTimestamp(data.created_at ?? data.CreatedAt ?? Date.now()),
+        createdAt: data.created_at ?? data.CreatedAt ?? Date.now(),
     });
     renderConversationSidebar();
 

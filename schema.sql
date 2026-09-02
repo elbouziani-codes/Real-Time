@@ -86,7 +86,7 @@ CREATE TABLE
 		sender_id CHAR(36) NOT NULL REFERENCES users (id) ON DELETE CASCADE, -- actuallt this must be reviewed if a user delete whta s the correct practice 
 		conversation_id CHAR(36) NOT NULL REFERENCES conversations (id) ON DELETE CASCADE,
 		content TEXT NOT NULL,
-		created_at INTEGER DEFAULT (unixepoch (CURRENT_TIMESTAMP, '+0 hours'))
+		created_at INTEGER NOT NULL
 	);
 
 CREATE INDEX IF NOT EXISTS poster_idx ON posts (author_id);
