@@ -22,7 +22,7 @@ export function chatListener() {
             onSend();
         }
     });
-    chatInput?.addEventListener("input", throttle(sendTyping, 500));
+    chatInput?.addEventListener("input", throttle(sendTyping, 500, true));
 
     const scroller = document.querySelector(".messages-container");
     scroller?.addEventListener("scroll", throttle(onMessagesScroll, 200));

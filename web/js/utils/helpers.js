@@ -8,7 +8,7 @@ export function escapeHTML(value = "") {
         .replaceAll("'", "&#39;");
 }
 
-export default function throttle(fn, wait) {
+export default function throttle(fn, wait, trailing = false) {
   let lastCall = 0;
   let timeout = null;
 
@@ -22,7 +22,7 @@ export default function throttle(fn, wait) {
       timeout = null;
       lastCall = now;
       fn(...args);
-    } else if (!timeout) {
+    } else if (!timeout && trailing) {
       // schedule a trailing call so the last scroll near the edge isn't dropped
       timeout = setTimeout(() => {
         lastCall = Date.now();
