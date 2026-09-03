@@ -99,9 +99,9 @@ var nameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]*$`) // would deleted later
 
 func ValueidateUserInfo(registerRequest RegisterRequest) (User, error) {
 	var user User
-	user.Email = strings.TrimSpace(registerRequest.Email)
+	user.Email = strings.TrimSpace(strings.ToLower(registerRequest.Email))
 	user.Password = registerRequest.Password
-	user.NickName = strings.TrimSpace(registerRequest.NickName)
+	user.NickName = strings.TrimSpace(strings.ToLower(registerRequest.NickName));
 	user.LastName = strings.TrimSpace(registerRequest.LastName)
 	user.FirstName = strings.TrimSpace(registerRequest.FirstName)
 	user.Gender = strings.TrimSpace(registerRequest.Gender)
